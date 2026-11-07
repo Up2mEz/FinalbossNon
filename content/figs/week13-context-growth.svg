@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330">
+  <defs>
+    <marker id="a-week13-context-growth" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+  </defs>
+  <!-- axes: x steps 0..64 over 590px (70..660), y tokens 0..140K over 200px (240..40) -->
+  <path d="M70 240 H660 M70 194.3 H660 M70 148.6 H660 M70 102.9 H660" class="mut"/>
+  <path d="M70 40 V240 H660" class="ln"/>
+  <text x="62" y="244" text-anchor="end" class="s">0</text>
+  <text x="62" y="198" text-anchor="end" class="s">32K</text>
+  <text x="62" y="153" text-anchor="end" class="s">64K</text>
+  <text x="62" y="107" text-anchor="end" class="s">96K</text>
+  <text x="70" y="28" class="s">ขนาด context (token) ณ ขั้นนั้น</text>
+  <text x="70" y="258" text-anchor="middle" class="s">0</text>
+  <text x="162" y="258" text-anchor="middle" class="s">10</text>
+  <text x="254" y="258" text-anchor="middle" class="s">20</text>
+  <text x="347" y="258" text-anchor="middle" class="s">30</text>
+  <text x="439" y="258" text-anchor="middle" class="s">40</text>
+  <text x="531" y="258" text-anchor="middle" class="s">50</text>
+  <text x="623" y="258" text-anchor="middle" class="s">60</text>
+  <text x="660" y="258" text-anchor="middle" class="s">64</text>
+  <text x="365" y="278" text-anchor="middle" class="s">ขั้นของ agent (step)</text>
+  <!-- context window limit (128K at y=57.1) -->
+  <path d="M70 57.1 H660" class="lnw dash"/>
+  <text x="76" y="50" class="wn">context window 128K (GPT-4o)</text>
+  <!-- table points (solid) and projection (dashed) -->
+  <polyline points="70.0,239.3 79.2,238.9 88.4,238.0 116.1,233.3 162.2,218.3" class="lna" fill="none"/>
+  <path d="M162.2 218.3 L650.8 58.5" class="lna dash"/>
+  <circle cx="70" cy="239.3" r="3.5" class="acc"/>
+  <circle cx="116.1" cy="233.3" r="3.5" class="acc"/>
+  <circle cx="162.2" cy="218.3" r="4" class="acc"/>
+  <circle cx="650.8" cy="58.5" r="3.5" class="acc"/>
+  <circle cx="660" cy="55.5" r="4.5" class="warn"/>
+  <text x="100" y="226" class="s">ขั้น 5: 4,670</text>
+  <text x="170" y="206" class="s">ขั้น 10: 15,220</text>
+  <text x="640" y="160" text-anchor="end" class="wn">ขั้น 64: 129,160 เกิน 128,000</text>
+  <text x="640" y="178" text-anchor="end" class="s">ขั้น 63: 127,050 (ยังไม่ข้าม)</text>
+  <text x="640" y="196" text-anchor="end" class="s">ต่อจากขั้น 10 เพิ่มขั้นละ ~2,110 (ประมาณการ)</text>
+  <path d="M656 148 V64" class="ln" marker-end="url(#a-week13-context-growth)"/>
+  <text x="360" y="306" text-anchor="middle" class="s">|s_t| = |system| + |q| + Σ(|τᵢ| + |aᵢ| + |oᵢ|) โตเชิงเส้นตามจำนวนขั้น</text>
+</svg>

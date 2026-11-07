@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 332">
+<defs><marker id="a-week11-rlhf-three-stages" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker></defs>
+<text x="126" y="34" text-anchor="middle" class="h">1) SFT</text>
+<rect x="20" y="50" width="212" height="50" rx="6" class="box"/>
+<text x="126" y="71" text-anchor="middle">Demonstrations</text>
+<text x="126" y="88" text-anchor="middle">prompt + คำตอบมนุษย์</text>
+<polyline points="126,100 126,128" class="ln" marker-end="url(#a-week11-rlhf-three-stages)"/>
+<text x="134" y="118" class="s">train</text>
+<rect x="20" y="128" width="212" height="44" rx="6" class="acc"/>
+<text x="126" y="146" text-anchor="middle">SFT</text>
+<text x="126" y="163" text-anchor="middle">next-token cross-entropy</text>
+<polyline points="126,172 126,200" class="ln" marker-end="url(#a-week11-rlhf-three-stages)"/>
+<rect x="20" y="200" width="212" height="44" rx="6" class="box"/>
+<text x="126" y="226.5" text-anchor="middle">SFT policy</text>
+<text x="126" y="278" text-anchor="middle" class="s">→ จุดเริ่มต้นของ Actor</text>
+<text x="126" y="294" text-anchor="middle" class="s">และ Reference</text>
+<text x="362" y="34" text-anchor="middle" class="h">2) Reward Model</text>
+<rect x="256" y="50" width="212" height="60" rx="6" class="box"/>
+<text x="362" y="67.5" text-anchor="middle">โมเดลสร้าง y1, y2</text>
+<text x="362" y="84.5" text-anchor="middle">มนุษย์จัดอันดับ</text>
+<text x="362" y="101.5" text-anchor="middle">y_w &gt; y_l</text>
+<polyline points="362,110 362,138" class="ln" marker-end="url(#a-week11-rlhf-three-stages)"/>
+<text x="370" y="128" class="s">train</text>
+<rect x="256" y="138" width="212" height="44" rx="6" class="acc"/>
+<text x="362" y="156" text-anchor="middle">Reward Model</text>
+<text x="362" y="173" text-anchor="middle">SFT + scalar head</text>
+<polyline points="362,182 362,206" class="ln" marker-end="url(#a-week11-rlhf-three-stages)"/>
+<rect x="256" y="206" width="212" height="52" rx="6" class="box"/>
+<text x="362" y="228" text-anchor="middle">L = −log σ(r_w − r_l)</text>
+<text x="362" y="245" text-anchor="middle" class="s">2.0 vs 0.5 → loss 0.2014</text>
+<text x="362" y="278" text-anchor="middle" class="s">→ ใช้เป็น Reward model</text>
+<text x="362" y="294" text-anchor="middle" class="s">(frozen) ใน PPO</text>
+<text x="598" y="34" text-anchor="middle" class="h">3) PPO (4 โมเดล)</text>
+<rect x="492" y="50" width="100" height="46" rx="6" class="acc"/>
+<text x="542" y="69" text-anchor="middle">Actor</text>
+<text x="542" y="86" text-anchor="middle">อัปเดต</text>
+<rect x="604" y="50" width="100" height="46" rx="6" class="acc"/>
+<text x="654" y="69" text-anchor="middle">Critic</text>
+<text x="654" y="86" text-anchor="middle">อัปเดต</text>
+<rect x="492" y="106" width="100" height="46" rx="6" class="mut"/>
+<text x="542" y="125" text-anchor="middle">Reward model</text>
+<text x="542" y="142" text-anchor="middle">frozen</text>
+<rect x="604" y="106" width="100" height="46" rx="6" class="mut"/>
+<text x="654" y="125" text-anchor="middle">Reference</text>
+<text x="654" y="142" text-anchor="middle">frozen</text>
+<rect x="492" y="166" width="212" height="52" rx="6" class="box"/>
+<text x="598" y="188" text-anchor="middle">max E[ r(x,y) −</text>
+<text x="598" y="205" text-anchor="middle">β · KL(π_θ ‖ π_ref) ]</text>
+<text x="598" y="246" text-anchor="middle" class="wn">KL กัน reward hacking</text>
+<text x="598" y="280" text-anchor="middle" class="s">rollout = bandwidth</text>
+<text x="598" y="296" text-anchor="middle" class="s">update = compute + VRAM</text>
+</svg>

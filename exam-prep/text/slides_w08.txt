@@ -1,0 +1,1428 @@
+Paradigm 3 ­ Encoder-Decoders: 
+
+(T5 & Uni ed Architectures)
+
+                                                                                      Asst. Prof. Nont Kanungsukkasem, Ph.D.
+
+if
+                                                                                                                                                                                                                                      2
+
+Recap ­ The Three Paradigms of Transformers
+
+                                                                                                                                                                                                                                  BD
+
+· Paradigm 1 (Encoder-Only): Bidirectional context. Pre-training:                                                                                             Bidirectional
+                                                                                                                                                                Encoder
+   MLM. Strengths: Classi cation, NER, QA. Example: BERT.
+B D
+                                                                                                                                                                               ABCD
+                                                                                                                                                              A_C_E
+
+                                                                                          Bidirectional         (a) BERT: Random tokens are replaAceudtworitehgmreasskss,iv
+
+                                                                                          Encoder               thAe doBcumCenDt isEencoded bidirectionally.DMeicssoindgetrok
+· Paradigm 2 (Decoder-Only): Causal (left-to-right) context. Pre- B D
+                                                                                                                are predicted independently, so BERT cannot easily
+
+   training:  CLM.    Strengths:  Text  generation.  Example: Bidirectional  GPT.
+A       _  C  _  E            Ausuetdofroerggreensersaitvioen.                            <s> A B C
+                                                                  Encoder                                           Decoder
+                                                                           (a) BERT: Random tokens are replaced with masks, and (b) GPT: Tokens are predicted auto-
+
+·                                                                 A  _  C    the document is encoded bidirectionally. Missing tokens                          DGcoPnTdictiaonnboenusleefdtwBfoairdrdgirecenoecnrttaietoxiont,nas. olHiot
+                                                                                                                                                              tional interactions. Encoder
+                                                                           _ aEre predicted independently, so BERT can<nso>t eAasiBly bCe
+   Paradigm 3 (Encoder-Decoder): Bidirectional encoding  used for generation.
+                                            (a) BERT: Random tokens are replaced with masks, and (b) GPT: Tokens are predicted auto-regressively, meaning
+    Causal decoding. Pre-training: Denoising objectives. the document is encoded bidirectionally. Missing tokens GPT can be used for generation. However woArdsBcanConlDy E
+                                                                                                                         are predicted independently, so BERT cannot easily be condition on leftward context, so it cannot learn bidireAc- _ B _ E
+                                            used for generation.                          tional interactions.
+                                                                                                A BBiEdin(dCrcoec)ccoBuDtmdAioeeREnnrTta:hIlanspubtesentoctohreruepntAceodudbteDoyr renreecepgeoldradecniesonsrtgibvsepeaanlisgnoefdtewxtitwh
+   Example: BART, T5.
+                                                                                   a bidirectional model, and then the likelihood of the orig
+
+                                                                           Bidirectional        AutDAoreec_ghFoiorddBerdesfiesrnn_ievs-tteaEutneinogf ,thaen  uncorrupted   document  is input                                        to  both
+                                                                             Encoder
+· Attention Pattern Summary Table:                                                                                                                            decoder<. s>  ABC        D
+
+                                                                        (c) BART: Inputs to the encoder need not beFailgigunreed1w: iAthsdcehceomdeartiocuctpoumtsp,aarlilsoowninogf aBrAbiRtaTrywniotihse
+                                                                        documAen_t hBas b_eenE corrupted by r<epsla>ciAng BspaCns oDf text with mask symbols. The corrupted docum
+                                                                        a bidirectional model, and then the likelihood of the original document (right) is calculated with a
+            Paradigm     Encoder Self-Attn  Decoder Self-Attn Cross-Attention a(dco)bciBudmiAreeRcnTtti:ohInanasplubmteseontdoeclto,hrearunepdntcethodedbneyrtFhhnrioeeedpredlldifiaekcnnneielonsi-thgttauobtsoneepdiaanonlogfisfg,thnoatheefndedtueeowxncrtciiotgowhdirneirdtaurhe.lpcmdtoeodadcesurkdmoscuyeuntmpmtub(teorsnil,gst.ahilEitsTl)nonhigiwnsgepiBlcnciuagsAotlhrcatRr,uourTblpabbitttyeoaeadtdsrhypdawrtonhopicotephruiseameea-gnntetcarnraotaatiidunon(etslnoeefrorfdeatrt)gmnhtaridraserotsgdeiusoeenignvctc-hesoos.ddidBdeeHedrecA,eorwalRedani,eTntdrhag.,wutahegeuerseembryoepdu
+   Encoder-Only                             -- -- hidden state of the decoder.
+                      Full bidirectional    For fine-tuning, an uncorrupted docFumigeunrteis1i:nAputsctohbeomthattihce ceoncmopdearriasnodndoecfToBhdeAisr,RaaTnpdpwwroietahucsBheErieRmpTrpers(oeDvneetavstiloipnneserfftrooarmlm.,at2hne0c1fie9n)aolvanerd Ga PsTtro(
+                                                                                                         back-translation MT baseline by 1.1 BLEU on t
+
+   Decoder-Only       --                     Causal masked -- WMT Romanian-English benchmark.
+   Encoder-Decoder    Full bidirectional
+                                              Figure 1: A schematic compEanrigsloisnho,f bByARprTopwaigthatBioEnRTth(rDouevglhinBeAt aRl.T, ,T20oth1be9re)etatbenyrd uGnsP-dTer(sRtacanoddfdoertrhd, eeastenadle.,fff2oe0rc1tos8,u).rwlearaglesomroepd
+
+                                                                              ing BART as a pre-trained target-side langaubalgaetiomnoadneall.ysis ethacaht .reTphliecatrecshiottehcetrurreecisenctlloyseplr
+
+                                            Causal masked  (DecEnc) English, by propagation throTuhgihs BaAppRrTo,acthheriembyprousv-es pceorfdoerrm, aanndcepfooorsveeodrutrraaliasnrtgirneognmogbojdeecltBiwvEeeRs.TuTs,ehwi1sit2hstutlhadyeyefraoslllloionwwsinugs dtoifcfear
+
+                                            ing BART as a pre-trained targbeatc-ksi-dtrealnasnlgautiaogne mMoTdebl.aselienaechb. yTh1e.1afrcuBhllLiytEeccUtounroetrnoisltchfloeorsealyntruhemelabdteeedrcotoodfethrfaaactdtuodsriestdi,oiinnnacllluydpinegrfodra
+                                            This approach improves perWforMmTanRceomovaenriaan-sEtnrognligsh beBnEchRmT,awrkit.hatnhde fooplltoimwiiznagtidoinffepraerntahcmesefi:tne(1ras)l,ehwaicdhhdicleahnyhelraavyoeefrboefenthsehoew
+                                            back-translation MT baseline bTyo 1b.1ettBerLEunUdeornstatnhde thetshee edfefceocdtse,rtowadebdeiatilaossnoailmrleyppoporertrtafnotrmffosorcrmorovesersr-aaslteltqepnueterinofocnremo-tvaoen-rsceeqausenthcee s
+                                            WMT Romanian-English bencahnmaabrlka.tion analysis that repthliecafitnesalohthidleedrcertnieoclnaeynoetflrytroapfirntohi-negeonbcujoesdceetsriva(enassa(iLdndiutihteieot natrala.l,n2fse-0e1d9-)f.oWrweafird
+
+                                              To better understand thesepoefsfeedcttsr,aiwniengalosobjerecptiovrets. ThfoisrmsteurdsyeqalutlheonawctseB-uAtosR-tsoTeqceuaxerheni-cbeitsmthpoedreemdl)io;csttaioncndo,n(ws2ish)tieBcnhEtlRByTAstRroTngdopeesrfno
+                                            an ablation analysis that replifcualtleys ocothnetrrorlecfeonrtlay pnruom- ber uosfesfaacntoardsd,mitiinaoncnclaueldfaiecnergdo-sdfsoatrthwaearfdulnltaeriatnwnsgoerokoubfgethafolsykres1ww0%oercdmo- nosriedepr.aram
+                                            posed training objectives. Thisanstdudoyptailmloiwzastiuosntopcaararem- eterps,rewdihcitciohnh, awvheicbheBenARshTowdones nolte. nIntlytostaizl,eBdABRETRcTomn-odel.
+
+                                            fully control for a number of factors, including data tains roughl2y 10M%omdoerle parameters than the equiva-
+                                                                     if
+Why Encoder-Decoders? ­ The Seq2Seq Imperative
+
+· The Core Problem: Many NLP tasks are inherently sequence-to-sequence:
+
+
+  · - Translation: " "  "Hello"
+
+
+  · - Summarization: [Long Document]  [Short Summary]
+
+
+  · - Generative QA: "Context: ... Question: ..."  "Answer string"
+
+· Encoder Limitation: Reads bidirectionally but cannot generate output
+
+   autoregressively.
+
+
+· Decoder Limitation: Generates autoregressively but processes input causally
+
+   (cannot deeply encode full input rst).
+
+
+· Encoder-Decoder Solution: Encode the full input bidirectionally rst, then
+
+   generate output autoregressively via Cross-Attention.
+
+                                                                                                                                                3
+
+if
+The Original Transformer ­ A Quick Architectural Revisit
+
+· Vaswani et al. (2017): The original Transformer WAS an
+
+   Encoder-Decoder.
+
+
+· Architecture Recap:
+
+
+  · Encoder Stack: Multi-Head Self-Attention  FFN
+
+
+  · Decoder Stack: Masked Multi-Head Self-Attention 
+
+      Cross-Attention  FFN
+
+
+· Tensor Flow:
+
+
+  · Encoder input/output: [batch, src_len, d_model]
+
+
+  · Decoder output: [batch, tgt_len, d_model] 
+
+      [batch, tgt_len, vocab_size]
+
+
+· Cross-Attention Bridge: CrossAttn(Qdec, Kenc, Venc)                                                                                              Figure 1: The Transformer - model architecture.
+
+                                                                                                                                                4
+
+The Transformer follows this overall architecture using stacked self-attention and point-w
+connected layers for both the encoder and decoder, shown in the left and right halves of
+respectively.
+The Philosophy of Denoising ­ Learning by Fixing Corruption
+
+· Denoising Autoencoders (DAE):
+
+
+· Given input x, apply corruption g(  ) to get x~ = g(x).
+
+
+· Train model to reconstruct original x from x~.
+
+
+   Objective:  max  log  P(x    x~)
+                 A _C . _ E .  DE.ABC.                                                 C.DE.AB
+                                                   Token Masking
+·                                                                  Sentence Permutation Document Rotation
+                                                      A.C.E.
+· Why This Works (Intuition):
+                     Token Deletion  ABC.DE.                                                 A_.D_E.
+                                                                                                                           Text Infilling
+· Syntax: Grammatical structure to ll gaps.
+
+
+· Semantics: Deep meaning to infer Fdigeulreet2e:dTrcanosfnotrmenattio.
+ns for noising the input that we experiment with. These transformations can b
+
+· Pragmatics: World knowledge to resolve ambiguities.
+
+
+                                                                       Text Infilling A number of text spans are sampled, input but manipulated, which is closely
+
+· Historical Lineage: Vincent (2008)  wBitEhRspTa'nsleMngLthMs d(r2aw0n1f9ro)ma PBoAissRonT/dTis5trib(2ut0io2n0).
+denoising pre-training objective. Here, th
+                                                                       ( = 3). Each span is replaced with a single [MASK] put is the input sequence, and the decod
+
+· Key Insight: MLM (mask 15%) is just atokmeni.ld0-floenrgmth ospfandsecnororeisspionngd.to the insertion of               outputs autoregressively.
+                                                                       [MASK] tokens. Text infilling is inspired by Span-  3.4 Machine Translation
+                                                                       BERT (Joshi et5 al., 2019), but SpanBERT samples
+
+                                      span lengths from a different (clamped geometric) dis-                               We also explore using BART to improve m
+                                      tribution, and replaces each span with a sequence of                                 lation decoders for translating into Engli
+                                      [MASK] tokens of exactly the same length. Text infill-                               work Edunov et al. (2019) has shown tha
+                                      ing teaches the model to predict how many tokens are                                 be improved by incorporating pre-trained
+
+                                                                   if
+                                                                                    BD                                         A B C D6 E
+
+Mathematical           Formalization              of  Denoising Bidirectional              Pre-trainingAutoregressive
+                                                                             Encoder                                                   Decoder
+
+                                                                                    A_C_E                <s> A B C D
+
+· The Denoising Objective (Pseudo-code):              (a) BERT: Random tokens are replaced with masks, and (b) GPT: Tokens are predicted auto-reg
+
+                                                      the document is encoded bidirectionally. Missing tokens GPT can be used for generation. Howe
+                                                      are predicted independently, so BERT cannot easily be condition on leftward context, so it ca
+
+  Probability( Target Word | Previous Words + Corrupteudsed fIonr gpenuerattio)n .                       tional interactions.
+
+                                                                                                         ABCDE
+
+  PyTorch equivalent: loss = CrossEntropyLoss(logits, targets)
+                         Bidirectional    Autoregressive
+                                                                                          Encoder            Decoder
+
+· How the Work is Split (Factorization):
+                                               A_B_E            <s> A B C D
+
+  · Encoder:  Reads  `corrupted_text`    outputs  matrix `h` of shape `[batch, src_len, d_model]`
+ (c) BART: Inputs to the encoder need not be aligned with decoder outputs, allowing arbitary noise t
+                                                         document has been corrupted by replacing spans of text with mask symbols. The corrupted docume
+
+                                                  a bidirectional model, and then the likelihood of the original document (right) is calculated with an
+
+                                                                                                                                 For fine-tuning, an uncorrupted document is input to both the encoder and decoder, and we use repre
+
+  · Decoder: Reads `h` + `previous_words`  guesshieddsen sttahteeof t`hne deecxodte_r. word`
+
+
+                                                  Figure 1: A schematic comparison of BART with BERT (Devlin et al., 2019) and GPT (R
+
+· Contrast with GPT:
+
+
+                                                  English, by propagation through BART, thereby us- coder, and for our large model
+
+  · GPT (CLM): Predict( Next Word | Previous Wordisng )B
+ART as a pre-trained target-side language model. each. The architecture is closely
+                                                                                                                    This approach improves performance over a strong BERT, with the following differen
+
+                                                                                                                    back-translation MT baseline by 1.1 BLEU on the the decoder additionally perform
+
+  · BART/T5 (Denoising): Predict( Next Word | PrevWiMoTuRsomWanioanr-Ednsglis+h beEncnhmcaorkd. er's Hint 'hth'e )fi
+nal hidden layer of the enc
+                                                                                                                       To better understand these effects, we also report former sequence-to-sequence m
+
+                                                                                                                        an ablation analysis that replicates other recently pro- uses an additional feed-forward
+
+· Key Distinction: Encoder input and Decoder targeptosaedrteraindinig obejercetivnest. Tsheis qstuudyeanllocwseuss t.o care- prediction, which BART does no
+                                                                                                                        fully control for a number of factors, including data tains roughly 10% more parame
+
+                                                  and optimization parameters, which have been shown lently sized BERT model.
+
+                                                  to be as important for overall performance as the se-
+
+                                                  lection of training objectives (Liu et al., 2019). We find 2.2 Pre-training BART
+
+                                                  that BART exhibits the most consistently strong perfor- BART is trained by corrupting do
+
+                                                  mance across the full range of tasks we consider.      timizing a reconstruction loss--
+
+                                                                                                         tween the decoder's output and t
+                                                                                                     7
+
+The Corruption Function Zoo ­ Beyond Simple Masking
+
+                                                          Analogy Mapping
+
+· Design Space of Corruption g(  ):
+     Corruption Type  Human Analogy What the Model
+                                                                                      Learns
+  · BERT: Token masking (15%             Token Masking
+                                                          Fill-in-the-blank quiz Vocabulary & local
+      [MASK]).
+                          Token Deletion                               context
+
+  · BART: Aggressive strategies          Sentence         Reconstructing a Detecting what's
+                                         Permutation      shredded document missing
+      (deletion, permutation, in lling,  Text In lling
+      rotation).
+                                         Re-ordering shu ed Document structure
+                                         Span Corruption
+  · T5: Span corruption with sentinel                     paragraphs       & coherence
+
+      tokens.
+                                            Filling gaps of  Generation & length
+                                                          unknown length   estimation
+
+                                                          Replacing        Multi-token
+                                                          highlighted      generation from
+                                                          passages         markers
+
+· Design Principle: The choice of        A _C . _ E .     DE.ABC.          C.DE.AB
+
+   corruption determines what the        Token Masking Sentence Permutation Document Rotation
+
+   model learns.                            A.C.E.        ABC.DE.          A_.D_E.
+                                         Token Deletion                    Text Infilling
+
+Figure 2: Transformations for noising the input that we experiment with. These transformations can be
+
+if l ff if
+In-Class Activity ­ Be the Denoising Model
+
+· Activity: Reconstruct the original Thai sentences!
+
+· Examples:
+
+
+  · 1. Token Masking: "  [MASK][MASK] " 
+
+      Reconstruct?
+
+
+  · 2. Sentence Permutation: "[B]   [A]  
+
+      "  Reorder?
+
+
+  · 3. Span Corruption: " <extra_id_0>  "  What did
+
+      `<extra_id_0>` replace?
+
+
+· Discussion Prompt: "Which corruption was hardest to reconstruct? Why?"
+
+                                                                                                                                                8
+                                                                         Bidirectional                                                                                                   Autoregress
+                                                                           Encoder                                                                                                           Decoder
+
+                                                                         A_C_E                                                                                                           <s> A B C
+
+                                                   (a) BERT: Random tokens are replaced with masks, and (b) GPT: Tokens are predicted auto
+
+Lewis, Mike, et al. "BART: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprtehheendsoiocnu."mPreoncet eidsinegnscoofdtheed5b8tihdairnencutailomneaeltliyn.g oMf tihsesiansgsotcoiaktieonnsfor cGomPpTutactaionnablelinugsueisdticfso.r2g0e20n.eration. H
+                                                                                                                            are predicted independently, so BERT cannot easily be condition on leftward context, so
+
+                                                   used for generation.                                     tional interactions.
+
+BART ­ Architecture Overview                                                                                                                                          ABCDE
+
+· BART (Bidirectional and Auto-Regressive Transformers):
+                   Bidirectional                                                                             Autoregressive
+                                                                              Encoder                                                                                     Decoder
+
+· Lewis et al. (2019), Facebook AI Research.
+                               A_B_E                                                                                     <s> A B C D
+
+                                                   (c) BART: Inputs to the encoder need not be aligned with decoder outputs, allowing arbitary noi
+
+· Architecture:    BART-base  (6  Enc  +  6  Dec,  ~140M) | BART-large (12 Enc + 12 Dec, document has been corrupted by replacing spans of text with mask symbols. The corrupted docu
+                                                       a bidirectional model, and then the likelihood of the original document (right) is calculated with
+
+~406M, d_model=1024, 16 heads).
+                   For fine-tuning, an uncorrupted document is input to both the encoder and decoder, and we use re
+                                                   hidden state of the decoder.
+
+                                                   Fig,ure  1: A schematic  compa.r
+ison  of  BART  with  BERT                                                        (Devlin  et  al.,  2019)  and  GPT
+
+                                                            heads
+· d = 1024 n = 16 Params: ~400M (BART-large). model
+
+· Tensor  ow: Input `[B,  src_len]`            EncoEinndggBleisArhR, Tbyaspa`r[opprBea-g,taratiionnesdtrhtarrcogue_gt-hsliBdeeAlnRaTn,g, utahge1erem0byo2due4sl-. ]`   coder, and for our large mo
+
+                                                                                                                                                                      each. The architecture is clos
+
+Decoder  `[B, tgt_len, 50265]` (vocaTbhi)s.
+approach improves performance over a strong BERT, with the following diff
+                                                                                              back-translation MT baseline by 1.1 BLEU on the the decoder additionally perfo
+
+                                                   WMT Romanian-English benchmark.                                                                                    the final hidden layer of the
+· Pre-training Strategy: Apply multiple corruptioTno fbuettnercutnidoernstsandtotheisne peffuectts,tewxe ta,lsotrraepionrt Defocrmoedr seeqruetnoce-to-sequence
+                                                   an ablation analysis that replicates other recently pro- uses an additional feed-forwa
+reconstruct the full original text.
+               posed training objectives. This study allows us to care- prediction, which BART does
+
+                                                                                                        fully control for a number of factors, including data tains roughly 10% more para
+
+· Key Design Choice: Decoder sees and reconsatnrduocptitmsiztathioen pearnamteitreres, wohricigh hinavae lbesenesqhouwen ncleentl(yfusizleld BERT model.
+                                                   to be as important for overall performance as the se-
+reconstruction).
+                                  lection of training objectives (Liu et al., 2019). We find 2.2 Pre-training BART
+
+· Tokenizer: BPE (same as GPT-2).                  that BART exhibits the most consistently strong perfor-                                                            BART is trained by corrupting
+                                                   mance across the full range of tasks we consider.                                                                  timizing a reconstruction los
+                                                                                                                                                                      tween the decoder's outp9ut an
+
+                                                   2 Model                                                                                                            Unlike existing denoising aut
+                                                                                                                                                                      lored to specific noising sche
+
+                                                   BART is a denoising autoencoder that maps a corrupted apply any type of document c
+
+                                                   document to the original document it was derived from. case, where all information
+
+                                                   It is implemented as a sequence-to-sequence model BART is equivalent to a langu
+
+          lf
+                                                                                                                                                                                                                                                                                                        10
+
+BART Corruption Strategy 1 ­ Token Masking & Deletion
+
+· Token Masking (like BERT):
+
+  · Random tokens replaced with `[MASK]`.
+
+  · Input: "The cat <mask> on the mat"  Target: "The cat sat on the mat"
+
+
+· Token Deletion (unique to BART):
+
+  · Random tokens are deleted entirely (no placeholder left behind).
+
+  · Input: "The cat on the mat"  Target: "The cat sat on the mat"
+
+  · Challenge: Model must detect what is missing AND where it was deleted.
+
+
+· Tensor Impact:
+
+  · Masking: `src_len = tgt_len`
+
+  · Deletion: `src_len < tgt_len`
+BART Corruption Strategy 2 ­ Text In lling
+
+· Text In lling (BART's signature corruption):
+
+  · Contiguous spans of tokens replaced with a single [MASK] token.
+
+  · Span lengths drawn from Poisson distribution ( = 3).
+
+  · Input: "The <mask> mat <mask> happily" (replaces "cat sat on the")
+
+  · Target: "The cat sat on the mat happily"
+
+
+· Critical Challenge:
+
+  · Each [MASK] represents 0 or more tokens.
+
+  · Model must learn to predict how many tokens each mask replaces.
+
+
+· Math Note: Span length  Poisson( = 3). 0-length spans create token insertions.
+
+                                                                                                                                               11
+
+if
+BART Corruption Strategy 3 ­ Sentence Permutation & Rotation
+
+· Sentence Permutation:
+
+  · Document split into sentences. Sentences shu ed randomly.
+
+  · Model learns document-level coherence and discourse structure.
+
+  · Input: "[S3] [S1] [S4] [S2]"  Target: "[S1] [S2] [S3] [S4]"
+
+
+· Document Rotation:
+
+  · A random token is chosen as the pivot. Document is rotated to begin there.
+
+  · Model must identify the true start of the document.
+
+  · Input: "sat on the mat. The cat"  Target: "The cat sat on the mat."
+
+
+· Combined E ect: Teaches global document structure, not just local dependencies.
+
+                                                                                                                                               12
+
+ff
+Lewis, Mike, et al. "BART: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprehension." Proceedings of the 58th annual meeting of the association for computational linguistics. 2020.
+
+Model                                                                                                                                                                                                             SQuAD 1.1 MNLI ELI5 XSum ConvAI2 CNN/DM
+
+BART ­ Full Corruption CF1ompAaccrisoPPnL &PPALblaPtPiLon RPePLsults
+BERT Base (Devlin et al., 2019)                                                                                                                                                                                   88.5                      84.3                                          -                               -                               -                                    -
+
+        Masked Language Model                                                                                                                                                                                         90.0                   83.5                                         24.77                             7.87                            12.59                                  7.06
+                                                                                                                                                                                                                                                                                          23.40
+· BAMRaTsk'esd SAeqb2lsaeqtion Study                                                                                                                                                                                  87.0                   82.1                                                                           6.80                            11.43                                  6.19
+                                                                                                                                                                                                                                                                                          21.40
+        Language Model                                                                                                                                                                                                76.7                   80.1                                         2E4L.0I53                         7.00                            11.51                                  6.56
+                                                                                                                                                                                                                                                                                          2P3P.7L3
+        PMeormdeulted Language Model                                                                                                                                                                              SQu8A9.D1 1.1             M8N3.L7 I                                                                     X7S.u6m9                        Co1n2v.2A3I2                         CN6N./9D6M
+        Multitask Masked Language Model                                                                                                                                                                               8F91.2                 8A2c.c4                                                                       P7P.5L0                          1P2P.3L9                              P6P.7L4
+
+BAERT Base (Devlin et al., 2019)                                                                                                                                                                                  88.5                      84.3                                          -                               -                                 -                                    -
+                                                                                                                                                                                                                                                                                                                                                          11112111....74549363                 16507566676..........58181589076399667094
+MLPwwwMMwwwea//////aaurnTSDTTTsmslgtkkooeeeiouueexxtnkkcaatddttteeeusgennIIdkSLmnenneDMcafifiLMMeqenllneaa2llgaoSlntiissesunndghRkektaggeiuuiqeogonlaf+dtengflgaLiSteMnieaoMgonnndtgoeeudnlaecgleeSMhuofdfleilng  89990007....4040          8888878888843405233412...........80155711314  2222244543.....2407660157        6776....88900708               11111111962211.......18263052773951   5.41
+                                                                                                                                                                                                                  987878065979......872412                                                225242144133......410867073973  116707776.......69165062340901
+                                                                                                                                                                                                                  90.8
+
+BART Base
+
+·· FaKu§pToco4nrsalieeoin.nbn1-awwwwwwslytng)eair.s//////caet1tlPoSTTDTTFihen:meooeeeneCoiihrxxnkkntnbcfCslttteeguoyhuiaeonndnIIrmmnnnorsmomaDMctitfifibteerneaispijollneoaecnllcaSnltiignsccoernnpgehRktietdggi:soiuivoepeoo:nvff+eTt-enngflarabBsbrerfiStfaooinipooeeoAsxfogrrsennorkmpt,RtcmpseraoaIeonTnannn-scatnd-cseeridedlnadfiaS.lielniWcnhrinienugaeni-pbfkgtgeflruli(eypiontvnedbueoaigddjocoesoiruacwoemstsdidiwsvstahieittonassaTtr998799.s.hkarek007005eA,uEst......xb884244,eslpnluabttstmmutriihIteeovanatsdhvepceeiern)lorBs.lb888887oc
+lteAa344145iheesnr......deRe803115nusgTborsoeifmmmst+ct.oo224225poodmE443451lmSie......nsfi216068lpettse769571trwadiwrneotatsiabtotbhlie11senfl607676ootnkes......tcc619906hxiskcuz243081etsse.iesnoaaDefirnncPeldooleitnve111111narcdaa196111rgrleiu......unbm164870dtaeml277365erotdamiucoienkoontennnaadosrittbetdfrjoaieRe1iotrnnc557065estto1n......iitp488158vcMhti139970aeeralsesmdtdt(iesoaobpetsyaestn  13
+
+Table 1: Comparison of pre-training objectives. All models are of comparable size and are trained for 1M steps
+oPnerafocrommabnicneatoiofnproef-tbroaoiknsinagnmd eWthikoidpsedviaarideastas.igEninfitr-ies iPnuthre lbaontgtoumagtewmo obdloeclskspearrefotrrmainbeedstononidEenLtiIc5al dTahtea
+ucasinntglythaecrsoasms etacsokdse-bTashee, eafnfedcfitivneen-teusnseodfwprieth-trthaienisnagme prEoLceI5dudraetsa.seEtnitsrieasn ionutthlieers,ewcoitnhd mbluocchk hairgehienrsppierrepdlebxy-
+                                                                                                                                                                                                                                            if if
+BART ­ The Full Reconstruction Objective (Visualized)
+
+· BART's End-to-End Training Flow:
+
+
+· 1. Original Text (x): "The cat sat on the mat happily"
+
+
+                                                                         BD                   ABCDE
+· 2. Corrupted (x~): "happily The <mask> mat" (src_len = 4)
+
+                                                                         Bidirectional      Autoregressive
+                                                                                                Decoder
+· 3. Encoder Output: h  [B,4,1024]
+                                      Encoder
+                                                                                            <s> A B C D
+                                                                         A_C_E
+
+· y 4. Decoder Target ( ): ["<s>", "The", "cat", "s(aa)tBE"R,T:"Roanndom",to"ketnshareere"p,lac"edmwaithtm"a,sks", handap(bp) GiPTl: Tyok"en,s "</s>"] are predicted auto-regressively
+(tgt_len = 9)
+                                     the document is encoded bidirectionally. Missing tokens GPT can be used for generation. However word
+                                                   are predicted independently, so BERT cannot easily be condition on leftward context, so it cannot lear
+
+                                                   used for generation.                     tional interactions.
+
+· 5. Loss: Cross-entropy over all target tokens.
+                                           ABCDE
+
+· Compute Signature:
+                                                        Bidirectional  Autoregressive
+                                                                               Encoder          Decoder
+
+· Encoder processes shorter corrupted input.
+                                A_B_E          <s> A B C D
+
+                                                                                                                   (c) BART: Inputs to the encoder need not be aligned with decoder outputs, allowing arbitary noise transforma
+
+· Decoder generates full original sequence (O(N ) self-attention cost). 2 document has been corrupted by replacing spans of text with mask symbols. The corrupted document (left) is
+                                                                                                                   a bidirectional model, and then the likelihood of the original document (right) is calculated with an autoregre
+
+                                                                                                                   For fine-tuning, an uncorrupted document is input to both the encoder and decoder, and we use representations
+
+                                                                                                                   hidden state of the decoder.
+
+                                                                                                                                       14
+
+                                               Figure 1: A schematic comparison of BART with BERT (Devlin et al., 2019) and GPT (Radford e
+
+                                               English, by propagation through BART, thereby us- coder, and for our large model we use
+                                               ing BART as a pre-trained target-side language model. each. The architecture is closely related t
+                   Raffel, Colin, et al. "Exploring the limits of transfer learning with a unified text-to-text transformer." Journal of machine learning research 21.140 (2020): 1-67.
+
+T5 ­ Architecture Overview
+                                                                                                                                                      Exploring the Limits of Transfer Learning
+
+· T5 (Text-to-Text Transfer Transformer):
+
+
+· Ra el et al. (2020), Google Research.
+    "translate English to German: That is good."   T5                "Das ist gut."
+                                                                  "cola sentence: The                      "not acceptable"
+· Architecture: Enc-Dec with Relative 
+                                                              course is jumping well."                               "3.8"
+   Position Bias (no absolute positional              "stsb sentence1: The rhino grazed        "six people hospitalized after
+   encoding).
+                                        on the grass. sentence2: A rhino
+                                                                                                  a storm in attala county."
+· Sizes: T5-Small (60M) up to T5-11B.
+                         is grazing in a field."
+                                                         "summarize: state authorities
+                                                  dispatched emergency crews tuesday to
+                                                   survey the damage after an onslaught
+                                                     of severe weather in mississippi..."
+
+                                            Figure 1: A diagram of our text-to-text framework. Every task we consider--including
+· Tensor ow: T5-base: `d_model = 768`, `d_tfranfslati=on, q3ue0sti7on2an`,sw`enrin_g,hanedacladsssificat=ion--1is2ca`s.t aEs nfeecdiongdouerrm/odel
+                             768]`. (T5 v1.1 uses d_ = 2048 with GEGLU.)
+ text as input and training it to generate some target text. This allows us to use the
+Decoder each `[B,  seq_len,                                 same model, loss function, hyperparameters, etc. across our diverse set of tasks. It
+
+                                            also provides a standard testbed for the methods included in our empirical survey.
+
+· Unifying Principle: "Every NLP task can be fr"aTm5" reefedrs tao souramotdeelx, wth-icthow-etdeubxtthep"Treoxtb-tole-Tmext.T"r
+ansfer Transformer".
+
+· Key Innovation: A single model framework and format for ALL tasks.
+
+
+                                                                                                             summarization, and sentiment classification, to name a few. With this unified approach,
+
+· Tokenizer: SentencePiece (32,000 vocab). we can compare the e!ectiveness of di!erent transfer learning objectives, unlabeled data
+                                                                                                             sets, and other factors, while exploring the limits of transfer learning for NLP by scaling up
+                                                                                                             models and data sets beyond what has previously been considered.
+                                                                                                                                               15
+
+                                                                                                                  We emphasize that our goal is not to propose new methods but instead to provide a
+                                                                                                             comprehensive perspective on where the field stands. As such, our work primarily comprises
+                                                                                                             a survey, exploration, and empirical comparison of existing techniques. We also explore the
+                                                                                                             limits of current approaches by scaling up the insights from our systematic study (training
+                                                                                                             models up to 11 billion parameters) to obtain state-of-the-art results in many of the tasks
+
+lf ff
+T5 ­ The Text-to-Text Paradigm in Detail
+
+· Task Pre x Convention:
+
+
+· Translation: "translate English to German: That is good"  "Das ist gut"
+
+
+· Summarization: "summarize: [long article]"  "[summary]"
+
+
+· Sentiment: "sst2 sentence: this is great"  "positive"
+
+
+· QA: 
+ "question: What color? context: The car is red."  "red" Exploring the Limits of Transfer Learning
+
+· Why This Matters:
+                                   "translate English to German: That is good."   T5                "Das ist gut."
+  · Single loss function, single decoding procedure.
+                        "cola sentence: The                      "not acceptable"
+
+                                                                         course is jumping well."                               "3.8"
+                                                                 "stsb sentence1: The rhino grazed        "six people hospitalized after
+                                                                 on the grass. sentence2: A rhino
+                                                                                                             a storm in attala county."
+                                                                          is grazing in a field."
+                                                                    "summarize: state authorities
+                                                             dispatched emergency crews tuesday to
+                                                              survey the damage after an onslaught
+                                                                of severe weather in mississippi..."
+
+  · Multi-task training becomes trivial (just mix pre xed datasets).
+ Figure 1: A diagram of our text-to-text framework. Every task we consider--including
+                                                                                                                                                                                                                                                                                                                       translation, question answering, and classification--is cast as feeding our model
+                                                                                                                                                                                                                                                                                                                       text as input and training it to generate some target text. This allows us to use the
+                                                                                                                                                                                                                                                                                                                       same model, loss function, hyperparameters, etc. across our diverse set of tasks. It
+                                                                                                                                                                                                                                                                                                                       also provides a standard testbed for the methods included in our empirical survey.
+                                                                                                                                                                                                                                                                                                                       "T5" refers to our model, which we dub the "Text-to-Text Transfer Transformer".
+
+· Contrast with BERT: BERT needs speci c architectural heads for di erent tasks.
+
+                           16                          summarization, and sentiment classification, to name a few. With this unified approach,
+
+                                                       we can compare the e!ectiveness of di!erent transfer learning objectives, unlabeled data
+
+                                                       sets, and other factors, while exploring the limits of transfer learning for NLP by scaling up
+
+                                                       models and data sets beyond what has previously been considered.
+
+                                                           We emphasize that our goal is not to propose new methods but instead to provide a
+                                                       comprehensive perspective on where the field stands. As such, our work primarily comprises
+                                                       a survey, exploration, and empirical comparison of existing techniques. We also explore the
+                                                       limits of current approaches by scaling up the insights from our systematic study (training
+                                                       models up to 11 billion parameters) to obtain state-of-the-art results in many of the tasks
+                                                       we consider. In order to perform experiments at this scale, we introduce the "Colossal Clean
+                                                       Crawled Corpus" (C4), a data set consisting of hundreds of gigabytes of clean English text
+
+if if
+                                                                                                                                                                                                                                                                                                       17
+
+T5 ­ Span Corruption Mechanics
+
+· Span Corruption Step-by-Step:
+
+   · 1. Randomly select non-overlapping spans (1 or more tokens).
+
+   · 2. Replace each span with a unique sentinel: <extra_id_0>, <extra_id_1>, ...
+
+   · 3. Encoder Input: Corrupted text with sentinels.
+
+   · 4. Decoder Target: ONLY the dropped spans, preceded by corresponding sentinels.
+
+
+· Example:
+
+   · Original: "The cute cat sat on the fuzzy mat"
+
+   · Input: "The <extra_id_0> cat sat on the <extra_id_1>" # src_len = 7
+
+   · Target: "<extra_id_0> cute <extra_id_1> fuzzy mat <extra_id_2> </s>"
+
+      # tgt_len = 7 vs. original 8 vs. BART 10
+
+
+· Insight: Decoder target is MUCH shorter than original text!
+Demo 1 ­ Visualizing Corruptions in Code
+
+· Demo 1 Overview:
+
+  · Visualizing BART vs. T5 corruptions on strings.
+
+  · Watch how the `[MASK]` tokens and `<extra_id_X>` sentinels are placed
+
+      dynamically.
+
+                                                                                                                                               18
+                                                                                                                                                                                                                                                                                                         19
+
+T5 vs. BART ­ Compute E ciency Argument
+
+· The Mathematical Argument: Target Length E ciency
+
+· BART (Full Reconstruction):
+
+
+   · Target: N tokens.
+
+   · Decoder Self-Attention FLOPs  O(N2).
+
+· T5 (Span Corruption):
+
+   · Target:  0.20N tokens (15% corrupted + 5% sentinels).
+
+   · Decoder Self-Attention FLOPs  O((0.2N)2) = O(0.04N2).
+
+· Speedup Factor:
+
+   · Decoder self-attention is  25 × cheaper (since (1/0.2)2 = 25).
+
+   · Overall training speedup  2 - 3 × (Encoder cost remains similar).
+
+· Takeaway: T5 enables training on vastly more data within the same compute budget.
+
+i ff
+                                                                                                                                  20
+
+T5 ­ Relative Position Bias
+
+· Positional Encoding in T5:
+
+
+  · Replaces absolute encodings with a 32-bucket trainable lookup table per head (16
+
+      forward, 16 backward).
+
+
+· Mechanism: Relative o set (m-n) fetches learned scalar bm-n added directly to
+
+   attention logits:
+
+       qm  kn
+          dk
+amn =          + bm-n  (Note: In T5's actual codebase, the  
+ 1 scaling is removed entirely in favor of initialization scaling!)
+
+                                                            dk
+
+· Logarithmic Bucketing:
+
+
+  · O sets 0­7: Exact 1-to-1 bias values.
+
+
+  · O sets 8­128+: Distant positions share buckets to save parameters.
+
+
+· Advantage: Highly parameter-e cient, no complex trigonometry, easy extrapolation.
+
+i ff ff f ff f
+                                                                                                                                                                                                                                                                                                         21
+
+BART vs. T5 ­ Side-by-Side Summary
+
+Feature     BART (Lewis et al.)          T5 (Ra el et al.)
+
+Architecture Standard Enc-Dec            Enc-Dec + Relative Pos Bias
+
+Corruption Text In lling + Sentence Perm. Span Corruption w/ Sentinels
+
+Target Length N (full length)            0.20N (compact)
+
+Task Framing Task heads OR generation    ALWAYS Text-to-Text
+
+Philosophy  Maximize generation quality  Maximize e ciency & generality
+Best At                                  Multi-task, Translation, QA
+            Abstractive Summarization, 
+            Text Generation
+
+Model Sizes 140M (base), 400M (large)    60M to 11B
+
+Training Data 160GB text (BookCorpus + Wikipedia C4 (Colossal Clean Crawled
+                      + CC-News + OpenWebText + Stories) Corpus, ~750GB)
+
+         iff f i f f
+Demo 2 ­ T5 Multi-tasking (Text-to-Text)
+
+· Demo 2 Overview:
+
+  · T5 handling multi-tasking (translate, summarize, QA) natively.
+
+  · Same model weights, di erent text pre xes.
+
+                                                                                                                                               22
+
+if ff
+Task Layout Divergence ­ The Two Faces of QA
+
+· Same Task, Two Approaches:
+
+  · Extractive QA (BERT):
+
+    · Output: Start/End pointers in the original context.
+
+    · Limitation: Cannot synthesize or paraphrase; answer must exist verbatim.
+
+  · Generative QA (T5 - Paradigm 3):
+
+    · Input: "question: ... context: ..."  Output: Decoder generates
+
+         free-form text string.
+
+
+    · Bene t: Can synthesize novel answers.
+
+    · Risk: May hallucinate.
+
+                                                                                                                                               23
+
+if
+BERT Extractive QA ­ Tensor Mechanics Deep Dive
+
+· BERT QA Tensor Flow:
+
+  · 1. Input: `[CLS] question [SEP] context [SEP]`  `[batch, seq_len, 768]`
+
+  · 2. Encoder Pass: Output hidden states `[batch, seq_len, 768]`
+
+  · 3. Two Linear Heads: Wstart, Wend  768×1
+
+  · 4. Prediction:
+
+     · Start logits: `(hidden @ W_start).squeeze(-1)`  `[batch, seq_len]`
+
+     · End logits: `(hidden @ W_end).squeeze(-1)`  `[batch, seq_len]`
+
+  · 5. Answer = `tokens[argmax(start) : argmax(end) + 1]`
+
+                                                                                                                                               24
+T5 Generative QA ­ Cross-Attention Setup
+
+· T5 QA Tensor Flow (Part 1):
+
+· 1. Input: "question: ... context: ..."  Encoder  `h_enc`
+
+   `[batch, src_len, d_model]`
+
+
+· 2. Decoder Start: `<pad>` token initiates generation.
+
+· 3. Cross-Attention Tensor Shapes:
+
+
+  · Q (from Decoder): `[batch, 1, d_model]`
+
+  · K, V (from Encoder): `[batch, src_len, d_model]` 
+
+      (Computed ONCE and cached!)
+
+                                                                                                                                               25
+T5 Generative QA ­ Autoregressive Loop
+
+· T5 QA Tensor Flow (Part 2):
+
+· 4. Autoregressive Loop Unrolled:
+
+
+  · Step 1: Input `<pad>`  Predict "red"
+
+  · Step 2: Input `<pad> red`  Predict `</s>` (EOS)
+
+· 5. Loss:  = -  log P(yt  y<t, henc)
+
+                                                                                                                                               26
+Demos 3 & 4 ­ Attention Heatmaps & String Comparisons
+
+· Demo 3: Attention Pattern Heatmaps extracted directly from layers.
+
+· Demo 4: Direct output string comparison (Generative vs Extractive QA).
+
+                                                                                                                                               27
+In-Class Activity ­ Design Your Own Task Pre x
+
+· Activity: Design Text-to-Text formats!
+
+· 1. NER: "Apple was founded by Steve Jobs."  Output format?
+
+· 2. Grammar Correction: "She go to school yesterday."  Output
+
+   format?
+
+
+· 3. Thai Sentiment: "    "  Output format?
+
+· Challenge: Is there any NLP task that CANNOT be framed as text-to-text?
+
+                                                                                                                                               28
+
+
+                                                                                                                                                                                                                                                                                                          29
+
+Fine-tuning BART ­ Task-Speci c Adaptations
+
+· BART Fine-Tuning Approaches:
+
+
+· Classi cation (Sentiment): Pass input to both Enc/Dec. Use hidden state
+
+   of the nal Decoder token  linear classi er.
+
+
+· Summarization: Direct sequence-to-sequence mapping.
+
+
+· Translation (mBART): Add language tag tokens to control output.
+
+
+· Note: BART still often                           Who am I ? </s> Where did I come from ? </s> <En>                                                                                </s> <Ja>
+
+   relies on task-speci c     Transformer Encoder  Transformer Decoder                                                          Sent-MT  Transformer Encoder                Transformer Decoder
+                                                                                                                                Doc-MT
+   heads for classi cation,   Where did __ from ? </s> Who __ I __ </s> <En> <En> Who am I ? </s> Where did I come from ? </s>              Who am I ? </s> <En>                   <Ja>  </s>
+                                                                                                            V! </s> <Ja>                                          :HOOWKHQV! See you tomorrow .</s> <En>
+   maintaining some                                                                                                                      Transformer Encoder
+                              Transformer Encoder  Transformer Decoder                                                                                                      Transformer Decoder
+   BERT-like philosophy.
+
+                              BB </s> BBV!<Ja>     <Ja>  V! </s>                                                                          V! </s> <Ja> <En> :HOOWKHQV! See you tomorrow .</s>
+
+                              Multilingual Denoising Pre-Training (mBART)                                                                                     Fine-tuning on Machine Translation
+
+                              Figure 1: Framework for our Multilingual Denoising Pre-training (left) and fine-tuning on downstream MT tasks
+                              (right), where we use (1) sentence permutation (2) word-span masking as the injected noise. A special language id
+                              token is added at both the encoder and decoder. One multilingual pre-trained model is used for all tasks.
+
+if if i i f f
+Fine-tuning T5 ­ Uni ed Text-to-Text for Everything
+
+· T5's Elegance of Uniformity:
+
+  · EVERY task uses the exact SAME ne-tuning procedure.
+
+  · Pre x prepended  Encoder  Decoder target text  Cross-Entropy Loss.
+
+  · No task-speci c heads.
+
+
+· Multi-task Fine-tuning:
+
+  · Mix examples from diverse tasks in the same batch.
+
+  · Proportional mixing prevents large datasets from dominating.
+
+
+· Flan-T5 (Chung et al., 2022): Fine-tuned on 1,836 tasks via instructions.
+
+   Bridge to modern Instruction Tuning.
+
+                                                                                                                                               30
+
+if if if if
+Encoder-Decoder vs. Decoder-Only for Summarization
+
+· Compute E ciency Comparison (Summarization):
+
+  · Enc-Dec (BART/T5): Encoder O(Ld2oc) + Decoder O(Ls2um + LsumLdoc).
+
+  · Dec-Only (GPT): Concatenate into one sequence. O((Ldoc + Lsum)2/2) 
+
+      (Due to Causal Masking halving FLOPs).
+
+
+· Example: Doc = 1000 tokens, Summary = 100 tokens. 
+
+  (Assuming equal param counts: N Enc/Dec layers vs 2N Dec-Only layers)
+
+
+  · Enc-Dec  N × [10002 + 1002 + (100 × 1000)] = 1,110,000N operations.
+
+  · Dec-Only  2N × [(1100)2/2] = 1,210,000N operations.
+
+· Verdict: Encoder-Decoder is mathematically more e cient for tasks with long inputs
+
+   and short outputs.
+
+                                                                                                                                               31
+
+iff
+                                                                                                                                                                                                                                                                                                        32
+
+Encoder-Decoder Attention Patterns ­ Visualized
+
+· Three Patterns (The DNA of Paradigm 3):
+
+· 1. Encoder Self-Attention: All ones. 
+
+   `[batch, heads, src_len, src_len]`
+
+
+· 2. Decoder Masked Self-Attention: Lower-triangular. 
+
+   `[batch, heads, tgt_len, tgt_len]`
+
+
+· 3. Cross-Attention: Rectangular. No masking needed.
+
+  · Q from Dec: `[tgt_len, d_k]`, 
+
+      K from Enc: `[src_len, d_k]`
+
+
+  · Attention Weights: 
+
+      `[batch, heads, tgt_len, src_len]`
+
+
+  · Output shape: `[batch, tgt_len, d_model]`
+In-Class Activity ­ Compute Target Lengths
+
+· Exercise: Given sentence (12 tokens): "The quick brown fox jumps over
+
+   the lazy dog in the park"
+
+
+· Scenario A (BART): In ll spans "quick brown" and "lazy dog".
+
+  · Q1: `src_len`? 
+
+  · Q2: `tgt_len`?
+
+
+· Scenario B (T5): Sentinel corruption on same spans.
+
+  · Q3: `src_len`? 
+
+  · Q4: `tgt_len`?
+
+
+· Q5: Calculate ratio `tgt_len_BART / tgt_len_T5`.
+
+                                                                                                                                               33
+
+if
+                                                                                                                                                                                                                                                                                                         34
+
+The Paradigm Matrix ­ All Three Side by Side
+
+Dimension     Encoder-Only           Decoder-Only        Encoder-Decoder (T5/BART)
+Context       (BERT)                 (GPT)
+              Bidirectional
+                                     Causal (left-to-right) Bidirectional (enc) + Causal (dec)
+
+Pre-training  MLM (15% masked) CLM (100% signal)         Denoising (span/in lling)
+                                                         ~15­100% (varies by corruption)
+Signal Density ~15%                  100%                 (via Decoder)
+                                                          (via Encoder)
+Generation     (not native)           (native)           Encoder + Decoder (2× params)
+                                                         Complex (two modules)
+Understanding  (bidirectional) Weaker (causal)
+                                                         Complex (Encoder cache +
+Parameter Count Encoder only         Decoder only        Decoder cache)
+                                                         Text-to-text (or task heads)
+Serving       Simple (single         Simple (one model)
+              forward pass)
+
+KV Cache      N/A                    Simple (linear
+
+                                     growth)
+
+Task Flexibility Needs task-speci c Text generation for
+
+              heads                  everything
+
+                              if if
+                                                                  Wang, Thomas, et al. "What language model architecture and pretraining objective works best for zero-shot generalization?." International Conference on Machine Learning. PMLR, 2022.
+
+Why Frontier Models Converged on Decoder-Only
+
+· Three Structural Reasons:
+
+· 1. Serving Simplicity & Parameter E ciency.
+
+· 2. Natural Fit for Multi-turn Alignment (RLHF).
+
+· 3. Predictable & Linear KV Cache.
+
+· The Scaling Driver:
+
+
+  · At massive scale (>100B params), single-stream In-Context Learning and
+
+      Chain-of-Thought unlock superior multi-step reasoning.
+
+                                                                                                                                               35
+
+iff
+Reason 1 ­ Serving Simplicity & Parameter E ciency
+
+· Parameter Duplication Problem:
+
+  · Enc-Dec with P params:  P/2 in Encoder,  P/2 in Decoder.
+
+  · Dec-Only with P params: All P dedicated to generation.
+
+
+· Serving Complexity:
+
+  · Enc-Dec requires TWO distinct routing passes. This causes an Enc-Dec
+
+      Penalty: it breaks continuous batching and destroys kernel fusion
+      opportunities (due to CPU-GPU synchronization overhead).
+
+
+  · Dec-Only is ONE uni ed loop. Easier to batch and optimize.
+
+                                                                                                                                               36
+
+if
+                                                                                                                                                                                                                                                                                                     37
+
+Reason 2 ­ Natural Fit for Multi-turn Alignment & RLHF
+
+· RLHF/DPO Pipeline (Week 11):
+
+  · AI alignment relies on 
+
+      rewarding generated tokens 
+      in conversation formats.
+
+
+· Decoder-Only Advantage:
+
+  · Single sequence: `<system>...<user>...<assistant>...`
+
+  · Easy to calculate reward gradients over the whole continuous context.
+
+
+· Enc-Dec Challenge:
+
+  · Where does the reward gradient go? History needs to be re-encoded at
+
+      every conversational turn, confusing the signal.
+Reason 3 ­ Predictable & Linear KV Cache Scalability
+
+· Decoder-Only KV Cache:
+
+  · Linear growth: `[batch, seq_len, d_head]`. Predictable memory
+
+      footprint.
+
+
+  · Enables PagedAttention (vLLM) and Chunked Pre ll & Pre x Caching
+
+      (e.g., RadixAttention), crucial for RAG.
+
+
+· Encoder-Decoder KV Cache:
+
+  · Two Caches: Static Encoder Cache (`src_len`) + Dynamic Decoder
+
+      Cache (`tgt_len` growing).
+
+
+  · Complicates continuous batching and memory paging.
+
+                                                                                                                                               38
+The Scaling Argument ­ Why Scale Favors Decoder-Only
+
+· Emergent Capabilities:
+
+
+  · Wang et al. (2022), Dec-Only 4.8B vs Enc-Dec 11B: after pretraining alone,
+
+      Dec-Only + full LM wins zero-shot
+
+
+  · Enc-Dec + span corruption only wins AFTER multitask netuning -- its
+
+      edge is conditional, not free.
+
+
+  · No controlled >100B comparison exists: nobody funded the Enc-Dec arm.
+
+
+  · In-Context Learning & Chain-of-Thought compensate for left-to-right
+
+      limitations.
+
+
+· Evidence of Shift (what labs BUILT, not a head-to-head result): T5 (2020) 
+
+   PaLM (2022)  Gemini (2023).
+
+                                                                                                                                               39
+Where Encoder-Decoders Still Win
+
+· The Remaining Strongholds:
+
+· 1. Machine Translation: NLLB (Meta) - Natural t for mapping two full
+
+   sequences.
+
+
+· 2. Speech-to-Text: Whisper (OpenAI) - Audio Encoder + Text Decoder.
+
+· 3. Summarization: Long input to short output e ciency.
+
+· Insight: Encoder-Decoders didn't lose; they became highly specialized task
+
+   masters, while Dec-Only became the generalists.
+
+                                                                                                                                               40
+The Decoder-Only Paradox ­ Summary
+
+· Three Pillars of Dominance:
+
+· 1. Serving Simplicity: Single pipeline, full params on generation.
+
+· 2. Alignment Compatibility: Easy RLHF multi-turn processing.
+
+· 3. KV Cache Scalability: Linear growth, PagedAttention friendly.
+
+· The Meta-Lesson: Simpler, scalable systems often beat theoretically superior
+
+   but complex systems in Deep Learning.
+
+                                                                                                                                               41
+                                                                                              Tay, Yi, et al. "UL2: Unifying Language Learning Paradigms." The Eleventh International Conference on Learning Representations.
+
+UL2 & Beyond ­ Attempts to Unify All Paradigms
+
+· UL2 (Unifying Language Learning Paradigms):
+
+
+· Tay et al. (2023). Uses mode tokens to mix objectives:
+
+
+· 1. [R]-Denoising: Short span corruption  Inputs-to-targets                                                  X-denoiser                                                X-denoiser        X-denoiser
+                                                                                                             (long spans &                                             (long spans &      (short spans
+
+                                                                                                                   low                                                       high             & high
+                                                                                                              corruption)                                               corruption)       corruption)
+
+(T5-like).
+                                 "Autoregressive"                                                                                                                                                                         Learning Paradigms
+                                            models
+                                                                                                                                                                                                                                            Supervised
+                                                                                                                                                                                                                                            Finetuning
+
+· 2. [S]-Denoising: Long pre x causal         Decoder-only                                                               X-denoiser                                                                                                   In-context
+                                                  PrefixLM                                                         (extreme denoising)                                                                                                 Learning
+   generation (GPT-like).
+
+                                                OR                                                                       R-denoiser                                                                                                   Zero-Shot
+· 3. [X]-Denoising: Extreme long span                                                                        (short spans & low corruption)
+                                            Encoder-Decoder                                                                                                                                                                             Language
+   corruption.
+                                                                                                           S-denoiser                                                                                                   Generation
+                                                                                                             (sequential denoising / prefix
+                                                                                                                                                                                                                                        Language
+                                                                                                                    language modeling)                                                                                               Understanding
+
+                                                                                                                                                                                                                                       Structured
+                                                                                                                                                                                                                                       Knowledge
+                                                                                                                                                                                                                                       Grounding
+
+· Takeaway: The pre-training objective matters as much                                                       Mixture-of-Denoisers                                                                                                       Long Range
+                                                                                                                                                                                                                                         Reasoning
+   as the architecture. Flan-UL2 remains highly
+                                                                                                                                                                                                                                     Task Paradigms
+
+competitive.                                Figure 2: An overview of UL2 pretraining paradigm. UL2 proposes a new pretraining objective that works
+                                            well on a diverse suite of downstream tasks.
+
+                                                               R-Denoising                                                  S-Denoising                                                                 X-Denoising
+
+                                        42  Inputs:                                                      Inputs:                                                       Inputs:                                                       Inputs:
+                                            [R] He dealt in archetypes before anyone knew such           [S] He dealt in archetypes before anyone knew such
+                                                                                                          things existed, and his ability to take an emotion or a      [X] He dealt in archetypes before anyone1k6new such           [X] He dealt in archetypes be3fore anyone knew such
+                                            things existed, and his ab3ility to take an emotion or a      situation and push it to the limit helped create a cadre of                                                                things existed, and3his ability to take an emoti5on or a
+                                            situation and5push it to the limit helped create a cadre of   plays that have been endlessly staged ­ and copied.          things existed, and his ability to take an emotion or a       situation and push it to the limit helped cre4ate a cadre of
+                                            plays that have been endlessly sta4ged ­ and copied.          Apart from this, Romeo and Juliet inspired Malorie                                                                         plays that4have been endlessly staged ­ and copie5d.
+                                                                                                          Blackman's Noughts & Crosses, there are references to        situation and push it to the limit3h2elped create a cadre of
+                                            Apart from this, Romeo and Juliet inspired Malorie                                                                                                                                       Apart from this, Romeo and Juliet inspired Malorie
+                                                                                                         Hamlet in Lunar Park by Br9et5Easton Ellis and The            plays that have been endlessly staged ­ and copied.
+                                            Blackman's Noughts & Cro5sses, there are references to                                                                                                                                   Blackman's Noug5hts & Crosses, th3ere are references to
+                                            Hamlet in Lunar Park by Bret Easton Ellis a2nd The            Tempest was the cue for The Magus by John Fowles.            Apart from this, Romeo a2nd4Juliet inspired Malorie           Hamlet in Lu3nar Park by Bret Easton E2llis and The4
+                                                                                                                                                                                                                                     Tem4pest was the c2ue for The Ma4gus by John Fow5les.
+                                            Tempest was the cue for The Magus by John Fowles.            Target:                                                       Blackman's Noughts & Crosses, there are references to
+                                                                                                         <B>
+                                                                                                                                                                       Hamlet in Lunar Park by Bret East2on4Ellis and The
+                                                                                                                                  95
+                                                                                                                                                                       Tempest was the cue for The Magus by John Fowles.
+
+                                            Target:                                                                                                                    Target:        16      <S>                                    Target:
+                                                                                                                                                                       <B>
+                                            <B> 3 <S> 5 <S> 4 <S> 5                                                                                                                                                                  <B> 3 <S> 3 <S> 5 <S> 4 <S>
+                                            <S> 2 <E>
+                                                                                                                                                                                          32            <S>                          4 <S> 5 <S> 5 <S> 3 <S>
+
+                                                                                                         if
+In-Class Discussion ­ The Architecture Debate
+
+· Prompt: "Given unlimited compute and a goal to build the
+
+   ultimate AI assistant, which architecture do you choose?"
+
+
+  · Team Enc-Dec vs. Team Dec-Only vs. Team Hybrid.
+
+                                                                                                                                               43
+The Complete Timeline ­ From T160:4ransformer to Today J.Yangetal.
+
+· Architectural Evolution:
+
+
+  · 2017: Transformer (Vaswani).
+
+
+  · 2018-2019: GPT-1/2, BERT, BART.
+
+
+  · 2020: T5, GPT-3 (In-Context breakthrough).
+
+
+  · 2022: PaLM, Whisper, UL2.
+
+
+  · 2023: LLaMA, GPT-4.
+
+
+  · 2024-2026: Gemini 1.5, LLaMA-3, Qwen-2.5, Claude 3.5, DeepSeek (V2/V3/R1).
+ Fig. 1. Evolutionary tree of modern LLMs traces the development of language models in recent years and
+                                                                                                                                                                                                      highlights some of the most well-known models. Models on the same branch have closer relationships.
+                                                                                                                                                                                                      Transformer-based models are shown in non-grey colors: decoder-only models in the blue branch, encoder-
+                                                                                                                                                                                                      only models in the pink branch, and encoder-decoder models in the green branch. The vertical position of the
+                                                                                                                                                                                                      models on the timeline represents their release dates. Open-source models are represented by solid squares,
+     · DeepSeek introduced Multi-Head Latent Attention (MLA) and DeepSeekMoE, while closed-source models are represented by hollow ones. The stacked bar plot in the bo om right corner
+                                                                                                                                                                                                      shows the number of models from various companies and institutions. A dynamic version of this figure could
+         decisively compressing the KV cache and cementing Decoder-Only dominance.
+ be found by this link. Further, an editable yet regularly updated version of this tree is available at llmtree.ai.
+                                                                                                                                                                                         to conduct experiments on LLM training. As a result, API-based research could become the
+                                                                                                                                                                                         predominant method in the academic community.
+
+· Trend: Dec-Only river gets wider, Enc-Dec becomes specialized tributaries. (e) Encoder-decoder models remain promising, as this type of architecture is still being actively
+                                                                                                                                                                                         explored, and most of them are open-sourced. Google has made substantial contributions
+                                                                                                                                                                                         to open-source encoder-decoder architectures. However, the !exibility and versatility of
+                                                                                                                                                                                         decoder-only models seem to make Google's insistence on this direction less promising.
+                                                                                                                                               44
+                                                                                                                                                                                  2.1 BERT-style Language Models: Encoder-Decoder or Encoder-only
+                                                                                                                                                                                  As natural language data is readily available and unsupervised training paradigms have been pro-
+                                                                                                                                                                                  posed to better utilize extremely large datasets, this motivates the unsupervised learning of natural
+                                                                                                                                                                                  language. Non-causal models are one of the earliest pretrained language models that sparked dis-
+                                                                                                                                                                                  cussions. They are encoder-only models and adapt the approach of predicting masked words in
+                                                                                                                                                                                  a sentence while considering the surrounding context. This training paradigm is known as the
+The Descendant Models ­ Flan-T5 and Friends
+
+· Notable Variants:
+
+  · mT5: Multilingual T5 (101 languages).
+
+  · Flan-T5: Instruction-tuned on 1,836 tasks. Incredible zero-shot abilities for
+
+      small scales.
+
+
+  · CodeT5+: Adapted for code understanding.
+
+  · mBART / PEGASUS: Specialized translation and summarization.
+
+· Legacy: Essential open-source tools for researchers and developers.
+
+                                                                                                                                               45
+Lab Preview ­ What You'll Build Today
+
+· Lab Overview:
+
+  · Part 1: Span Corruption Engine - Build T5-style corruption from scratch in
+
+      pure PyTorch. (Strict Rule: No `DataCollatorForSeq2Seq` allowed!)
+
+
+  · Part 2: Enc-Dec Forward Pass - Manually track tensor shapes through T5-
+
+      small without high-level pipelines.
+
+
+  · Part 3: Generative QA Comparison - Compare BERT extractive vs. T5
+
+      generative QA outputs.
+
+                                                                                                                                               46
+Key Takeaways ­ Five Things to Remember
+
+· 1. Denoising: Corrupting input and reconstructing it forces deep semantic
+
+   understanding.
+
+
+· 2. BART vs. T5 Target: BART reconstructs full text; T5 only drops spans
+
+   (drastic compute savings).
+
+
+· 3. Text-to-Text Framework: T5 proved all tasks can be uni ed into a single
+
+   inputoutput string format.
+
+
+· 4. Specialization: Enc-Dec is still the king for translation, ASR, and
+
+   abstractive summarization.
+
+
+· 5. The Paradox: Serving simplicity, alignment t, and predictable KV caches
+
+   crowned Decoder-only as the general AI architecture.
+
+                                                                                                                                               47
+Bridge to Next Week ­ Vector Representation & Semantic Search
+· Next Week: Extending the Encoder Paradigm.
+
+· The Problem: BERT's token embeddings produce poor sentence
+
+   representations (anisotropy).
+
+
+· The Solution: Siamese Networks (Sentence-BERT) & Contrastive Learning.
+
+· Why It Matters: The foundation for Vector Search and RAG (Week 12).
+
+                                                                                                                                               48
+

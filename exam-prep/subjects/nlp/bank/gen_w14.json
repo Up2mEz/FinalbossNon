@@ -1,0 +1,482 @@
+[
+ {
+  "id": "n14-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "Gopher rules: alpha-word ratio",
+  "stem": "ตามกฎ Gopher (heuristic filter) เอกสารต้องมี alpha-word ratio (สัดส่วนคำที่มีตัวอักษร) อย่างน้อยเท่าใดจึงจะผ่าน?",
+  "opts": {
+   "A": "0.5",
+   "B": "0.8",
+   "C": "0.95",
+   "D": "0.2"
+  },
+  "ans": "B",
+  "expl": "สไลด์กำหนด alpha-word ratio >= 0.8 เพื่อตัดตารางสัญลักษณ์และโค้ด ตัวเลือกอื่น (0.2, 0.5, 0.95) ไม่ใช่ค่าในสไลด์",
+  "src": "text/slides_w14.txt s.11 ; notes 2.7"
+ },
+ {
+  "id": "n14-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "LSH banding: H = b x r",
+  "stem": "MinHash signature ยาว H = 100 ตำแหน่ง ถูกแบ่งเป็น b = 20 bands ใน LSH banding แต่ละ band มีกี่ rows (r)?",
+  "opts": {
+   "A": "20",
+   "B": "80",
+   "C": "5",
+   "D": "2,000"
+  },
+  "ans": "C",
+  "expl": "H = b x r จึง r = H / b = 100 / 20 = 5 ส่วน 80 มาจาก 100 - 20 (ลบแทนหาร), 20 คือค่า b เอง, 2,000 มาจากการคูณ 100 x 20",
+  "src": "text/slides_w14.txt s.26 ; notes 2.17"
+ },
+ {
+  "id": "n14-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "Three eras of evaluation",
+  "stem": "BERTScore, Chatbot Arena และ MT-Bench จัดอยู่ในยุค (era) ใดของการประเมินผลตามสไลด์?",
+  "opts": {
+   "A": "Era 2 (2020-2024): semantic matching + human preference",
+   "B": "Era 1 (ก่อน 2020): surface string matching",
+   "C": "Era 3 (2024-2026): dynamic, capability-specific, adversarial",
+   "D": "ไม่จัดอยู่ใน era ใดเลย"
+  },
+  "ans": "A",
+  "expl": "สไลด์จัด BERTScore, Chatbot Arena, MT-Bench ไว้ใน Era 2 ส่วน BLEU/ROUGE เป็น Era 1 และ LiveBench/SWE-bench/HarmBench/RAGAS เป็น Era 3",
+  "src": "text/slides_w14.txt s.32 ; notes 2.21"
+ },
+ {
+  "id": "n14-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "MMLU facts",
+  "stem": "MMLU (Massive Multitask Language Understanding) ครอบคลุมกี่วิชา (subjects)?",
+  "opts": {
+   "A": "164",
+   "B": "80",
+   "C": "510",
+   "D": "57"
+  },
+  "ans": "D",
+  "expl": "MMLU มี 57 วิชา 15,908 ข้อ ส่วน 164 คือจำนวนโจทย์ HumanEval, 80 คือคำถามของ MT-Bench, 510 คือ behaviors ของ HarmBench",
+  "src": "text/slides_w14.txt s.42, s.38, s.44, s.51 ; notes 2.29"
+ },
+ {
+  "id": "n14-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "LLM judge: positional bias",
+  "stem": "LLM judge มักเลือกคำตอบที่ถูกวางเป็นอันดับแรก แม้จะสลับลำดับของคู่คำตอบเดิมแล้วก็ตาม อคติแบบนี้เรียกว่าอะไร?",
+  "opts": {
+   "A": "Length (verbosity) bias",
+   "B": "Data contamination",
+   "C": "Positional bias",
+   "D": "Benchmark saturation"
+  },
+  "ans": "C",
+  "expl": "การชอบคำตอบที่มาก่อนคือ positional (primacy) bias ส่วน length bias คือชอบคำตอบยาว contamination คือข้อสอบรั่วเข้า training data และ saturation คือ benchmark ใกล้เพดานจนแยกโมเดลไม่ได้",
+  "src": "text/slides_w14.txt s.40 ; notes 2.27"
+ },
+ {
+  "id": "n14-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "LiveBench refresh",
+  "stem": "LiveBench รีเฟรชคำถามใหม่บ่อยเพียงใด?",
+  "opts": {
+   "A": "รายวัน",
+   "B": "รายเดือน",
+   "C": "รายปี",
+   "D": "ไม่เปลี่ยนเลย (static)"
+  },
+  "ans": "B",
+  "expl": "LiveBench อัปเดตคำถามรายเดือน (monthly) จากแหล่งใหม่ เช่น การแข่งขัน, arXiv, ข่าว เพื่อลด saturation และ contamination",
+  "src": "text/slides_w14.txt s.46, s.48 ; notes 2.33"
+ },
+ {
+  "id": "n14-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "RAGAS faithfulness calculation",
+  "stem": "คำตอบของระบบ RAG ถูกแตกเป็น atomic claims ได้ 10 claims และ context สนับสนุน 7 claims ค่า RAGAS faithfulness เท่าใด?",
+  "opts": {
+   "A": "0.30",
+   "B": "1.43",
+   "C": "0.07",
+   "D": "0.70"
+  },
+  "ans": "D",
+  "expl": "Faithfulness = claims ที่ context สนับสนุน / claims ทั้งหมด = 7 / 10 = 0.70 ส่วน 0.30 คือสัดส่วนที่ไม่ถูกสนับสนุน, 1.43 คือ 10/7 (กลับเศษส่วน), 0.07 คือ 7/100 (เลื่อนทศนิยมผิด)",
+  "src": "text/slides_w14.txt s.53 ; verify/verify_14_19.md #19 ; notes 2.34"
+ },
+ {
+  "id": "n14-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "Exact vs near deduplication",
+  "stem": "ข่าวฉบับเดียวกันถูกเผยแพร่ซ้ำสองเว็บ โดยเปลี่ยนเฉพาะพาดหัว เนื้อหาส่วนที่เหลือเหมือนกันเกือบทั้งหมด ต้องการจับว่าเป็นสำเนาใกล้เคียงกัน วิธีใดเหมาะที่สุด?",
+  "opts": {
+   "A": "แปลงเป็น shingles แล้วใช้ MinHash + LSH หา candidate จากนั้นตรวจ Jaccard จริง",
+   "B": "normalise ข้อความ (lowercase, ตัดช่องว่าง) แล้วเทียบ SHA-256 เพราะ hash ของเนื้อหาที่ต่างกันเล็กน้อยจะมีค่าใกล้เคียงกัน",
+   "C": "ใช้ fastText lid.176 ตรวจว่าทั้งสองหน้าได้ language label เดียวกัน",
+   "D": "ใช้ Gopher alpha-word ratio >= 0.8 กับทั้งสองหน้าแล้วเทียบผลผ่าน/ไม่ผ่าน"
+  },
+  "ans": "A",
+  "expl": "SHA-256 จับได้เฉพาะข้อความที่เหมือนกันทุก byte หลัง normalise พาดหัวต่างกันจึงได้ hash ต่างกันโดยสิ้นเชิง (ไม่ใช่ใกล้เคียงกัน) near-duplicate ต้องใช้ shingle + MinHash + LSH สร้าง candidate แล้ว verify ด้วย Jaccard Language ID และ Gopher เป็น filter คุณภาพ ไม่ใช่ dedup",
+  "src": "text/slides_w14.txt s.20-22 ; notes 2.13-2.15"
+ },
+ {
+  "id": "n14-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "FineWeb vs Dolma",
+  "stem": "ทีมวิจัยต้องการคลังข้อมูลที่ผสมโค้ด เปเปอร์ และ Wikipedia รวมกับ web text และต้องย้อนตรวจ log ของ tag/filter ทุกเอกสารเพื่อ audit ควรเลือกชุดใด?",
+  "opts": {
+   "A": "FineWeb เพราะใหญ่ที่สุด (15T tokens) และออกแบบ filter แบบ ablation-driven",
+   "B": "FineWeb-Edu เพราะเก็บเฉพาะเอกสารที่ classifier ให้คะแนน 3 ขึ้นไป",
+   "C": "Dolma เพราะผสมหลายแหล่งและมี tagger log รายเอกสาร",
+   "D": "Common Crawl WET เพราะเป็น plain text ที่สกัดแล้วจึงตรวจสอบง่าย"
+  },
+  "ans": "C",
+  "expl": "Dolma (AI2, ~3T tokens) เป็น multi-source (CC, GitHub, Wiki, papers) มี toolkit taggers + mixer และ log ทุกการตัดสินใจ เหมาะกับ reproducibility และการ audit FineWeb เป็น Common Crawl อย่างเดียว",
+  "src": "text/slides_w14.txt s.18-19 ; verify/verify_14_19.md #17 ; notes 2.12"
+ },
+ {
+  "id": "n14-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "BERTScore recall from similarity matrix",
+  "stem": "candidate มี 3 tokens (แถว c1-c3) และ reference มี 2 tokens (คอลัมน์ r1, r2) ตาราง cosine similarity S เป็น [[0.6, 0.9], [0.8, 0.7], [0.3, 0.4]] BERTScore Recall (R) เท่าใด?",
+  "opts": {
+   "A": "0.70",
+   "B": "0.85",
+   "C": "0.65",
+   "D": "0.62"
+  },
+  "ans": "B",
+  "expl": "Recall = เฉลี่ยของ max ตามแต่ละ reference token (แต่ละคอลัมน์): คอลัมน์ r1 max = 0.8, คอลัมน์ r2 max = 0.9 ได้ (0.8 + 0.9)/2 = 0.85 ค่า 0.70 คือ Precision (max รายแถว 0.9, 0.8, 0.4 เฉลี่ย 0.70) ค่า 0.65 คือเฉลี่ยแนวทแยง (0.6 + 0.7)/2 ซึ่งไม่ใช่ greedy matching ค่า 0.62 คือเฉลี่ยทุกช่อง",
+  "src": "text/slides_w14.txt s.35 ; notes 2.23"
+ },
+ {
+  "id": "n14-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "pass@k calculation",
+  "stem": "โจทย์ HumanEval ข้อหนึ่ง generate n = 20 samples มี c = 1 sample ที่ผ่านทุก test ค่า pass@5 = 1 - C(n-c, k)/C(n, k) เท่าใด?",
+  "opts": {
+   "A": "0.05",
+   "B": "0.75",
+   "C": "0.95",
+   "D": "0.25"
+  },
+  "ans": "D",
+  "expl": "C(19,5)/C(20,5) = 15/20 = 0.75 (ความน่าจะเป็นที่ 5 ตัวที่สุ่มล้มทั้งหมด) pass@5 = 1 - 0.75 = 0.25 (กรณี c = 1 จะได้ k/n = 5/20) ค่า 0.05 คือ pass@1 = c/n, 0.75 คือโอกาสล้มทั้งหมด (ลืม 1 -), 0.95 คือ 1 - 0.05",
+  "src": "text/slides_w14.txt s.44 ; notes 3.1"
+ },
+ {
+  "id": "n14-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "HarmBench ASR interpretation",
+  "stem": "โมเดล X ได้ ASR = 0% บน HarmBench เพราะปฏิเสธทุกคำขอ รวมถึงคำถามปกติที่ไม่เป็นอันตรายด้วย ข้อสรุปใดถูกต้อง?",
+  "opts": {
+   "A": "ASR ต่ำ = ทนต่อการโจมตีเหล่านี้ แต่ไม่ได้แปลว่าใช้งานได้ ต้องรายงานผลงานปกติด้วย",
+   "B": "ASR 0% แปลว่าโมเดลปลอดภัยและดีที่สุดแล้ว จึงไม่จำเป็นต้องวัดผลงานด้านอื่นของโมเดลอีกต่อไป",
+   "C": "ASR 0% น่าสงสัย เพราะ ASR ตัดสินโดยผู้เชี่ยวชาญที่เป็นมนุษย์ซึ่งน่าจะเจอการโจมตีที่สำเร็จอย่างน้อยบางกรณี",
+   "D": "ASR เป็นสัดส่วนของ attack methods ทั้ง 18 วิธีที่ jailbreak สำเร็จ จึงเป็น 0% ไม่ได้"
+  },
+  "ans": "A",
+  "expl": "ASR คือสัดส่วน test cases ที่ elicit พฤติกรรมอันตราย ตัดสินด้วย fine-tuned Llama-2-13B classifier ไม่ใช่คน การปฏิเสธทุกอย่างทำให้ ASR = 0 ได้ จึงอ่านเป็น robust ต่อการโจมตีเหล่านี้ ไม่ใช่ safe หรือมีประโยชน์ และต้องรายงาน normal-task performance ด้วย",
+  "src": "text/slides_w14.txt s.51 ; notes 2.33"
+ },
+ {
+  "id": "n14-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "Filter ordering by expected cost",
+  "stem": "Filter A: ต้นทุน c_A = 2 ms/doc เก็บเอกสารไว้ p_A = 0.9 ส่วน Filter B: c_B = 3 ms/doc เก็บไว้ p_B = 0.2 (p คือสัดส่วนที่รอด) ต้นทุนเฉลี่ยต่อเอกสารต่ำสุดได้จากข้อใด?",
+  "opts": {
+   "A": "ทำ B ก่อน A เฉลี่ย 3.4 ms/doc",
+   "B": "ทำ A ก่อน B เฉลี่ย 4.7 ms/doc เพราะ A ถูกกว่า",
+   "C": "ทำ B ก่อน A เฉลี่ย 4.7 ms/doc",
+   "D": "ลำดับไหนก็ได้ เฉลี่ย 5.0 ms/doc เท่ากัน"
+  },
+  "ans": "A",
+  "expl": "A ก่อน B: c_A + p_A c_B = 2 + 0.9 x 3 = 4.7 ms. B ก่อน A: c_B + p_B c_A = 3 + 0.2 x 2 = 3.4 ms. B แพงกว่าแต่ทิ้งเอกสารถึง 80% จึงควรมาก่อน cheap-first เป็นเพียง heuristic เริ่มต้น ไม่ใช่กฎตายตัว",
+  "src": "text/slides_w14.txt s.10, s.30 ; notes 2.6, 3.7"
+ },
+ {
+  "id": "n14-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "Dedup cost scaling: brute force vs MinHash",
+  "stem": "Brute-force เทียบ shingle sets ทุกคู่ มีต้นทุนรวม N^2 x s^2 (N = จำนวนเอกสาร, s = shingles ต่อเอกสาร) ถ้าจำนวนเอกสารเพิ่มเป็น 2 เท่า และแต่ละเอกสารยาวขึ้นจน s เพิ่ม 3 เท่า ข้อใดถูก?",
+  "opts": {
+   "A": "Brute-force เพิ่ม 6 เท่า และการเทียบ MinHash ต่อคู่เพิ่ม 3 เท่า ตามความยาวเอกสาร",
+   "B": "Brute-force เพิ่ม 72 เท่า เพราะต้นทุนขึ้นกับ N^3",
+   "C": "Brute-force เพิ่ม 36 เท่า และการเทียบ MinHash ต่อคู่เพิ่ม 3 เท่า ตามความยาวเอกสาร",
+   "D": "Brute-force เพิ่ม 36 เท่า ส่วนการเทียบ MinHash ต่อคู่คงเดิม (H ตำแหน่ง)"
+  },
+  "ans": "D",
+  "expl": "Brute-force = N^2 s^2 เพิ่ม 2^2 x 3^2 = 4 x 9 = 36 เท่า (ไม่ใช่ N^3 เพราะ corpus ใหญ่ขึ้นไม่ได้ทำให้แต่ละเอกสารยาวขึ้น แต่ที่นี่โจทย์ให้ s เพิ่มเอง) MinHash เทียบคู่ละ H integer comparisons ไม่ขึ้นกับความยาวเอกสาร (ความยาวมีผลเฉพาะตอนสร้าง signature)",
+  "src": "text/slides_w14.txt s.23, s.28 ; notes 2.15b, 2.18"
+ },
+ {
+  "id": "n14-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "Benchmark contamination reasoning",
+  "stem": "โมเดล Gamma ได้ 94.2% บน MMLU และพบว่า 12% ของข้อ MMLU ปรากฏ verbatim ใน pre-training corpus ข้อใดถูกต้อง?",
+  "opts": {
+   "A": "คะแนนที่ไม่ปนเปื้อนคือ 94.2 - 12 = 82.2% เพราะถือว่าข้อที่รั่วตอบถูกทั้งหมดทุกข้อ",
+   "B": "คำนวณจากสองตัวเลขนี้ไม่ได้ ต้องรันซ้ำบนข้อ clean 88% หรือชุดข้อสอบใหม่",
+   "C": "คะแนนที่ไม่ปนเปื้อนคือ 94.2 x 0.88 = 82.9% เพราะตัดข้อที่รั่วออกแล้วคูณสัดส่วนที่เหลือ",
+   "D": "ไม่ต้องกังวล เพราะ MMLU เป็นข้อสอบแบบ 4 ตัวเลือก การรั่วจึงไม่มีผลต่อคะแนนรวมของโมเดล"
+  },
+  "ans": "B",
+  "expl": "คะแนนสะอาดขึ้นกับความแม่นของโมเดลบนข้อ 88% ที่ไม่รั่ว ซึ่งต้องวัดโดยตรง ตัวเลือก A และ C สมมติความแม่นบนข้อที่รั่ว/ไม่รั่วโดยไม่มีหลักฐาน และ D ผิดเพราะการรั่วทำให้คะแนนสูงเกินจริงได้ไม่ว่ารูปแบบข้อสอบ",
+  "src": "text/slides_w14.txt s.45, s.54 ; notes 2.32, 2.36"
+ },
+ {
+  "id": "n14-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "Testing length bias in an LLM judge",
+  "stem": "Model Alpha ชนะ pairwise ทุกครั้ง โดยตอบยาวเฉลี่ย 850 tokens เทียบกับ Beta 320 tokens ต้องการทดสอบว่า length bias อธิบายผลนี้หรือไม่ วิธีใดสะอาดที่สุด?",
+  "opts": {
+   "A": "ดู correlation ระหว่างความยาวกับคะแนนข้ามหลายโมเดล ถ้าสูงก็ถือว่ายืนยัน length bias ได้แล้ว",
+   "B": "หารคะแนนของแต่ละโมเดลด้วยจำนวน token ของคำตอบ แล้วเทียบคะแนนที่ได้ของทั้งสองโมเดล",
+   "C": "ใช้เนื้อหาเดิมแต่ขยายความโดยพูดซ้ำ ไม่เพิ่มข้อมูล แล้วดูว่า judge เลือกฉบับยาวหรือไม่",
+   "D": "เปลี่ยนไปใช้ judge ที่ใหญ่ขึ้นหนึ่งตัว แล้วถือว่า length bias หายไปแล้วทั้งหมด"
+  },
+  "ans": "C",
+  "expl": "Controlled test (เนื้อหาเดิม คำมากขึ้น) แยกผลของความยาวออกจากคุณภาพ correlation ข้ามโมเดลเป็นแค่ hint เพราะโมเดลเก่งก็เขียนยาว การหารด้วย token ไม่เท่ากับ statistical length control (เช่น AlpacaEval-LC) และ judge ที่แรงกว่าต้านได้ดีกว่าแต่ไม่หมด",
+  "src": "text/slides_w14.txt s.39, s.54 ; notes 2.26"
+ },
+ {
+  "id": "n14-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "BLEU vs BERTScore: find the wrong statement",
+  "stem": "จากตัวอย่าง reference 'The cat sat on the mat' เทียบ paraphrase 'A feline rested upon the rug' และ word salad 'mat the on is cat the' ข้อใด ไม่ถูกต้อง?",
+  "opts": {
+   "A": "BLEU-1 ให้ word salad 0.83 สูงกว่า paraphrase ที่ได้ 0.17 เพราะนับแค่คำที่ตรงกัน",
+   "B": "BERTScore F1 0.79 ของ paraphrase เทียบกับ BLEU-1 0.17 ได้ตรง ๆ จึงดีกว่าราว 4.6 เท่า",
+   "C": "BERTScore F1 ให้ paraphrase 0.79 สูงกว่า word salad 0.67 แต่ยังตรวจข้อเท็จจริงไม่ได้",
+   "D": "BERTScore ใช้ cosine similarity ระหว่าง token embeddings จึงจับ paraphrase ได้ดีกว่า"
+  },
+  "ans": "B",
+  "expl": "BLEU และ BERTScore อยู่คนละสเกล (raw cosine ของ BERTScore อยู่ราว 0.7-0.9 แม้ประโยคไม่เกี่ยวกัน) จึงเทียบได้เฉพาะ ranking ภายในเมตริกเดียวกัน ไม่ใช่อัตราส่วนของเลขดิบ ข้ออื่นตรงกับสไลด์",
+  "src": "text/slides_w14.txt s.33, s.35-36 ; notes 2.22-2.23"
+ },
+ {
+  "id": "n14-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "RAGAS Context Precision@K",
+  "stem": "ระบบ RAG ดึง 5 chunks ความเกี่ยวข้องตามอันดับคือ rel = [0, 1, 1, 0, 1] (1 = เกี่ยวข้อง) ใช้ Context Precision@K = (sum_k Precision@k x v_k) / (จำนวน item ที่เกี่ยวข้องใน top K) โดย v_k = rel_k ค่า Context Precision@5 ประมาณเท่าใด?",
+  "opts": {
+   "A": "0.35",
+   "B": "0.45",
+   "C": "0.59",
+   "D": "0.60"
+  },
+  "ans": "C",
+  "expl": "Precision@2 = 1/2 = 0.500, Precision@3 = 2/3 = 0.667, Precision@5 = 3/5 = 0.600 (นับเฉพาะอันดับที่ v_k = 1) ผลรวม = 1.767 หารด้วยจำนวน item ที่เกี่ยวข้อง 3 ได้ 0.589 ค่า 0.60 คือ Precision@5 ตรงๆ ค่า 0.45 คือเฉลี่ย Precision@k ทุกอันดับ ค่า 0.35 คือหารผลรวมด้วย K = 5",
+  "src": "text/slides_w14.txt s.53 ; verify/verify_14_19.md #19 ; notes 2.34"
+ },
+ {
+  "id": "n14-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "LSH configuration and S-curve ramp",
+  "stem": "ใช้ MinHash signature H = 128 ตำแหน่ง ต้องการให้ช่วงเปลี่ยนของ S-curve อยู่แถว s ประมาณ 0.7 โดยใช้ s* ~ (1/b)^(1/r) และ P(candidate) = 1 - (1 - s^r)^b ข้อใดถูกต้อง?",
+  "opts": {
+   "A": "b = 32, r = 4: s* ~ 0.42 จึงจับคู่ J = 0.7 เป็น candidate ได้เกือบแน่นอน (P ~ 1.00) ตรงกับเป้าหมาย",
+   "B": "b = 16, r = 8: s* ~ 0.71 และที่ J = 0.7 โอกาสเป็น candidate คือ 0.50 พอดี เพราะ s* คือจุด 50%",
+   "C": "b = 8, r = 16: s* ~ 0.88 จึงเป็นค่าที่ใกล้ 0.7 ที่สุดในบรรดาทางเลือกทั้งหมด",
+   "D": "b = 16, r = 8: s* ~ 0.71 แต่ที่ J = 0.7 P ราว 0.61 จึงพลาดราว 39% ต้อง verify ด้วย Jaccard จริง"
+  },
+  "ans": "D",
+  "expl": "H = b x r = 16 x 8 = 128 และ s* = (1/16)^(1/8) = 0.707 ใกล้เป้า 0.7 ที่ s = 0.7: s^8 = 0.0576, (1 - 0.0576)^16 = 0.387 ได้ P = 1 - 0.387 = 0.613 ไม่ใช่ 0.5 (s* เป็นตำแหน่ง ramp ไม่ใช่ cut-off หรือจุด 50%) b = 32, r = 4 ให้ s* = 0.42 ไม่ตรงเป้า และ b = 8, r = 16 ให้ s* = 0.88 สูงเกินไป",
+  "src": "text/slides_w14.txt s.26-27 ; notes 2.17, 3.3"
+ },
+ {
+  "id": "n14-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "Chinchilla ratio vs available corpora",
+  "stem": "ต้องการเทรนโมเดล 175B parameters ให้ได้จำนวน token ตามอัตรา Chinchilla (~20 tokens/parameter) โดยไม่วนข้อมูลซ้ำ มีคลัง FineWeb-Edu 1.3T tokens และ FineWeb เต็ม 15T tokens ข้อใดถูก?",
+  "opts": {
+   "A": "ต้องการ 3.5T tokens FineWeb-Edu มีราว 37% ของที่ต้องใช้ (ต้องวนราว 2.7 รอบหากใช้ Edu อย่างเดียว) FineWeb เต็มมีราว 4.3 เท่า",
+   "B": "ต้องการ 350B tokens FineWeb-Edu 1.3T มีมากเกินพอราว 3.7 เท่า ไม่ต้องใช้ FineWeb เต็มเลย",
+   "C": "ต้องการ 35T tokens ดังนั้นต่อให้ใช้ FineWeb เต็ม 15T ก็ยังไม่พอ ต้องหาข้อมูลเพิ่มจากแหล่งอื่น",
+   "D": "ต้องการ 3.5T tokens แต่ FineWeb-Edu 1.3T ยังเพียงพอ เพราะ Edu คุณภาพสูงจึงใช้ token น้อยลง 10 เท่าได้เลย"
+  },
+  "ans": "A",
+  "expl": "175B x 20 = 3.5 x 10^12 = 3.5T 1.3/3.5 = 0.371 (ครอบคลุม 37%), 3.5/1.3 = 2.7 รอบ, 15/3.5 = 4.3 เท่า B และ C คือพลาดกำลังสิบ (350B, 35T) ส่วน D สับสนเรื่อง Edu ได้ MMLU เท่าเดิมด้วย token น้อยลงกับจำนวน token ที่ Chinchilla ต้องการ ซึ่งเป็นคนละเรื่องกัน",
+  "src": "text/slides_w14.txt s.4, s.16-17 ; notes 2.1, 2.11, 3.4"
+ },
+ {
+  "id": "n14-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "Aggregating pass@k over problems",
+  "stem": "benchmark มี 3 โจทย์ แต่ละข้อ generate n = 10 samples มี c ที่ผ่านเป็น 0, 10, 3 ตามลำดับ คะแนน pass@2 ของ benchmark = ค่าเฉลี่ยของ pass@2 รายข้อ โดย pass@k = 1 - C(n-c, k)/C(n, k) (ถ้า n - c < k ให้ pass@k = 1) ได้ค่าเท่าใด?",
+  "opts": {
+   "A": "0.43",
+   "B": "0.64",
+   "C": "0.67",
+   "D": "0.51"
+  },
+  "ans": "D",
+  "expl": "ข้อ 1 (c = 0): pass@2 = 0 ข้อ 2 (c = 10): n - c = 0 < 2 จึง = 1 ข้อ 3 (c = 3): 1 - C(7,2)/C(10,2) = 1 - 21/45 = 0.533 เฉลี่ย (0 + 1 + 0.533)/3 = 0.511 ค่า 0.43 คือเฉลี่ย pass@1 = (0 + 1 + 0.3)/3, ค่า 0.64 คือใช้ C(c,k) แทน C(n-c,k) ในข้อ 3, ค่า 0.67 คือสัดส่วนโจทย์ที่ c > 0 (2/3)",
+  "src": "text/slides_w14.txt s.44 ; notes 3.1"
+ },
+ {
+  "id": "n14-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "Swap test results and aggregation policy",
+  "stem": "judge ตัดสิน 100 คู่คำตอบทั้งสองลำดับ (A-B และ B-A) ผล: Alpha ชนะทั้งสองลำดับ 54 คู่, Beta ชนะทั้งสองลำดับ 16 คู่, ผลไม่ตรงกัน (inconsistent) 30 คู่ ข้อใดถูกต้อง?",
+  "opts": {
+   "A": "ถ้านับ inconsistent เป็นเสมอ (ครึ่งคะแนน) Alpha = (54 + 15)/100 = 69%; ถ้าตัดออก 54/70 = 77.1% ทั้งสองเป็น policy ที่ต้องรายงาน และ inconsistent 30% บ่งชี้ว่า judge ไวต่อลำดับ (position bias)",
+   "B": "Alpha = 54 + 30 = 84% เพราะคู่ที่ไม่ตรงกันถือว่า Alpha เป็นฝ่ายชนะ เนื่องจากถูกวางเป็นลำดับแรกในทุกคู่ที่ตัดสินทั้งหมด 100 คู่",
+   "C": "ป้ายที่ถูกของคู่ inconsistent คือ tie ซึ่งเป็นผลการวัด Alpha = 69% จึงไม่ใช่การเลือก policy ของผู้ประเมินแต่อย่างใดทั้งสิ้น",
+   "D": "ถ้าตัดคู่ inconsistent ออก Alpha = 54/100 = 54% และไม่จำเป็นต้องรายงานจำนวนคู่ที่ถูกตัดออกไปให้ผู้อ่านทราบ"
+  },
+  "ans": "A",
+  "expl": "Swap trick ประกาศผู้ชนะเมื่อชนะทั้งสองลำดับ คู่ที่ไม่ตรงกัน 30 คู่ ป้ายที่ซื่อสัตย์คือ inconsistent การให้เป็น tie เป็น policy ไม่ใช่การวัด: tie policy ได้ (54 + 0.5 x 30)/100 = 0.69 ส่วนการตัดออกได้ 54/(54 + 16) = 0.771 ข้อ B นับผิดข้าง, C ผิดเรื่อง tie ว่าเป็นการวัด, D ใช้ตัวหารผิดและซ่อนข้อมูลที่ถูกตัด",
+  "src": "text/slides_w14.txt s.40-41 ; notes 2.27"
+ },
+ {
+  "id": "n14-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "Tokenizer cost vs context budget",
+  "stem": "เอกสารภาษาไทย 40,000 ตัวอักษร ถูก tokenize ด้วย GPT-2 ซึ่งมี TPC ภาษาไทย = 2.00 tokens/ตัวอักษร (ภาษาอังกฤษ 0.14) ใส่ใน context ที่มี system+query อีก 500 tokens ถ้าแต่ละ step ของ agent เพิ่ม 2,110 tokens และรวมกันต้องไม่เกิน 128,000 tokens agent รันได้เต็ม ๆ อย่างมากกี่ step?",
+  "opts": {
+   "A": "23",
+   "B": "22",
+   "C": "41",
+   "D": "57"
+  },
+  "ans": "B",
+  "expl": "เอกสาร = 40,000 x 2.00 = 80,000 tokens เหลือ 128,000 - 80,000 - 500 = 47,500 tokens 47,500 / 2,110 = 22.5 ต้องปัดลงเป็น 22 step (step ที่ 23 รวม 129,030 > 128,000) ค่า 23 มาจากการปัดขึ้น, 41 มาจากการนับ 1 ตัวอักษรเป็น 1 token (ได้ 41.5), 57 มาจากการใช้ TPC ภาษาอังกฤษ 0.14 (5,600 tokens)",
+  "src": "text/slides_w14.txt s.8-9 ; verify/verify_14_19.md #15, #16 ; notes 2.5, 3.5"
+ },
+ {
+  "id": "n14-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "Diagnosing a self-repeating page through the pipeline",
+  "stem": "หน้าเว็บภาษาอังกฤษยาว 200 คำ ซึ่งประโยคเดียวถูกพิมพ์ซ้ำ 20 ครั้ง (สมมติ perplexity ต่ำกว่า cutoff) ผ่านทั้ง Gopher กฎพื้นฐาน (word count, mean word length, alpha ratio, stop-word), perplexity filter และ MinHash dedup ข้อใดอธิบายและแก้ได้ถูกต้อง?",
+  "opts": {
+   "A": "MinHash + LSH ควรจับได้ เพราะ shingle ซ้ำกันเองมากจึงมี Jaccard สูง ให้ลดจำนวน b ลงเพื่อให้จับหน้าแบบนี้ได้",
+   "B": "ให้เก็บเฉพาะ bucket head ของ perplexity เพราะ PPL ต่ำหมายถึงคุณภาพสูงและช่วยตัดหน้าแบบนี้ออกได้",
+   "C": "หน้านี้ผ่านสถิติพื้นฐาน, PPL ต่ำเพราะซ้ำจึงถูกเก็บ, MinHash เทียบข้ามเอกสารไม่ใช่ภายในหน้า จึงต้องใช้ Gopher repetition rules",
+   "D": "ให้เพิ่ม alpha-word ratio threshold เป็น 0.95 เพื่อตัดหน้าที่ซ้ำออกจากชุดข้อมูลทั้งหมด"
+  },
+  "ans": "C",
+  "expl": "หน้านี้มี 200 คำ (>= 50), คำอังกฤษปกติ, alpha ratio สูง, มี stop-words จึงผ่านกฎพื้นฐาน ข้อความซ้ำทำนายง่าย PPL ต่ำจึงถูก perplexity filter เก็บ (perplexity trap) MinHash/LSH เทียบความคล้ายระหว่างคู่เอกสาร ไม่ตรวจการซ้ำภายในเอกสารเดียว สไลด์ระบุว่า repetition rules (duplicate line/paragraph fraction, n-gram share) คือสิ่งที่จับหน้าแบบนี้",
+  "src": "text/slides_w14.txt s.11, s.15, s.20, s.23 ; notes 2.7, 2.10, 4 (cookie banner)"
+ },
+ {
+  "id": "n14-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 14,
+  "level": 1,
+  "topic": "fastText language ID facts",
+  "stem": "fastText lid.176.bin รองรับ ___ ภาษา และ FineWeb เก็บข้อความภาษาอังกฤษเมื่อ confidence score >= ___",
+  "key": "176;0.65",
+  "note": "ยอมรับ 0.65 หรือ 65% ; lid.176 = 176 languages, FineWeb threshold 0.65",
+  "src": "text/slides_w14.txt s.7 ; notes 2.4"
+ },
+ {
+  "id": "n14-L2-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 14,
+  "level": 2,
+  "topic": "BERTScore F1",
+  "stem": "BERTScore ได้ Precision P = 0.9 และ Recall R = 0.6 ค่า F1 = 2PR/(P+R) เท่ากับ ___ (ทศนิยม 2 ตำแหน่ง)",
+  "key": "0.72",
+  "note": "2 x 0.9 x 0.6 / (0.9 + 0.6) = 1.08/1.5 = 0.72 (harmonic mean ไม่ใช่ค่าเฉลี่ย 0.75)",
+  "src": "text/slides_w14.txt s.35 ; notes 2.23"
+ },
+ {
+  "id": "n14-L3-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 14,
+  "level": 3,
+  "topic": "LSH banding parameters",
+  "stem": "MinHash signature ยาว H = 128 แบ่งเป็น b = 32 bands จะได้ r = ___ rows ต่อ band และ threshold ประมาณ s* = (1/b)^(1/r) = ___ (ทศนิยม 2 ตำแหน่ง)",
+  "key": "4;0.42",
+  "note": "r = 128/32 = 4 ; s* = (1/32)^(1/4) = 0.4204 ~ 0.42 ; s* เป็นตำแหน่ง ramp ไม่ใช่จุด 50%",
+  "src": "text/slides_w14.txt s.26 ; notes 2.17, 3.3"
+ },
+ {
+  "id": "n14-L4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 14,
+  "level": 4,
+  "topic": "MinHash standard error",
+  "stem": "MinHash ใช้ H = 256 hash positions standard error สูงสุดของค่าประมาณ Jaccard = 1/(2 sqrt(H)) = ___ และถ้าต้องการให้ standard error สูงสุดลดลงเหลือครึ่งหนึ่ง ต้องเพิ่ม H เป็น ___",
+  "key": "0.03125;1024",
+  "note": "ยอมรับ 0.031 หรือ 0.0313 ; sqrt(256) = 16 จึง 1/32 = 0.03125 ; SE ลดครึ่งต้อง H เพิ่ม 4 เท่า = 1,024 (ลดด้วย H ไม่ใช่จำนวน shingle)",
+  "src": "text/slides_w14.txt s.23 ; notes 2.15b, 3.2"
+ }
+]

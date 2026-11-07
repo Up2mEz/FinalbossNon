@@ -1,0 +1,1413 @@
+Principles of Autonomous Agents,
+Structural Tool Constraints
+
+                                                                                       Asst. Prof. Nont Kanungsukkasem, Ph.D.
+Agenda
+
+· Part 1: From LLMs to Agents -- The Paradigm Shift
+
+· Part 2: Formalizing the ReAct Architecture -- The Execution Loop 
+
+· Part 3: Grammar-Constrained Decoding Theory 
+
+· Part 4: Memory Management Architectures 
+
+· Part 5: Multi-Agent Topologies 
+
+· Part 6: Synthesis, Lab & Conclusion
+
+                                                                                                                                                                                                      2
+What Is an Agent?
+
+· De nition: An autonomous agent is a system where an LLM controls the
+
+   execution ow -- deciding what to do next, calling tools, and iterating until
+   the task is complete.
+
+
+· The Key Distinction:
+
+
+· Formal View: An agent is a feedback control loop. If the state explicitly
+
+   contains the full interaction history, the transition is Markov with respect to
+   that augmented state; a compressed observation may be partially observable.
+
+
+· Analogy: LLM = Calculator (you type, it answers). Agent = Researcher (asks
+
+   questions, runs experiments, revises hypotheses).
+
+                                                                                                                                                                                                      3
+
+lf if
+Levels of Autonomy for AI Agents
+
+Feng, Kevin J., David W. McDonald, and Amy X. Zhang. "Levels of autonomy for ai agents." arXiv preprint arXiv:2506.12469 (2025).  4
+The Anatomy of an Agent
+
+· Four Core Components:
+
+
+  · 1. LLM Brain (Controller): The reasoning 
+
+      engine -- decides what to do next.
+
+
+  · 2. Tool Set (Actuators): External functions 
+
+      the agent can call (search, calculator, code execution, APIs).
+
+
+  · 3. Memory (State): Short-term (context window) + Long-term (persistent
+
+      storage).
+
+
+  · 4. Planning Module: Task decomposition and strategy selection.
+
+
+· Data Flow: User Query  LLM Brain  (Plan  Tool Call  Observation) × N
+
+    Final Answer.
+
+                                                                                                                                                                                                      5
+Why Agents?
+
+· Already have:
+   · Re ection (W11): a loop, but the critic knows only what the writer knows.
+
+   · RAG (W12): fresh facts, but a xed pipeline: retrieve once, then answer.
+
+
+· Still missing:
+   · Grounded veri cation: check against the world (search, run code, tests), not against itself.
+
+   · Live, per-request state: stock price now, order status. Can't be pre-indexed.
+
+   · Model-chosen control ow: decide whether, what, and how many times to retrieve or act.
+
+   · Side e ects: execute code, call APIs, write to a database.
+
+
+· The Agent Solution: the LLM picks the next action in a loop, and the observation comes from a
+
+   tool, not from itself.
+
+
+· Key Insight: The LLM doesn't become smarter -- it becomes more capable through tooling.
+                                                                                                                                                                                                      6
+
+if lf if ff lf
+In-Class Activity -- "Be the Agent"
+
+· Activity: Given a multi-step task, identify which steps need external tools.
+
+· Task: "Find Thailand's GDP (nominal, in USD) and its population for the same
+
+   year, then calculate the GDP per capita in USD."
+
+
+· Steps to analyze:
+
+  · 1. Find GDP of Thailand  Tool needed? What tool?
+
+  · 2. Find population of Thailand  Tool needed? What tool?
+
+  · 3. Calculate GDP / Population  Tool needed? What tool?
+
+  · 4. Format the answer  Tool needed? What tool?
+
+
+· Discussion: Which steps can the LLM do alone? Which require tools?
+                                                                                                                                                                                                      7
+Part 2 -- Formalizing the ReAct Architecture
+
+· Part 2: Formalizing the ReAct Architecture
+
+· Subtitle: Modeling Reasoning and Acting as an Explicit Execution Loop
+
+· Key Paper: Yao et al. (2023), "ReAct: Synergizing Reasoning and Acting in
+
+    Language Models"
+
+
+· Core Innovation: Interleave reasoning traces (Thought) with actions (Tool
+
+    calls) in a single generation.
+
+8 Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2023). REACT: SYNERGIZING REASONING AND ACTING IN LANGUAGE MODELS. Paper presented at 11th International Conference on Learning Representations, ICLR 2023
+blished as a conference paper at ICLR 2023
+
+                                                                                                                                                                                                                    9
+
+     The ReAct Framework -- Thought-Action-Observation Loop
+
+      ·                        +RWVSRW4$                                                                                                                                                   G5H$FW5HDVRQ$FW
+
+         Thought: The model decides what                                                                                                                   7KRXJKW,QHHGWRVHDUFK$SSOH5HPRWHDQGILQGWKH 
+XDHQVWFRLRQQWUR$OiVnLWfGKoHHrISmUURRaPJtUiWDoKPnH$$SoSSrSOOHaHc55HtiHPoPRRWnWHHisZDZVnKeDRWUeLdRJWLeKQdHDUOnOG\eHxYLtF.
+H                                  SURJUDPLWZDVRULJLQDOO\GHVLJQHGWRLQWHUDFWZLWK
+                                                                                                                                                           $FW6HDUFK>$SSOH5HPRWH@
+HVLJQHGWRLQWHUDFWZLWK"                                                                                                                                     2EV7KH$SSOH5HPRWHLVDUHPRWHFRQWUROLQWURGXFHGLQ 
+                                                                                                                                                           2FWREHUE\$SSOHªRULJLQDOO\GHVLJQHGWRFRQWUROWKH 
+      · Action: The model emits a structured                                                                                                               )URQW5RZPHGLDFHQWHU SURJUDPª
+
+      D6tWoDoQGlDcUGall.
+       F$FW2QO\
+
+QVZHUL3RG                        $FW6HDUFK>$SSOH5HPRWH@                                                                                                    7KRXJKW$SSOH5HPRWHZDVRULJLQDOO\GHVLJQHGWRFRQWURO 
+                                                                                                                                                           WKH)URQW5RZPHGLDFHQWHUSURJUDP,QHHGWRVHDUFK )URQW
+      · Observation: T2hEVeen7vKHiro$SnSOmHe5HnPtRWrHetLuV rnDs                                                                                            5RZQH[WDQGILQGZKDWRWKHUGHYLFHFDQFRQWUROLW
+E&R7t5hHeDVRtQoo2QlOr\e sult.
+UHPRWHFRQWUROª                                                                                                             $FW6HDUFK>)URQW5RZ@
+                                                                                                                                                           2EV&RXOGQRWILQG>)URQW5RZ@6LPLODU>
+)URQW5RZ 
+KRXJKW/HW
+VWKLQNVWHS  $FW6HDUFK>)URQW5RZ @                                                                                                                 6HDWWR(DUWK
+
+)URQW5RZ0RWRUVSRUWV
+
+ )URQW5RZ 
+                                                                                                                                                           VRIWZDUH 
+ª@
+·  , a , o , ...,  , a Q\ULWJVHWLUHQDDFSOWO\Z$LSGWSLaHKOVnHo$LsSJo5QSwHpHOPGHRe:WrW7H9R1oZDrVs1top125cERZVo@nd6L&iPRtTLiXoOODGnUT.Q
+RªWunILtQilGa>n)URQW 
+                                                                                                                                                           7KRXJKW)URQW5RZLVQRWIRXQG,QHHGWRVHDUFK )URQW
+SSOH79FDQEHFRQWUROOHG  $FW6HDUFK>)URQW5RZ                                                                                                                  5RZVRIWZDUH 
+· \L3KRQHLE3DxGamDQGpLle3R:GThinkVRIWZ`DSUHea@rch["population                                                                                             $FW6HDUFK>)URQW5RZVRIWZDUH @
+Bangkok"]` RXFK6RWKHDQVZHULV     i2nEsVpec)tURrQeWs5uRZlt.L
+VD                                                                                             2EV)URQW5RZLVDGLVFRQWLQXHGPHGLDFHQWHUVRIWZDUHª
+                               
+3KRQHL3DGDQGL3RG                 GLVFRQWLQXHGPHGLDFHQWHU                                                                                                   7KRXJKW)URQW5RZVRIWZDUHLVFRQWUROOHGE\DQ$SSOH 
+
+RXFK                             VRIWZDUHª                                                                                                                 5HPRWHRUWKHNH\ERDUGIXQFWLRQNH\V 6RWKHDQVZHULV 
+
+      · Key Point: The observation, not an                                                                                                                 NH\ERDUGIXQFWLRQNH\V
+QRXVFZKHUL3KRiQmHaLg3iDnGedL3RrGesult$,FWguid)eLQsLVtKh>\eHVn@ext step.
+                                                                                                                                                           $FW)LQLVK>NH\ERDUGIXQFWLRQNH\V @                
+
+                                           $OI:RUOG                                                                                                                                        E5H$FW5HDVRQ$FW
+
+RXDUHLQWKHPLGGOHRIDURRP/RRNLQJTXLFNO\DURXQG                                                                                                                $FW7KLQN>)LUVW,QHHGWRILQGDSHSSHUVKDNHUPRUH 
+RX\RXVHHDFDELQHWDFDELQHWDFRIIHHPDFKLQH                                                                                                                     OLNHO\WRDSSHDULQFDELQHWVFRXQWHUWRSV @
+FRXQWHUWRSDVWRYHEXUQHUDQGDWRDVWHU                                                                                                                          $FW*RWRFDELQHW 
+RXUWDVNLVWR3XWVRPHSHSSHUVKDNHURQDGUDZHU                                                                                                                    2EV2QWKHFDELQHW\RXVHHDYDVH 
+ReAct as a Formal State Machine
+
+· State De nition: st = (q, h1:t-1) where q = original query, h1:t-1 = full history of
+
+   (thought, action, observation) tuples.
+
+
+· Transition Function: st LLM (t, at) env ot  st+1
+
+
+· Markov Property of the Augmented State: Because st already contains the query and
+
+   full history, it is a su cient state representation:
+   
+
+                   P(st+1  st) = P(st+1  st, st-1, ..., s1) under this model.
+
+· Practical Caveat: If we truncate or summarize history, the model receives an
+
+   observation that may omit relevant information; memory management then becomes
+   critical.
+
+
+· Implication: Context window must hold the full trajectory -- memory management is
+
+   critical.
+
+                                                                                                                                                                                                     10
+
+i ff if
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2023). REACT: SYNERGIZING REASONING AND ACTING IN LANGUAGE MODELS. Paper presented at 11th International Conference on Learning Representations, ICLR 2023
+
+The ReAct Execution Loop (Pseudocode)
+
+ · The Core Loop:
+
+
+ · A loop alone is not su cient: Agentic behavior comes from a policy that chooses
+
+    actions from observations and tool feedback toward a goal. Pipelines can also contain
+    loops.
+
+
+ · Key Design Choices: `max_steps` as a safety guard, `build_prompt` must include full
+
+    history.
+
+                                                                                                                                                                                                       11
+
+i ff
+State Space Tracking -- The Context Growth Problem
+
+                                                                                           t-1
+
+· Context Length at Step t: | st | = | system | + | q | +  ( | i | + | ai | + | oi | )
+
+
+                                                                                           i=1
+
+· Numeric Example (GPT-4o, 128K context):
+
+
+· Note: rows 5 and 10 assume every step in between adds the same amount as that row.
+
+· Risk: Observations grow as the agent digs deeper. Keep averaging ~2,110 tokens/step
+
+   and the running total crosses 128,000 at step 64 -- and you must stop earlier still, since
+   the model also needs headroom to write its reply.
+
+                                                                                                                                                                                                     12
+            Published as a conference paper at ICLR 2023
+
+Four                                                   +RWVSRW4$                                    G5H$FW5HDVRQ$FW
+Strategies
+on the      4XHVWLRQ$VLGHIURPWKH$SSOH5HPRWHZKDWRWKHUGHYLFH          7KRXJKW,QHHGWRVHDUFK$SSOH5HPRWHDQGILQGWKH 
+Same        FDQFRQWUROWKHSURJUDP$SSOH5HPRWHZDVRULJLQDOO\            SURJUDPLWZDVRULJLQDOO\GHVLJQHGWRLQWHUDFWZLWK
+Question    GHVLJQHGWRLQWHUDFWZLWK"                                 $FW6HDUFK>$SSOH5HPRWH@
+                                                                    2EV7KH$SSOH5HPRWHLVDUHPRWHFRQWUROLQWURGXFHGLQ 
+                       D6WDQGDUG                    F$FW2QO\      2FWREHUE\$SSOHªRULJLQDOO\GHVLJQHGWRFRQWUROWKH 
+                                     $FW6HDUFK>$SSOH5HPRWH@         )URQW5RZPHGLDFHQWHU SURJUDPª
+             $QVZHUL3RG              2EV7KH$SSOH5HPRWHLV D
+                                     UHPRWHFRQWUROª                 7KRXJKW$SSOH5HPRWHZDVRULJLQDOO\GHVLJQHGWRFRQWURO 
+                E&R75HDVRQ2QO\                                    WKH)URQW5RZPHGLDFHQWHUSURJUDP,QHHGWRVHDUFK )URQW
+            7KRXJKW/HW
+VWKLQNVWHS    $FW6HDUFK>)URQW5RZ @           5RZQH[WDQGILQGZKDWRWKHUGHYLFHFDQFRQWUROLW
+            E\VWHS $SSOH5HPRWHZDV    2EV&RXOGQRWILQG>)URQW          $FW6HDUFK>)URQW5RZ@
+            RULJLQDOO\GHVLJQHGWR     5RZ@6LPLODUª                   2EV&RXOGQRWILQG>)URQW5RZ@6LPLODU>
+)URQW5RZ 
+            LQWHUDFWZLWK$SSOH79                                     6HDWWR(DUWK
+
+)URQW5RZ0RWRUVSRUWV
+
+ )URQW5RZ 
+            $SSOH79FDQEHFRQWUROOHG   $FW6HDUFK>)URQW5RZ             VRIWZDUH 
+ª@
+            E\L3KRQHL3DGDQGL3RG      VRIWZDUH @
+            7RXFK 6RWKHDQVZHULV      2EV)URQW5RZLVD                 7KRXJKW)URQW5RZLVQRWIRXQG,QHHGWRVHDUFK )URQW
+            L3KRQHL3DGDQGL3RG        GLVFRQWLQXHGPHGLDFHQWHU        5RZVRIWZDUH 
+            7RXFK                    VRIWZDUHª                      $FW6HDUFK>)URQW5RZVRIWZDUH @
+                                                                    2EV)URQW5RZLVDGLVFRQWLQXHGPHGLDFHQWHUVRIWZDUHª
+            $QVZHUL3KRQHL3DGL3RG     $FW)LQLVK>\HV@
+            7RXFK                                                   7KRXJKW)URQW5RZVRIWZDUHLVFRQWUROOHGE\DQ$SSOH 
+
+                                                                    5HPRWHRUWKHNH\ERDUGIXQFWLRQNH\V 6RWKHDQVZHULV 
+
+                                                                    NH\ERDUGIXQFWLRQNH\V
+
+                                                                    $FW)LQLVK>NH\ERDUGIXQFWLRQNH\V @                
+
+                                                         $OI:RUOG                                   E5H$FW5HDVRQ$FW
+            <RXDUHLQWKHPLGGOHRIDURRP/RRNLQJTXLFNO\DURXQG
+            \RX\RXVHHDFDELQHWDFDELQHWDFRIIHHPDFKLQH                 $FW7KLQN>)LUVW,QHHGWRILQGDSHSSHUVKDNHUPRUH 
+            DFRXQWHUWRSDVWRYHEXUQHUDQGDWRDVWHU                      OLNHO\WRDSSHDULQFDELQHWVFRXQWHUWRSV @
+            <RXUWDVNLVWR3XWVRPHSHSSHUVKDNHURQDGUDZHU                $FW*RWRFDELQHW 
+                                                                    2EV2QWKHFDELQHW\RXVHHDYDVH 
+                                                         D$FW2QO\
+            $FW*RWRGUDZHU                                           +HUHWKHDJHQWJRWRFDELQHWWKHQFDELQHWWKHQFRXQWHUWRSDQG
+            2EV7KHGUDZHULVFORVHG 
+                                                                    $FW*RWRFRXQWHUWRS 
+                                                                    2EV2QWKHFRXQWHUWRS\RXVHHDDSSOHDEUHDG 
+                                                                    DSHSSHUVKDNHUDQGDYDVH
+
+            $FW2SHQGUDZHU                                           $FW7DNHSHSSHUVKDNHUIURPFRXQWHUWRS 
+            2EV<RXRSHQWKHGUDZHU7KHGUDZHULVRSHQ,QLW                  2EV<RXSLFNXSWKHSHSSHUVKDNHUIURPWKHFRXQWHUWRS 
+            \RXVHHDGLVKVSRQJHDQGDVSRRQ
+                                                                    $FW7KLQN>1RZ,ILQGDSHSSHUVKDNHU1H[W,QHHGWR 
+            $FW*RWRVLQNEDVLQ                                        SXWLWLQRQGUDZHU @
+            2EV2QWKHVLQNEDVLQ\RXVHHDGLVKVSRQJHD                     $FW*RWRGUDZHU 
+            VSDWXODDQGDVSRRQ                                        2EV'UDZHULVFORVHG 
+
+            $FW7DNHSHSSHUVKDNHUIURPVLQNEDVLQ                        $FW2SHQGUDZHU 
+            2EV1RWKLQJKDSSHQV                                       2EV<RXRSHQ'UDZHUª
+
+            $FW7DNHSHSSHUVKDNHUIURPVLQNEDVLQ                        $FW3XWSHSSHUVKDNHULQRQGUDZHU                          13
+            2EV1RWKLQJKDSSHQV                                       2EV<RXSXWSHSSHUVKDNHULQRQWKHGUDZHU
+
+            Figure 1: (1) Comparison of 4 prompting methods, (a) Standard, (b) Chain-of-thought (CoT,
+            Reason Only), (c) Act-only, and (d) ReAct (Reason+Act), solving a HotpotQA (Yang et al., 2018)
+            question. (2) Comparison of (a) Act-only and (b) ReAct prompting to solve an AlfWorld (Shridhar
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2023). REACT: SYNERGIZING REASONING AND ACTING IN LANGUAGE MODELS. Paper presented at 11th International Conference on Learning Representations, ICLR 2023
+
+                                                              Published as a conference paper at ICLR 2023
+
+What the Numbers Really Show -- Benchmark Accuracy
+
+· HotpotQA EM,        Prompt Methoda                                                             HotpotQA Fever
+                                                                                                    (EM) (Acc)
+
+PaLM-540B             Standard                                                                   28.7  57.1
+
+(Yao et al. 2023, Table 1):
+ CoT (Wei et al., 2022)                                              29.4  56.3
+                                                                    CoT-SC (Wang et al., 2022a)  33.4  60.4
+
+                      Act                                                                        25.7  58.9
+                      ReAct
+                      CoT-SC ! ReAct                                                             27.4  60.9
+                      ReAct! CoT-SC
+                                                                                                 34.2  64.6
+
+                                                                                                 35.1  62.0
+
+                      Supervised SoTAb                                                           67.5  89.5
+
+· Ranking ips by      wtainssk:oRnefAaTHccaobtttalpHerotote1rtpQo:attQPArAialiLasEeMnMvdCi-saF524eo7l.v01,eT(BFr2.8p.9eor, o3vnm3.8epmftorirnSg6utar0nletds.aiur9-ldth,s CvooonTs,pnF5uirg6meub.rae3esr2)o:o.f
+PnCaoLinTM-g-S54C(0HsBamoprptolpemsoputsitneQgd.rAesults  with  resp
+
+   27.4 vs 29.4) but
+
+                      CoT-SC in Wang et al. (2022b).
+                                                                                                           b
+
+· Sample e ciency: Self-consistency drives (Zhu et al., 2021; Lewis et al., 2020) the combo gains (CoT-SC alone is
+
+33.4), but adding ReAct mastecarhchersefoirtmuwlatiitohn ("omnaylybe 3I c­an5sesarachm/loopkluep sx invstsead2"1), .a
+nd synthesize the final answer (
+                                                       the answer is x"). See Appendix C for more details.
+
+· The Core Question: If ReABcatselloinsesesWreasywstemsacticoalrley abolante RHeAocttptorajteQctoArie,s two bhuiyld pdroidmptistfor multiple baselines
+
+   transform agent research? formats as Figure 1(1a-1c)): (a) Standard prompting (Standard), which removes all thou
+                                                            actions, observations in ReAct trajectories. (b) Chain-of-thought prompting (CoT) (1W4ei
+                                                            2022), which removes actions and observations and serve as a reasoning-only baseline. We
+
+                                                            build a self-consistency baseline (CoT-SC) (Wang et al., 2022a;b) by sampling 21 CoT traject
+
+                                                            with decoding temperature 0.7 during inference and adopting the majority answer, which is fou
+                                                            consistently boost performance over CoT. (c) Acting-only prompt (Act), which removes tho
+                                                            in ReAct trajectories, loosely resembling how WebGPT (Nakano et al., 2021) interacts wit
+            if l f f
+PWublihshyedRasea cAoncfetrenMceapatpteer art sICL--R 20E23rror & Hallucination Analysis
+
+· Success & Failure Modes on HotpotQA (Yao et al. 2023, Table 2 -- 200 human-
+
+   analyzed trajectories):
+
+
+         Type            Definition                                                      ReAct CoT
+
+Success  True positive   Correct reasoning trace and facts                               94%             86%
+         False positive  Hallucinated reasoning trace or facts
+                                                                                         6%              14%
+
+         Reasoning error Wrong reasoning trace (including failing to recover from repetitive steps) 47%  16%
+
+Failure  Search result error Search return empty or does not contain useful information  23%             -
+
+         Hallucination   Hallucinated reasoning trace or facts                           0%              56%
+
+         Label ambiguity Right prediction but did not match the label precisely          29%             28%
+
+T·ab0le%2:HTayllupecsinoaftisounccienssfaainludrefa:iWluhreenmRodeeAscot ffaRiles,Aict tneavnedr CinovTenotsn fHacottpso(CtQoAT,haasllwuceilnlaatsestheir
+
+perc5e6n%tagoefsitisn wrarnodnogmalynssweleecrste).d
+ examples studied by human.
+
+R·eAIncstpvesc.tCabolTe enOgnintheeeortihnegr ehrarnodr,sR:eRAecAtcto'sut4p7er%forrmeassCoonTinogneFrreovresr ((l6o0o.p9invgs.)5m6.o3t)ivaantdeslightly
+
+lags`mbaehxi_nsdteCposT`; o2n3%HoatpreotsQeAar(c2h7.m4 ivsss.e2s9..
+4). Fever claims for SUPPORTS/REFUTES might only
+
+ridsa·ifnvfdHheitoraaigmsbl.hyl1Tyea4ors%sabtlimregultuhpteectlrekaadumycn5cohd0uuaenrltrlrastuatc(cajseyinenc:deat9oAttr4hioipe%enpsbseweo)n.hdfiatiRhxveicDoAor.cra1rlt)e',dscsitofcfaoeanrrcderteinincncgtecotabornerrsetewcwttreeiaeernnvsseRwaaereceArcsvucer(tajrutiaednegaddneddCtrobuuypTe-EtopoMno-dsH)aittfoiervtopekmonstoQ(RwCeAloeA,Tdcwgtee 15
+
+and CoT respectively (thus 200 examples in total), and manually labeled their success and failure
+modes in Table 2. Some key observations are as follows:
+                                            https://developers.openai.com/api/docs/guides/function-calling
+
+Tool De nitions as Function Signatures
+
+· JSON Schema = a blank form: which boxes exist, what type each takes, which are required. The
+
+   data is the lled-in form.
+
+· A tool de nition is the form we show the LLM: name, description (when to use it)
+
+   and parameters (the schema of the inputs).
+
+                          · De nition  call, eld by eld: 
+
+                               - name  name
+                               - parameters (the shape)  arguments (the
+                               value)
+                               - "type": "object"  arguments must be {...}
+                               - properties.query: string  "query": "..."
+                               - required: ["query"]  query may not be
+                               missing.
+
+· The LLM lls it in: `{"name": "search_web", "arguments": {"query": "GDP Thailand 2024"}}` --
+
+   whose `arguments` must validate against the `parameters` schema above (an object with a required
+
+   string `query`).
+
+
+· This is where Grammar-Constrained Decoding (Part 3) becomes essential.                                    16
+
+if if i i f f i i f f if
+The Tool Call Protocol -- Data Flow
+
+· Step-by-Step Protocol:
+
+
+· 1.LLM generates a tool call: `{"name": "search_web", "arguments": {"query": "GDP
+
+   Thailand 2024"}}` (slide 16). Only the inner `{"query": ...}` comes from our schema; the outer
+
+   keys are the protocol's (OpenAI `name`/`arguments`, Anthropic `name`/`input`, our demo `Action:
+
+   name[argument]`), learned from ne-tuning or the prompt.
+
+
+· 2. Parser validates the JSON against the tool schema.
+
+
+· 3. Dispatcher routes to the correct tool function.
+
+
+· 4. Tool executes and returns a string result.
+
+
+· 5. Result is appended as an Observation and the loop continues -- the LLM sees it in its next prompt.
+
+
+· Failure Modes:
+
+
+· Malformed JSON  Parser error  Retry or fail.
+
+
+· Hallucinated tool name  Tool not found  Error message.
+
+
+· In nite loop  `max_steps` guard.                                                                        17
+
+if if
+The Reliability Problem -- Why We Need Constrained Decoding
+· The Problem: LLMs generate text token-by-token. There is no built-in
+
+   guarantee the output will be valid JSON, valid code, or valid anything.
+
+
+· Real Failure Examples:
+
+
+· Current Mitigation (Brittle): Regex parsing, retry loops, prompt engineering.
+
+· Better Solution: Constrain the decoding process itself at the logit level.
+
+                                                                                                                                                                                                     18
+                                             Willard & Louf (2023), "E cient Guided Generation for LLMs." [arXiv:2307.09702]
+
+Part 3 -- Grammar-Constrained Decoding Theory
+
+· Part 3: Grammar-Constrained Decoding Theory
+
+· Subtitle: Forcing Valid Structured Outputs at the Vocabulary Logit Level
+
+· Central Question: Under what assumptions can constrained decoding
+
+   guarantee syntactic compliance without repair?
+
+                                                                                                                                                                                                     19
+
+iff
+The Structured Output Problem
+
+· Why is structured output hard? LLMs pick from a vocabulary of ~50,000
+
+   (GPT-2) to over 250,000 (Gemma) tokens at every step, and nothing built-in
+   enforces syntactic validity.
+
+
+· JSON Validity Requirements (all must hold): our tool schema needs an
+
+   object, so it starts with `{`; keys are quoted strings, values are valid types,
+   brackets properly nested and closed.
+
+
+· Failure Rate Is Benchmark-Dependent: Measure valid-JSON and schema-
+
+   valid rates for the chosen model, prompt, decoding settings, and schema; do
+   not assume a universal percentage.
+
+                                                                                                                                                                                                     20
+Logit-Level Masking -- The Core Idea
+
+· Concept: At each decoding step, before softmax, set the logits of all invalid tokens to -.
+
+
+·  Mathematical  Formulation:  logiti  =     logiti  if token i   valid
+
+
+                                          {-         otherwise
+
+·  After Softmax: P(tokeni) =   elogiti
+
+                                            
+
+
+                               j elogitj
+
+   · Invalid tokens get e- = 0  probability = 0.
+
+
+   · Valid tokens share 100% of the probability mass.
+
+
+· Result: Relative to a correct grammar­token index, invalid next tokens receive zero
+
+   probability. A full syntax guarantee additionally requires correct parser state, token-pre x
+
+   handling, and valid termination.
+     
+                                                                                                 21
+Visualizing Logit Masking -- A Worked Example
+
+· Scenario: Generating JSON, current state = `{`. The grammar allows 3 continuations: open
+
+   a key with `"`, close an empty object with `}`, or emit whitespace (JSON permits blanks
+   between structural symbols, so `{\n "a": 1}` is legal).
+
+
+· But the mask works on token ids, not characters. GPT-2's vocabulary is 50,257 BPE
+
+   tokens, and many of them spell one of those 3 continuations.
+
+
+· 3 grammatical continuations = 69 vocabulary entries: 62 tokens that open a key (`"`, ` "`,
+
+   `":`, `","`, ...), 5 whitespace-only tokens (`\t`, `\n`, `\r`, ` `, `\n\n`), 2 forms of `}` (`}`, ` }`).
+
+
+· Masked tokens: Everything else -- 50,188 tokens masked to - (99.86% of the
+
+   vocabulary).
+
+
+· Probability redistribution: Those 69 tokens now share 100% of the probability mass.
+
+
+· Contrast -- how much masking bites depends on the parser state: inside a string
+
+   (`{"name": "A`) almost nothing is illegal, so 50,146 of 50,257 tokens stay valid and only
+   111 are masked.
+
+                                                                                                                                                                                                     22
+Context-Free Grammars (CFG) for JSON
+
+· What determines the valid tokens? A formal grammar -- speci cally, JSON can
+
+   be described by a Context-Free Grammar (CFG).
+
+
+· JSON CFG (Simpli ed BNF):
+
+
+· Parser State: At each decoding step, the parser tracks its full con guration -- the
+
+   current rule and the stack of enclosing objects/arrays. (A stack is what a plain regex/
+   DFA cannot keep; that is the whole reason nesting needs a CFG.)
+
+
+· Key Insight: At each parser state, the CFG de nes a nite set of valid next tokens
+
+   (the full set of valid continuations can still be in nite).
+
+                                                                                                                                                                                                     23
+
+if
+                                             Willard & Louf (2023), "E cient Guided Generation for LLMs." [arXiv:2307.09702]
+
+CFG-Guided Decoding Algorithm
+
+· Algorithm (at each decoding step):
+
+
+   · 1. Maintain parser state -- not just which rule, but the position inside the rule (`object  '{'
+
+       members? '}'` means the `{` is already consumed) and the stack of unclosed brackets (`{"a":
+       {"b": 1` sits two objects deep, so the rst `}` closes the inner one and a second `}` is still legal).
+
+
+   · 2. Compute valid next tokens -- from the parser state, enumerate all tokens that keep the parse
+
+       valid.
+
+
+   · 3. Apply logit mask -- set invalid tokens to -.
+
+
+   · 4. Sample -- draw the next token from the masked distribution.
+
+
+   · 5. Update parser state -- advance the parser with the selected token.
+
+
+· Implementation: The `outlines` library by Willard & Louf provides production-ready CFG-guided
+
+   decoding.
+
+
+· Naive Complexity: Scanning the whole vocabulary at every step costs O( | | ). Precomputed state-to-
+
+   token indices make lookup e cient, but applying a vocabulary mask and the model's output softmax still
+   scale with vocabulary size; the whole decoding step is not O(1).
+
+                                                                                                                                                                                                     24
+
+if i ff iff 
+Regular Expression Constraints -- A Simpler Alternative
+
+· For simpler structures: Use Regular Expressions instead of full CFGs.
+
+
+· Example: Date eld must match `\d{4}-\d{2}-\d{2}` (e.g., `2024-01-15`).
+
+
+· Method:
+
+
+   · 1. Compile regex to a Deterministic Finite Automaton (DFA).
+
+
+   · 2. At each decoding step, use the DFA state to determine valid next tokens.
+
+   · 3. Apply the same - masking technique.
+
+
+· Advantage: A DFA state transition for one character is constant-time; end-to-end token
+
+   validation and decoding still include tokenizer-pre x lookup, masking, and model computation.
+
+
+· Limitation: Cannot enforce arbitrarily deep recursion -- balanced nesting to unbounded depth
+
+   is not a regular language. (Nuance worth stating: JSON capped at a xed max depth is regular
+   and can be compiled to a DFA -- the state count just blows up. Unbounded depth is what
+   forces a CFG/pushdown automaton.)
+
+                                                                                                                                                                                                     25
+
+if
+Performance Impact of Constrained Decoding
+
+· Latency Overhead: Depends on grammar complexity, tokenizer indexing, batch
+
+   size, backend, and cache behavior; benchmark the chosen serving stack.
+
+
+· Format 
+
+   Compliance:
+
+
+· Trade-o : Constrained decoding trades some exibility and compute for
+
+   syntactic validity; semantic and schema validation remain necessary.
+
+
+· Production adoption: Used in vLLM, TensorRT-LLM, llama.cpp, and most
+
+   inference frameworks.
+                                                                                                                                                                                                     26
+
+f
+                                       Park, Joon Sung, et al. "Generative agents: Interactive simulacra of human behavior." Proceedings of the 36th annual acm symposium on user interface software and technology. 2023.
+
+Part 4 -- Memory Management Architectures
+
+· Part 4: Memory Management Architectures
+
+
+· Subtitle: How Agents Remember -- From Short-Term Context to Long-Term
+
+   Persistence
+
+
+· The Core Challenge: Context windows are nite. Agents need to remember
+
+across many turns and sessions. UIST '23, October 29-November 1, 2023, San Francisco, CA, USA  J.S. Park, J.C. O'Brien, C.J. Cai, M.R. Morris, P. Liang, M.S. Bernstein
+
+                                                                                                                                                                                 27
+
+Figure 5: Our generative agent architecture. Agents perceive their environment, and all perceptions are saved in a comprehensive
+record of the agent's experiences called the memory stream. Based on their perceptions, the architecture retrieves relevant
+memories and uses those retrieved actions to determine an action. These retrieved memories are also used to form longer-term
+plans and create higher-level re!ections, both of which are entered into the memory stream for future use.
+                                                      Sumers, T. R., Yao, S., Narasimhan, K., & Gri ths, T. L. (2024). Cognitive Architectures for Language Agents. Transactions on Machine Learning Research, 2024.
+
+The Memory Taxonomy
+
+· Four Types of Agent Memory:
+
+   · 1. Working Memory (Short-Term): Current context window contents -- immediate, fast, limited.
+
+   · 2. Episodic Memory: Records of speci c past interactions -- "what happened in conversation
+
+      #42?"
+
+
+   · 3. Semantic Memory: Compiled knowledge and facts -- "Thailand's capital is Bangkok."
+
+   · 4. Procedural Memory: Learned skills and patterns -- "how to search then summarize."
+
+· Human Analogy:
+
+   · Working Memory = What you're thinking about right now.
+
+   · Episodic Memory = Diary entries.
+
+   · Semantic Memory = Textbook knowledge.
+
+   · Procedural Memory = How to ride a bike.
+
+                                                                                                                                                                                                     28
+
+if i ff
+Ingestion-Time vs. Runtime Compilation 
+(Karpathy's LLM-OS Framing)
+
+· The Pattern (extends Andrej Karpathy's 2023 "LLM OS" framing): Di erentiate between
+
+   ingestion-time compilation and runtime context loading.
+
+
+· Two Phases:
+
+
+  · 1. Ingestion Time (O ine): Process raw documents  extract key facts  compile
+
+      into structured summaries  store.
+
+
+  · 2. Runtime (Online): Load only relevant summaries into context window  generate
+
+      answer.
+
+
+· Analogy: Studying for an exam.
+
+
+  · Ingestion = Reading the textbook and making a cheat sheet (notes).
+
+
+  · Runtime = Bringing only the cheat sheet to the exam room.
+
+
+· Key Insight: Don't stu raw documents into the prompt. Pre-digest them.
+                                                                                                                                                                                                     29
+
+f l f ff
+Short-Term vs. Long-Term -- The Technical Trade-o
+
+· Comparison Table:
+
+
+· Design Decision: What goes in short-term vs. long-term?
+
+  · Short-term: current task, recent tool results, active plan.
+
+  · Long-term: past conversations, compiled knowledge, user preferences.
+
+                                                                                                                                                                                                     30
+Three Memory Implementations -- Bu er, Summary, and Retrieval
+
+· Implementation 1 -- Bu er Memory: Append everything, O(n) growth. Simple,
+
+   no loss -- but eventually over ows.
+
+
+· Implementation 2 -- Summary Memory: when the bu er exceeds a token
+
+   budget, the LLM collapses everything but the last k turns into one summary,
+
+  bounded at O(k × msg + summary) . Bounded -- but summarization is
+
+   lossy.
+
+
+· Implementation 3 -- Retrieval Memory: Embed + vector-search top-k relevant
+  messages. The prompt is bounded at O(k × | msg | ) -- but note the store still
+
+   holds all n turns, so storage stays O(n) and search is O(n) for the brute-force
+   scorer we use in the demo (an ANN index makes it sublinear). Relevant -- but
+   may miss temporally important items.
+
+
+· Hybrid Approach (the practical default): Summarize old turns, retrieve relevant
+
+episodes on top. When two rankers disagree about which episodes to pull, fuse
+
+their rankings with RRF from Week 12.                                               31
+
+                                       lf ff
+Part 5 -- Multi-Agent Topologies
+
+· Part 5: Introduction to Multi-Agent Topologies
+
+· Subtitle: From Single Agents to Collaborative Teams
+
+· The Core Concept: Moving beyond a single LLM to multiple specialized
+
+   LLMs working together to solve complex tasks.
+
+                                                                                                                                                                                                     32
+                                   Wu, Q., et al.. (2024). AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation. ICLR 2024 Workshop on Large Language Model (LLM) Agents.
+
+Why Multi-Agent?
+
+· Single-Agent Limit: Long tasks can over ow context and propagate early
+
+   errors.
+
+
+· Specialization: Di erent roles can use focused prompts and tools.
+
+
+· Decomposition: Split a complex task into bounded sub-tasks.
+
+
+· Parallelism: Run independent sub-tasks concurrently when coordination cost
+
+   is low.
+
+
+· Trade-o : More agents add messaging, consistency, latency, and cost
+
+   problems.
+
+
+· Use When: The task is genuinely decomposable--not merely because agents
+
+   are available.
+
+                                                                                                                                                                                                     33
+
+ff f
+Topology 1 -- Sequential Pipeline
+
+· Structure: Agents execute in a linear order.
+
+· Data Flow: The output of Agent A is the input to Agent B.
+
+· Formal De nition: yi = fi(yi-1) where fi is agent i.
+
+
+                              N
+
+· Total Latency:  Ti (No speedup from parallelism).
+
+
+                            i=1
+
+· Pros: Simple, predictable, easy to debug.
+
+· Cons: Slow, rigid, error cascades (if A fails, B fails).
+
+                                                                                                                                                                                                     34
+
+if
+Sequential Pipeline -- Worked Example
+
+· Scenario: Writing a Technical Blog Post.
+
+· Agent 1 (Research): Tools = Search + Web Scraper  outputs `facts_list`, a
+
+   list of veri ed facts.
+
+
+· Agent 2 (Writer): No tools, just the facts  drafts `draft_text`, raw prose.
+
+· Agent 3 (Editor): Tools = Dictionary  xes grammar and ow  ` nal_post`.
+
+· Execution: final = Editor(Writer(Research(query)))
+
+· Error cascade in practice: if Research returns a miss, Writer still writes uent
+
+   prose around it and Editor polishes it -- the nal post is con dently wrong.
+
+                                                                                                                                                                                                     35
+
+if if
+Topology 2 -- Routing Network (Dispatcher)
+
+· Structure: A central router dispatches tasks to specialized agents.
+
+· Data Flow: The router decides which agent 
+
+   handles each sub-task based on the query.
+
+
+                                                                         User Query
+
+· Example: Customer Service Bot routing to 
+
+   Billing, Technical Support, or Sales.
+
+
+· Pros: Highly e cient, isolates domains, users get specialized help.
+
+· Cons: Router becomes a single point of failure.
+
+                                                                                                                                                                                                     36
+
+i ff
+Routing Network -- Implementation Details
+
+· Formal De nition: Router function r(q)  agentk.
+
+· How is the Router implemented?
+
+
+  · 1. LLM-Based Classi cation: Prompt LLM to output a JSON category.
+
+      (Slow but smart)
+
+
+·  2. Embedding Similarity: k = arg max cos(E(q), E(desci)). (Fast,
+              i
+   cheaper)
+
+
+  · 3. Rule-Based: Regex or keyword matching. (Fastest, rigid)
+
+· Key Metric: Routing Accuracy. If the router fails, the specialized agent fails.
+
+                                                                                   37
+
+              if if
+                                                https://reference.langchain.com/python/langgraph-supervisor
+
+Topology 3 -- Supervisor-Led (Hierarchical)
+
+· Structure: A Supervisor agent 
+
+   delegates, monitors, and 
+   aggregates work from 
+   Sub-agents.
+
+
+· Data Flow: Tree structure. 
+
+   Supervisor plans -> Assigns -> 
+   Sub-agents execute -> 
+   Supervisor evaluates.
+
+
+· Dynamic Control: The Supervisor can reassign work or request revisions if the
+
+   output is bad.
+
+
+· Pros: Highly exible, can handle ambiguous/complex tasks, self-correcting.
+
+
+· Cons: Very high latency, high token cost, complex to implement.
+                                                                                                                                                                                                     38
+
+lf
+Supervisor-Led -- Formal De nition (Pseudocode)
+
+· Supervisor Loop:
+
+
+· Key Insight: The supervisor has meta-reasoning capabilities.
+                                                                                                                                                                                                     39
+Yilun Du, Shuang Li, Antonio Torralba, Joshua B. Tenenbaum, and Igor Mordatch. 2024. Improving factuality and reasoning in language models through multiagent debate. In Proceedings of the 41st International Conference on Machine Learning (ICML'24), Vol. 235.
+
+  Topology 4 -- Debate / Consensus
+
+   · Structure: Multiple agents propose solutions independently, then debate or
+
+       vote.
+
+
+   · Data Flow: Parallel generation -> Exchange arguments -> Judge evaluates/
+
+       synthesizes.
+
+
+   · Best For: Fact-checking, code review, creative brainstorming, complex
+
+       reasoning.
+
+
+   · Mechanism:
+
+
+      · Agent A: "The answer is X because..."
+
+
+      · Agent B: "The answer is Y because..."
+
+
+      · Agent C (Judge): "Based on A and B, the true answer is Z."
+
+                                                                                                                                                                                                             40
+Topology Comparison Table
+
+· Comparing the Architectures:
+
+
+· Takeaway: No single topology wins every scenario. Choose based on task
+
+   requirements.
+
+                                                                                                                                                                                                     41
+                                                                                                                                                                                                    42
+
+The Communication Protocol Problem
+
+· 3 Core Communication Protocols:                      Agent Customization:                     ConversableAgent
+
+· Shared Scratchpad: Simple shared state;               human_input_mode = "NEVER"                                        Unified Conversation Interfaces:
+                                                        code_execution_config = False
+                                                        DEFAULT_SYSTEM_MESSAGE = "You                                             · send
+                                                        are a helpful AI assistant...                                             · receive
+                                                        In the following cases, suggest                                           · generate_reply
+                                                        python code..."
+                                                                                                                                                 human_input_mode = "NEVER"
+
+risks context bloat and con icting edits.
+  AutoGen                                             human_input_mode = "ALWAYS"                      group_chat = [              ]
+                                             Agents
+
+   · Message Passing: Send bounded                     AssistantAgent                           UserProxyAgent                                   GroupChatManager
+
+      messages to named recipients (e.g.,              1.2 Register a Custom Reply Func:        1.1 Define Agents:
+      AutoGen's send/receive).
+
+                                                       # This func will be invoked in                                                            # Note: when no reply
+   · Structured Payloads: Use JSON Schema              generate_reply                                                                            func is registered, a
+                                                                                                                                                 list of default reply
+      for machine-checkable elds.
+                     A.register_reply(B,                                                                       functions will be used.
+                                                       reply_func_A2B)
+· Engineering Guidelines:
+                  Developer  def reply_func_A2B(msg):                 User Proxy A        Assistant B
+                                               Code
+   · Choose By: Task coupling, message                        ouput = input_from_human()                  2 Initiate Conversations:
+                                                              ...
+      volume, and reliability needs.
+                         if not ouput:                     A.initiate_chat("Plot a chart of META and
+                                                                                                      TESLA stock price change YTD.", B)
+   · Design Rule: Always de ne ownership,                        if msg includes code:
+                                                                         output = execute(msg)
+      expected output, and termination
+      conditions (prevent in nite loops).                     return output
+
+                                                                                                The Resulting Automated Agent Chat:
+
+                                                       Conversation-Driven                      Plot a chart of META and                         receive
+                                                            Control Flow                        TESLA stock price change YTD.                                    generate_reply
+
+                                             Program                      receive                                 Execute the following          send
+                                            Execution                                                                                   code...         generate_reply
+                                                             generate_reply
+                                                                                 send           Error: package yfinance is not
+                                                                                                installed
+                                                          Conversation-Centric
+                                                                Computation                     Sorry! Please first pip install
+                                                                                                   yfinance and then execute
+                                                                                                              ...
+
+                                            Figure 2: Illustration of how to use AutoGen to program a multi-agent conversation. The top sub-
+                                            figure illustrates the built-in agents provided by AutoGen, which have unified conversation interfaces
+                                            and can be customized. The middle sub-figure shows an example of using AutoGen to develop
+                                            a two-agent system with a custom reply function. The bottom sub-figure illustrates the resulting
+                                            automated agent chat from the two-agent system during program execution.
+
+                                   lf if if if
+In-Class Activity -- Design Your Agent Team
+
+· Scenario: You are tasked with building a fully automated "Market Research System."
+
+· Inputs: A product name (e.g., "Electric Scooters in Bangkok").
+
+· Output: A 5-page formatted PDF report with competitor analysis, pricing, and
+
+   consumer sentiment.
+
+
+· Your Task:
+
+  · 1. Which Topology will you choose?
+
+  · 2. De ne your Agents (Roles & Tools for each).
+
+  · 3. Draw the data ow between them.
+
+
+· Discuss your design with your neighbor.
+
+                                                                                                                                                                                                     43
+
+lf if
+Part 6 -- Synthesis, Lab & Conclusion
+
+· Part 6: Synthesis, Lab & Conclusion
+
+· Subtitle: Bringing It All Together
+
+· Goal: Unifying ReAct, Constrained Decoding, Memory, and Multi-Agent
+
+   frameworks.
+
+                                                                                                                                                                                                     44
+Bringing It All Together -- The Complete Agent Architecture
+
+· The Complete Agent Architecture (Micro-Level):
+  Single Agent = Planning + Memory + LLM + Constraints + Tools
+
+
+· Execution Flow (How They Interact):
+
+· 1. Planning: Decomposes user query into structured sub-tasks.
+
+
+· 2. Memory: Retrieves relevant historical context and prior state.
+
+
+· 3. LLM: Executes the core ReAct reasoning loop (Thought -> Action).
+
+
+· 4. Constraints: Enforces valid grammar/JSON schema during token generation.
+
+
+· 5. Tools: Executes real-world action $\rightarrow$ Appends observation back to context.
+
+
+· Scaling to Teams (Macro-Level):
+  Multi-Agent System = Topology × {Agent1, Agent2, ...} + Protocol
+
+
+· Connects specialized agents via Topologies (Routing, Supervisor, Debate) and
+Communication Protocols.
+                                                                                            45
+The Reliability Stack (Defense in Depth)
+
+· Layer 1 -- Constrain: Generate only valid grammar or schema shapes.
+
+· Layer 2 -- Validate: Check types, ranges, permissions, and business rules.
+
+· Layer 3 -- Recover: Retry only bounded, recoverable failures with error
+
+   feedback.
+
+
+· Layer 4 -- Escalate: Require human approval for risky or destructive actions.
+
+· Defense in Depth: No single layer catches every failure mode.
+
+                                                                                                                                                                                                     46
+                              Ruan, Yangjun, et al. "Identifying the risks of LM agents with an LM-emulated sandbox." International Conference on Learning Representations. Vol. 2024. 2024
+
+Guardrails & Safety in Agent Systems
+
+· Risk: Agents can a ect external systems, not just generate text.
+
+· In nite Loops: Enforce `max_steps`, time, and token budgets.
+
+· Unauthorized Actions: Use least privilege and explicit allowlists.
+
+· Prompt Injection: Treat tool content as untrusted data, not instructions.
+
+· Code Execution: Use isolation, resource limits, and controlled interfaces.
+
+· High-Impact Actions: Pause for human con rmation and keep an audit log.
+
+                                                                                                                                                                                                     47
+
+ff if
+Evaluation of Agent Systems
+
+· How do we know an agent is good? Accuracy alone is not enough.
+
+
+· Key Metrics: Task Success Rate, Tool Call E ciency (redundant calls?), and Cost &
+
+   Latency per task.
+
+
+· Standard Benchmarks: WebArena (simulated websites), SWE-bench (real GitHub
+
+   issues), GAIA (multi-modal, multi-step).
+
+
+· How fast the numbers move: GAIA launched (2023) with humans at 92% vs.
+
+   GPT-4+plugins at 15%; as of early 2026 (March 2026 leaderboard), orchestrated
+   multi-model agent systems reached ~92.4% on GAIA (a score close to the original
+   human baseline), while o cial SWE-bench Veri ed Pass@1 reached ~79.2% (up
+   from single digits in 2023). A benchmark that saturates so quickly measures the
+   sca old as much as the model -- and makes it worth checking for contamination (
+   Week 14).
+
+https://leaderboard.steel.dev/leaderboards/gaia/  https://webarena.dev/
+
+https://www.swebench.com/  https://huggingface.co/spaces/gaia-benchmark/leaderboard  48
+
+i ff ff
+The Frontier: Code Agents & Computer Use
+
+· The Ultimate Tool: Python Code Execution.
+
+
+  · Instead of prede ned APIs, the agent writes python scripts, executes them,
+
+      and reads the output.
+
+
+· Computer Use (GUI Agents):
+
+
+  · Agents can receive screenshots/accessibility state and emit mouse/
+
+      keyboard actions; capabilities and product names change, so cite current
+      o cial documentation if naming one.
+
+
+· Outlook: These systems can automate bounded digital tasks but require
+
+   permissions, sandboxing, con rmation, and monitoring.
+
+                  https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool
+
+                                                                                                                                                                                                     49
+
+if if iff
+Ethical Considerations
+
+· Accountability: If an autonomous agent makes a costly mistake (e.g., buys
+
+   the wrong stock, insults a client), who is responsible? The developer? The
+   LLM provider? The user?
+
+
+· Transparency: Should agents have to disclose that they are non-human
+
+   when interacting online?
+
+
+· Consent: Can an agent scrape data or perform actions on a user's behalf
+
+   without explicit per-task consent?
+
+
+· Class Discussion: Where do we draw the line between automation and
+
+   agency?
+
+                                                                                                                                                                                                     50
+Summary -- The Agent Stack
+
+· The Agent Paradigm: LLM controlled via a `while` loop, interleaving
+
+   Reasoning and Acting (ReAct).
+
+
+· Constrained Decoding: Enforcing syntactic constraints via logit masking
+
+   (CFG / regex), subject to correct grammar-token mapping and termination;
+   validate schema and semantics separately.
+
+
+· Memory Architectures: Balancing Bu er Memory vs. Summary Memory vs.
+
+   Retrieval Memory.
+
+
+· Multi-Agent Systems: Deploying Sequential, Routing, Supervisor, or Debate
+
+   topologies for complex tasks.
+
+
+· Guardrails: Ensuring safety via token limits, validation, and human-in-the-
+
+   loop.
+
+                                                                                                                                                                                                     51
+
+ff
+The Bigger Picture -- Where Agents Fit
+
+· Weeks 1­8: Architectures, embeddings, Transformers, and language models.
+
+· Week 9: Extending encoders & semantic search.
+
+· Week 10: E cient adaptation (PEFT) & hardware-aware NLP.
+
+· Week 11: Prompting and reasoning strategies.
+
+· Week 12: Retrieval-augmented generation.
+
+· Week 13: Tool use and agent loops.
+
+· Week 14: Data engines (where training data comes from) and evaluation.
+
+· Connection: Agents combine earlier components but also add control and
+
+   safety concerns.
+
+                                                                                                                                                                                                     52
+
+iff
+Lab Preview -- What You Will Build
+
+· Part A (In-Class) -- The ReAct Loop:
+
+  · Write one line in `react_step()` to assemble the prompt from `query` +
+
+      `history`.
+
+
+  · Solves a multi-step task (Bangkok population / 1000) using
+
+      `search_wikipedia` & `calculator` via an o ine mock LLM.
+
+
+· Part B (Homework) -- Context Growth Analysis:
+
+  · Count tokens with `tiktoken`, plot the O(n) linear context growth curve,
+
+      and calculate when a 4,096-token window over ows.
+
+                                                                                                                                                                                                     53
+Recommended Reading
+
+· Next Week: Week 14 -- Data Engines & Evaluation (BERTScore, RAGAS, LLM-
+
+   as-Judge).
+
+
+· Recommended Reading:
+
+  · 1. Yao et al. (2023), "ReAct: Synergizing Reasoning and Acting in Language
+
+      Models," ICLR 2023.
+
+
+  · 2. Willard & Louf (2023), "E cient Guided Generation for Large Language
+
+      Models," arXiv:2307.09702 (Preprint).
+
+
+  · 3. Park et al. (2023), "Generative Agents: Interactive Simulacra of Human
+
+      Behavior," ACM UIST 2023.
+
+
+  · 4. Wang et al. (2024), "A Survey on Large Language Model based
+
+      Autonomous Agents," Frontiers of Computer Science (FCS 2024).
+
+                                                                                                                                                                                                     54
+
+iff
+

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 288">
+<defs><marker id="aa-week11-alignment-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker><marker id="aw-week11-alignment-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker></defs>
+<text x="20" y="28" class="h">จาก base model สู่ reasoning agent</text>
+<rect x="20" y="50" width="170" height="116" rx="6" class="mut"/>
+<text x="105" y="87" text-anchor="middle">Base model</text>
+<text x="105" y="104" text-anchor="middle">The Scholar</text>
+<text x="105" y="121" text-anchor="middle">next-token prediction</text>
+<text x="105" y="138" text-anchor="middle">คุยไม่เป็น</text>
+<rect x="275" y="50" width="170" height="116" rx="6" class="box"/>
+<text x="360" y="87" text-anchor="middle">Aligned assistant</text>
+<text x="360" y="104" text-anchor="middle">The Helper</text>
+<text x="360" y="121" text-anchor="middle">SFT + DPO</text>
+<text x="360" y="138" text-anchor="middle">สุภาพ ปลอดภัย</text>
+<rect x="530" y="50" width="170" height="116" rx="6" class="acc"/>
+<text x="615" y="87" text-anchor="middle">Reasoning agent</text>
+<text x="615" y="104" text-anchor="middle">The Thinker</text>
+<text x="615" y="121" text-anchor="middle">GRPO · System 2</text>
+<text x="615" y="138" text-anchor="middle">ย้อนกลับ ตรวจเอง</text>
+<polyline points="190,108 275,108" class="lna" marker-end="url(#aa-week11-alignment-pipeline)"/>
+<text x="232" y="82" text-anchor="middle" class="s">SFT +</text>
+<text x="232" y="96" text-anchor="middle" class="s">RLHF/DPO</text>
+<polyline points="445,108 530,108" class="lna" marker-end="url(#aa-week11-alignment-pipeline)"/>
+<text x="487" y="82" text-anchor="middle" class="s">GRPO</text>
+<text x="487" y="96" text-anchor="middle" class="s">rule reward</text>
+<text x="105" y="188" text-anchor="middle" class="s">เว็บ ~ล้านล้าน token</text>
+<text x="360" y="188" text-anchor="middle" class="s">demos + preference pairs</text>
+<text x="615" y="188" text-anchor="middle" class="s">reward ตรวจกฎได้</text>
+<polyline points="20,240 700,240" class="lnw" marker-end="url(#aw-week11-alignment-pipeline)"/>
+<text x="360" y="226" text-anchor="middle" class="wn">ความสามารถด้านเหตุผล ↑ แต่ token, เวลา, TTFT ก็ ↑</text>
+<text x="360" y="266" text-anchor="middle" class="s">ใช้ "ผู้ช่วย" กับงานง่าย · ใช้ "นักคิด" กับโจทย์ที่ต้องวางแผน</text>
+</svg>

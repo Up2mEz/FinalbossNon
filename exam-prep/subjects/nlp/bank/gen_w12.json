@@ -1,0 +1,493 @@
+[
+ {
+  "id": "n12-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "BM25 parameter b",
+  "stem": "ในสูตร BM25 พารามิเตอร์ตัวใดควบคุมความแรงของ length normalization?",
+  "opts": {
+   "A": "k1 (TF saturation)",
+   "B": "b",
+   "C": "n_t (จำนวน doc ที่มีคำนั้น)",
+   "D": "epsilon (ε) ของ rank_bm25"
+  },
+  "ans": "B",
+  "expl": "b อยู่ในพจน์ L(d) = 1 - b + b|d|/avgdl: b = 0 ไม่สนความยาว, b = 1 penalty เต็ม. k1 คุม TF saturation, n_t เป็นตัวแปรของ IDF, ε เป็นตัวกัน IDF ติดลบของ rank_bm25.",
+  "src": "text/slides_w12.txt s.17 ; notes sec 2.2"
+ },
+ {
+  "id": "n12-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "Sparse vs Dense",
+  "stem": "จุดอ่อนหลักของ BM25 (sparse retrieval) ตามสไลด์คืออะไร?",
+  "opts": {
+   "A": "ให้คะแนนต่ำกับคำหายากและรหัสสินค้า",
+   "B": "ช้ามากเพราะต้องทำ ANN search ทั้ง corpus",
+   "C": "Vocabulary mismatch: คำต่างกันแต่ความหมายเดียวกันจะ match ไม่ได้",
+   "D": "Hallucinated relevance: ดึงเอกสารที่ใกล้เคียงเชิงความหมายแต่ผิดข้อเท็จจริง"
+  },
+  "ans": "C",
+  "expl": "BM25 จับคู่ตัวคำ จึงพลาดเมื่อเอกสารใช้คำอื่น (เช่น myocardial infarction แทน heart attack). A คือจุดแข็งของ BM25, B เป็นลักษณะของ dense, D คือจุดอ่อนของ dense.",
+  "src": "text/slides_w12.txt s.14, s.20 ; notes sec 2.2"
+ },
+ {
+  "id": "n12-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "Cross-encoder score",
+  "stem": "Scoring head ของ Cross-encoder (ดึง [CLS] embedding แล้วผ่าน linear layer) ส่งออกคะแนนชนิดใด?",
+  "opts": {
+   "A": "raw scalar logit",
+   "B": "ความน่าจะเป็นในช่วง 0 ถึง 1 เสมอ",
+   "C": "cosine similarity ในช่วง -1 ถึง 1",
+   "D": "อันดับ (rank) ที่เป็นจำนวนเต็ม"
+  },
+  "ans": "A",
+  "expl": "สไลด์ระบุว่า score = w^T h[CLS] + b เป็น raw scalar logit ไม่ถูกจำกัดช่วง และติดลบได้. cosine เป็นของ bi-encoder ส่วน rank เป็นของ RRF.",
+  "src": "text/slides_w12.txt s.25"
+ },
+ {
+  "id": "n12-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "GraphRAG triple",
+  "stem": "Triple ที่ใช้สร้าง Knowledge Graph ในขั้น extraction มีรูปแบบใด?",
+  "opts": {
+   "A": "(Query, Document, Score)",
+   "B": "(Entity, Community, Summary)",
+   "C": "(Chunk, Embedding, Index)",
+   "D": "(Subject, Relation, Object)"
+  },
+  "ans": "D",
+  "expl": "Triple = (Subject, Relation, Object) เช่น (Sam Altman, WORKED_AT, OpenAI). ตัวเลือกอื่นเป็นคำที่ปะปนจาก retrieval หรือ community summary ไม่ใช่ triple.",
+  "src": "text/slides_w12.txt s.41"
+ },
+ {
+  "id": "n12-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "Lost in the Middle",
+  "stem": "ตามผลของ Lost in the Middle (Liu et al.) เมื่อย้ายเอกสารที่เกี่ยวข้องไปตำแหน่งต่าง ๆ ใน context ยาว accuracy ต่ำที่สุดเมื่อเอกสารอยู่ที่ใด?",
+  "opts": {
+   "A": "ต้น context",
+   "B": "กลาง context",
+   "C": "ท้าย context",
+   "D": "ไม่มีรูปแบบ accuracy เท่ากันทุกตำแหน่ง"
+  },
+  "ans": "B",
+  "expl": "Accuracy เป็นเส้นโค้งรูปตัว U: สูงที่ต้นและท้าย (primacy, recency) และต่ำที่กลาง.",
+  "src": "text/slides_w12.txt s.52",
+  "hinted": true
+ },
+ {
+  "id": "n12-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "Semantic chunking",
+  "stem": "Semantic shift detection chunking ตัดข้อความเป็น chunk ที่ตำแหน่งใด?",
+  "opts": {
+   "A": "ทุกจำนวนตัวอักษรคงที่ตาม chunk_size",
+   "B": "ทุก heading หรือ section ที่พบในเอกสารต้นฉบับ",
+   "C": "จุดที่ 1 - cosine ของประโยคติดกันพุ่งเกิน τ",
+   "D": "จุดที่ BM25 score ของประโยคสูงสุดเทียบกับ query"
+  },
+  "ans": "C",
+  "expl": "วิธีนี้ embed ทุกประโยคด้วย bi-encoder แล้วตัดที่ distance spike เกิน threshold τ (heuristic คือ 95th percentile). A คือ fixed-size, B คือ structural chunking.",
+  "src": "text/slides_w12.txt s.9 ; notes sec 2.1"
+ },
+ {
+  "id": "n12-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "BM25 TF ceiling",
+  "stem": "ปรับ BM25 จาก (k1 = 1.5, b = 0.75) เป็น (k1 = 3.0, b = 0) ส่วน TF มี ceiling (asymptote เมื่อ f เพิ่มไม่จำกัด) เป็นเท่าใด?",
+  "opts": {
+   "A": "2.50",
+   "B": "3.00",
+   "C": "4.50",
+   "D": "4.00"
+  },
+  "ans": "D",
+  "expl": "ceiling = k1 + 1 = 3.0 + 1 = 4.00 และไม่ขึ้นกับ b หรือความยาวเอกสาร. 2.50 คือค่าเดิมที่ k1 = 1.5, 3.00 คือความเข้าใจผิดว่า ceiling = k1, 4.50 เป็นการบวก 1.5 ผิดที่.",
+  "src": "text/slides_w12.txt s.16 ; notes sec 2.2 และ hint W12",
+  "hinted": true
+ },
+ {
+  "id": "n12-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "BM25 TF diminishing returns",
+  "stem": "BM25 (k1 = 1.5, b = 0) ถ้าคำหนึ่งปรากฏ f = 1 ครั้ง แล้วเพิ่มเป็น f = 2 ครั้ง ส่วน TF เพิ่มขึ้นประมาณกี่เปอร์เซ็นต์?",
+  "opts": {
+   "A": "+42.9%",
+   "B": "+100%",
+   "C": "+57.1%",
+   "D": "+14.3%"
+  },
+  "ans": "A",
+  "expl": "TF = f(2.5)/(f+1.5): f=1 ให้ 2.5/2.5 = 1.000, f=2 ให้ 5/3.5 = 1.4286. เพิ่ม (1.4286 - 1)/1 = +42.9%. +100% คือสมมติว่า TF เป็นเส้นตรง (TF-IDF), 57.1% คือ 1.4286 ต่อ ceiling 2.5 ไม่ใช่การเพิ่ม.",
+  "src": "text/slides_w12.txt s.16 ; verify_6_13.md #7",
+  "hinted": true
+ },
+ {
+  "id": "n12-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "RRF k effect",
+  "stem": "ใช้ RRF ที่ k = 60 คะแนนของเอกสารเมื่อขยับจากอันดับ 1 ไปอันดับ 2 ลดลงประมาณกี่เปอร์เซ็นต์ (เทียบกับคะแนนอันดับ 1)?",
+  "opts": {
+   "A": "50%",
+   "B": "1.6%",
+   "C": "16%",
+   "D": "0.016%"
+  },
+  "ans": "B",
+  "expl": "1/61 = 0.016393 และ 1/62 = 0.016129 จึงลดลง (0.016393 - 0.016129)/0.016393 = 1/62 = 1.6%. ถ้าไม่มี k (k = 0) จะได้ 1.0 เป็น 0.5 คือลด 50%.",
+  "src": "text/slides_w12.txt s.23 ; notes sec 3.5"
+ },
+ {
+  "id": "n12-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "ColBERT",
+  "stem": "ข้อใดอธิบาย ColBERT ได้ถูกต้องตามสไลด์?",
+  "opts": {
+   "A": "encode query กับ document ร่วมกันใน tower เดียว จึงแม่นสูงสุดเทียบเท่า cross-encoder",
+   "B": "ใช้ inverted index แบบ BM25 ต่อกับ dense จึงเร็วกว่า bi-encoder ประมาณ 100 เท่า",
+   "C": "Late interaction ด้วย MaxSim: ถูกกว่า cross-encoder ~100x, คุณภาพอยู่ระหว่างกลาง",
+   "D": "ทำ cross-attention เต็มรูปแบบทุก token จึงไม่ถูกกว่า cross-encoder"
+  },
+  "ans": "C",
+  "expl": "ColBERT ใช้ late interaction ด้วย MaxSim ถูกกว่า cross-encoder ราว 2 orders of magnitude และคุณภาพอยู่ระหว่าง bi-encoder กับ cross-encoder. A และ D คือลักษณะของ cross-encoder.",
+  "src": "text/slides_w12.txt s.26 ; verify_6_13.md #10"
+ },
+ {
+  "id": "n12-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "GraphRAG local vs global",
+  "stem": "คำถามใดเหมาะกับ GraphRAG Global search (map-reduce ข้าม community summaries) มากที่สุด?",
+  "opts": {
+   "A": "What are the key achievements of Sam Altman?",
+   "B": "เอกสารฉบับใดมีเลข invoice #INV-2024-7832",
+   "C": "จุดเดือดของน้ำที่ความดันบรรยากาศมาตรฐานคือเท่าใด",
+   "D": "What are the top themes across all 500 reports?"
+  },
+  "ans": "D",
+  "expl": "Global search ตอบคำถามภาพรวมทั้ง corpus ที่ไม่มี entity anchor. คำถามเรื่องผลงานของคนคนเดียวเป็น Local search (entity-focused), ส่วนรหัส invoice และข้อเท็จจริงเดี่ยวเป็นงานของ BM25 หรือ vector RAG.",
+  "src": "text/slides_w12.txt s.44 และ s.39"
+ },
+ {
+  "id": "n12-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "Bookend ordering",
+  "stem": "ผล rerank ได้ chunk อันดับ 1 ถึง 6 (C1..C6) ตาม Optimal Bookend Prompt Structure ลำดับใน prompt (ก่อนถึง Question) ควรเป็นข้อใด?",
+  "opts": {
+   "A": "C1, C3, C4, C5, C6, C2",
+   "B": "C1, C2, C3, C4, C5, C6",
+   "C": "C2, C3, C4, C5, C6, C1",
+   "D": "C1, C2, C6, C5, C4, C3"
+  },
+  "ans": "A",
+  "expl": "Template: TOP-1 ที่ตำแหน่งแรก (primacy), CHUNKS 3..K อยู่กลาง, TOP-2 ที่ตำแหน่งท้ายติด query (recency). จึงได้ C1, C3, C4, C5, C6, C2.",
+  "src": "text/slides_w12.txt s.53 ; verify_6_13.md #13",
+  "hinted": true
+ },
+ {
+  "id": "n12-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "BM25 length normalization",
+  "stem": "BM25 ตั้ง k1 = 1.2, b = 0.75, avgdl = 200 คำค้นปรากฏ f = 4 ครั้งในเอกสาร A (ยาว 100 คำ) และเอกสาร B (ยาว 400 คำ) ส่วน TF ของ A เป็นกี่เท่าของ B (ประมาณ)?",
+  "opts": {
+   "A": "4.00",
+   "B": "2.80",
+   "C": "1.28",
+   "D": "0.78"
+  },
+  "ans": "C",
+  "expl": "L(A) = 0.25 + 0.75(0.5) = 0.625, L(B) = 0.25 + 0.75(2) = 1.75. TF_A = 4(2.2)/(4 + 1.2(0.625)) = 8.8/4.75 = 1.853, TF_B = 8.8/(4 + 2.1) = 8.8/6.1 = 1.443. อัตราส่วน = 1.28. 4.00 คืออัตราส่วนความยาว, 2.80 คืออัตราส่วน L, 0.78 กลับด้าน.",
+  "src": "text/slides_w12.txt s.17 ; notes sec 3.2 และ hint W12",
+  "hinted": true
+ },
+ {
+  "id": "n12-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "RRF ranking",
+  "stem": "ใช้ RRF ที่ k = 60 เอกสาร X อยู่อันดับ 1 ใน BM25 เท่านั้น, Y อยู่อันดับ 4 ใน BM25 และอันดับ 6 ใน dense, Z อยู่อันดับ 3 ในทั้งสองระบบ ลำดับหลัง fuse จากมากไปน้อยคือข้อใด?",
+  "opts": {
+   "A": "X, Z, Y",
+   "B": "Z, Y, X",
+   "C": "X, Y, Z",
+   "D": "Y, Z, X"
+  },
+  "ans": "B",
+  "expl": "X = 1/61 = 0.01639; Y = 1/64 + 1/66 = 0.01563 + 0.01515 = 0.03078; Z = 2/63 = 0.03175. ดังนั้น Z > Y > X: ติดอันดับดีในสองลิสต์ชนะติดอันดับ 1 ลิสต์เดียว (Intersection > Union).",
+  "src": "text/slides_w12.txt s.22 ; notes sec 3.5"
+ },
+ {
+  "id": "n12-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "Two-stage pipeline latency",
+  "stem": "ตามตัวอย่างในสไลด์: BM25 ~5 ms ขนานกับ dense ~10 ms, RRF ~1 ms, cross-encoder rerank 80 candidates ~200 ms. ถ้าเวลา cross-encoder แปรตามจำนวน pair เป็นเส้นตรง แล้วลด candidates เหลือ 20 pairs เวลารวมของ Stage 1 ถึง 3 เป็นเท่าใด?",
+  "opts": {
+   "A": "211 ms",
+   "B": "66 ms",
+   "C": "56 ms",
+   "D": "61 ms"
+  },
+  "ans": "D",
+  "expl": "Cross-encoder = 200 x 20/80 = 50 ms. Stage 1 ขนานกันจึงใช้ max(5, 10) = 10 ms. รวม 10 + 1 + 50 = 61 ms. 211 ms คือค่าเดิมที่ 80 pairs, 66 ms ผิดเพราะรวม 5 + 10 แบบอนุกรม, 56 ms ผิดเพราะใช้ 5 แทน max.",
+  "src": "text/slides_w12.txt s.27 ; verify_6_13.md #11",
+  "hinted": true
+ },
+ {
+  "id": "n12-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "CLIP failure modes",
+  "stem": "ทีมใช้ CLIP ทำ multimodal RAG แล้วพบ: query 'broken phone screen' ได้โทรศัพท์ปกติ, 'bird without wings' ได้นกปกติ, 'dog chasing cat' ได้รูปหมากับแมวที่ยืนห่างกัน ข้อใดอธิบายและแนะนำถูกต้อง?",
+  "opts": {
+   "A": "เป็น failure mode (attribute, negation, relation) ต้องทดสอบ compositional queries",
+   "B": "เกิดจาก image encoder เป็น ViT ซึ่งแบ่งภาพเป็น patch จึงต้องเปลี่ยนมาใช้ ResNet แทน",
+   "C": "แก้ได้เสมอโดยเปลี่ยน prompt template เป็น 'A photo of a {object}.' อย่างเดียว",
+   "D": "เกิดจาก batch size N = 32,768 ใหญ่เกินไปจน negatives มากเกินไป"
+  },
+  "ans": "A",
+  "expl": "สไลด์ระบุว่า CLIP พลาด relations, attributes และ negation เพราะ similarity ไม่ได้เข้าใจ composition จึงต้อง test compositional queries ไม่ assume ว่าเข้าใจความหมาย. ViT กับ ResNet ไม่ใช่สาเหตุ และ prompt template ไม่ใช่ยาครอบจักรวาล.",
+  "src": "text/slides_w12.txt s.37 ; notes sec 2.3"
+ },
+ {
+  "id": "n12-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "GraphRAG multi-hop",
+  "stem": "ถาม 'บริษัทใดที่อดีตผู้บริหาร OpenAI ไปก่อตั้งภายหลัง' แล้ว vector RAG ตอบพลาด ข้อใดอธิบายสาเหตุและทางแก้ได้ถูกต้อง?",
+  "opts": {
+   "A": "embedding dimension น้อยเกินไป จึงต้องเพิ่มเป็น 3072 มิติเพื่อให้จับความสัมพันธ์ได้",
+   "B": "BM25 IDF ของคำว่า OpenAI ติดลบ จึงต้องเปลี่ยนเป็นสูตร ln(1 + ...) ของ Lucene",
+   "C": "cosine ดึง chunk แยกจุด ต่อ chain A->B->C ไม่ได้ จึงควรใช้ GraphRAG (เช่น Text-to-Cypher เดิน graph) สำหรับคำถามหลาย hop",
+   "D": "เกิดจาก lost in the middle ของ context ยาว จึงต้องใช้ bookend จัดลำดับ chunk ใหม่"
+  },
+  "ans": "C",
+  "expl": "Multi-hop ต้องเชื่อม OpenAI -> executives -> companies ข้ามเอกสาร ซึ่ง cosine บน chunk แยกจุดทำไม่ได้. GraphRAG ใช้ query decomposition (Text-to-Cypher) -> deterministic traversal -> LLM synthesis. ตัวเลือกอื่นแก้ปัญหาคนละเรื่อง.",
+  "src": "text/slides_w12.txt s.39, s.45"
+ },
+ {
+  "id": "n12-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "Lost in the Middle design rules",
+  "stem": "ข้อใดขัดกับ 4 production rules ที่สไลด์สรุปจาก Lost in the Middle?",
+  "opts": {
+   "A": "rerank ด้วย cross-encoder ก่อนจัดลำดับ chunk",
+   "B": "เพิ่ม K จาก 5 เป็น 50 เพราะ chunk ยิ่งมากยิ่งตอบดีขึ้น",
+   "C": "วางหลักฐานสำคัญที่สุดไว้ที่ต้นและท้าย prompt",
+   "D": "สรุป chunk ยาวก่อน synthesis สำหรับคำถามซับซ้อน (context distillation)"
+  },
+  "ans": "B",
+  "expl": "กฎข้อ 3 คือ tune K เพื่อสมดุล recall กับ distraction และ more chunks ไม่ได้แปลว่าตอบดีขึ้น. ข้ออื่นตรงกับกฎ Reranker first, Bookend ordering และ Context distillation.",
+  "src": "text/slides_w12.txt s.53 ; notes sec 2.4",
+  "hinted": true
+ },
+ {
+  "id": "n12-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "BM25 keyword stuffing",
+  "stem": "ใช้ setup ของสไลด์: query 'deep learning', IDF(deep) = 1.50, IDF(learning) = 2.50, avgdl = 100, k1 = 1.5, b = 0.75. เอกสารยาว 100 คำที่มี deep และ learning อย่างละ 30 ครั้งได้ราว 9.52 ถ้าผู้เขียนเพิ่มเป็นอย่างละ 45 ครั้ง (เอกสารยังยาว 100 คำ) คะแนนเป็นเท่าใด?",
+  "opts": {
+   "A": "ประมาณ 9.68 (+1.6%)",
+   "B": "ประมาณ 14.3 (+50%)",
+   "C": "ประมาณ 10.47 (+10%)",
+   "D": "ประมาณ 9.52 (+0%)"
+  },
+  "ans": "A",
+  "expl": "L = 1 - 0.75 + 0.75 x 100/100 = 1. TF = f(k1+1)/(f + k1 L) = 45 x 2.5 / (45 + 1.5) = 112.5 / 46.5 = 2.419. คะแนน = (1.50 + 2.50) x 2.419 = 9.677 ประมาณ 9.68 เทียบ 9.52 (f = 30: 75/31.5 = 2.381, 4 x 2.381 = 9.52) เพิ่มเพียง 1.6% เพราะ TF อิ่มตัวใกล้เพดาน k1+1 = 2.5 (ทำนายแบบเส้นตรงจะได้ +50% คือข้อ B ซึ่งผิด).",
+  "src": "text/slides_w12.txt s.16, s.18 ; verify_6_13.md #8",
+  "hinted": true
+ },
+ {
+  "id": "n12-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "BM25 effect of b",
+  "stem": "avgdl = 100, k1 = 1.5, คำหนึ่งปรากฏ f = 3 ครั้งในเอกสาร 3 ฉบับยาว 50, 100 และ 500 คำ ถ้าเปลี่ยน b จาก 0 เป็น 1 ส่วน TF ของแต่ละฉบับเปลี่ยนอย่างไร?",
+  "opts": {
+   "A": "ทั้งสามฉบับยังได้ 1.667 เท่าเดิม เพราะ b ไม่กระทบ TF เมื่อ f คงที่",
+   "B": "ฉบับ 100 คำเพิ่มจาก 1.667 เป็น 2.500 (ถึงเพดาน k1 + 1)",
+   "C": "ฉบับ 50 คำลดเหลือ 1.429 และฉบับ 500 คำเพิ่มเป็น 2.000",
+   "D": "100 คำคงที่ 1.667, 50 คำเพิ่มเป็น 2.000, 500 คำลดเหลือ 0.714"
+  },
+  "ans": "D",
+  "expl": "TF = 7.5/(3 + 1.5L). b = 0: L = 1 ทุกฉบับ จึง 7.5/4.5 = 1.667. b = 1: L = |d|/100 = 0.5, 1, 5 ได้ 7.5/3.75 = 2.000, 7.5/4.5 = 1.667, 7.5/10.5 = 0.714. เอกสารยาวเท่า avgdl ได้ L = 1 เสมอ จึงไม่เปลี่ยน, สั้นกว่าได้โบนัส, ยาวกว่าถูกลงโทษ.",
+  "src": "text/slides_w12.txt s.17 ; notes sec 3.2",
+  "hinted": true
+ },
+ {
+  "id": "n12-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "RRF k edge case",
+  "stem": "เอกสาร P อยู่อันดับ 1 ในลิสต์ BM25 ลิสต์เดียว ส่วนเอกสาร Q อยู่อันดับ 3 ทั้งในลิสต์ BM25 และ dense เมื่อเปลี่ยนค่า k ของ RRF จาก 60 เป็น 0 การจัดอันดับ P กับ Q เป็นอย่างไร?",
+  "opts": {
+   "A": "Q ชนะทั้งสองกรณี เพราะติดสองลิสต์ย่อมได้คะแนนรวมสูงกว่าเสมอ",
+   "B": "P ชนะทั้งสองกรณี เพราะอันดับ 1 ได้คะแนนสูงสุดไม่ว่า k เป็นเท่าใด",
+   "C": "ที่ k = 60 Q ชนะ (0.0317 เทียบ 0.0164) ที่ k = 0 P ชนะ (1.000 เทียบ 0.667)",
+   "D": "ที่ k = 60 P ชนะ (0.0164 เทียบ 0.0159) ที่ k = 0 Q ชนะ (1.000 เทียบ 0.667)"
+  },
+  "ans": "C",
+  "expl": "k = 60: P = 1/61 = 0.0164, Q = 2/63 = 0.0317 จึง Q ชนะ. k = 0: P = 1/1 = 1.000, Q = 2/3 = 0.667 จึง P ชนะ. k เล็กทำให้โค้งชันที่อันดับต้น อันดับ 1 ครอบงำ ส่วน k ใหญ่ทำให้โค้งแบนและการติดหลายลิสต์ชนะ.",
+  "src": "text/slides_w12.txt s.23 ; notes sec 3.5"
+ },
+ {
+  "id": "n12-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "Reranker candidate pool",
+  "stem": "ระบบ: BM25 + dense -> RRF -> cross-encoder rerank เฉพาะ top K = 50 -> LLM รับ top 5. เอกสารที่มีคำตอบอยู่อันดับ 70 หลัง RRF จึงไม่ถึง LLM ถ้าเปลี่ยนเป็น cross-encoder รุ่นที่แม่นกว่า (ขนาดและ K เท่าเดิม) จะช่วยหรือไม่?",
+  "opts": {
+   "A": "ช่วย เพราะ cross-encoder ที่แม่นกว่าจะค้นเจอเอกสารที่หลุดออกจากชุด K ได้เอง",
+   "B": "ไม่ช่วย เพราะอันดับ 70 ไม่เคยเข้า reranker ต้องเพิ่ม K (แลก latency)",
+   "C": "ช่วย เพราะ reranker ทำหน้าที่เพิ่ม recall ของ Stage 1",
+   "D": "ไม่ช่วย เพราะ cross-encoder precompute ไม่ได้ จึงต้องเปลี่ยนไปใช้ bi-encoder แทนในขั้น rerank"
+  },
+  "ans": "B",
+  "expl": "Reranker เพิ่ม precision เฉพาะภายในชุด K ที่ได้รับ ไม่เพิ่ม recall. เอกสารอันดับ 70 อยู่นอก K = 50 จึงไม่ถูกให้คะแนน ต้องปรับ K (เพิ่ม cost) หรือปรับ retrieval/fusion ให้ขึ้นมา. Cross-encoder ใช้ได้แค่กับ top K จึงตรวจทั้ง corpus ไม่ได้ และการเปลี่ยนเป็น bi-encoder ไม่ใช่ทางแก้.",
+  "src": "text/slides_w12.txt s.24-27 ; notes sec 2.2",
+  "hinted": true
+ },
+ {
+  "id": "n12-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "RAG system design",
+  "stem": "ระบบ QA ของสำนักงานกฎหมาย (~2M chunks) รับคำถาม 3 แบบ: (1) 'termination clause section 12.3', (2) 'ภาระของเราเมื่อลูกค้าผิดนัดคืออะไร', (3) 'สัญญากับบริษัท A ต่างจากบริษัท B ด้านความรับผิดอย่างไร' ออกแบบข้อใดสอดคล้องกับสไลด์มากที่สุด?",
+  "opts": {
+   "A": "ใช้ dense retrieval อย่างเดียว เพราะข้อ (2) เป็นเชิงความหมาย ส่วนข้อ (3) ใช้ k ใหญ่ ๆ แทน",
+   "B": "ใช้ BM25 อย่างเดียว เพราะเร็วที่สุดและ BEIR ชี้ว่าชนะ DPR ในทุก dataset",
+   "C": "ยัดสัญญาทั้งหมดเข้า long context 1M tokens แล้วถามตรง ๆ ทุกข้อ",
+   "D": "hybrid + rerank สำหรับข้อ (1)-(2) และ route ข้อ (3) ไป GraphRAG"
+  },
+  "ans": "D",
+  "expl": "ข้อ (1) เป็นรหัสหรือมาตราตรงตัว BM25 ชนะ, ข้อ (2) เป็นเชิงแนวคิด dense ชนะ จึงต้อง hybrid, ส่วนข้อ (3) เป็น comparative/multi-doc ที่ vector RAG ทำไม่ได้ ต้อง route ไป GraphRAG. BM25 ชนะ DPR 'ในส่วนใหญ่' ไม่ใช่ทุก dataset, และ long context มี cost O(N^2) กับ lost in the middle.",
+  "src": "text/slides_w12.txt s.28, s.39, s.46, s.47"
+ },
+ {
+  "id": "n12-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "CLIP temperature",
+  "stem": "ใน batch N = 4 รูป i มี similarity กับ caption ที่ถูก 0.30 และกับ caption อื่นอีก 3 ตัว 0.20 เท่ากัน loss ฝั่ง image->text: -ln( exp(s_ii/τ) / Σ_j exp(s_ij/τ) ). เมื่อลด τ จาก 0.1 เป็น 0.01 loss ของรูป i เปลี่ยนจากประมาณเท่าใดเป็นเท่าใด?",
+  "opts": {
+   "A": "0.744 เป็น 0.000136",
+   "B": "0.744 เป็น 7.44",
+   "C": "1.386 คงที่ ไม่ขึ้นกับ τ",
+   "D": "0.475 เป็น 0.99986"
+  },
+  "ans": "A",
+  "expl": "τ = 0.1: logits 3.0 และ 2.0 (x3) ได้ p = e^3/(e^3 + 3e^2) = 20.09/42.26 = 0.4754, loss = -ln 0.4754 = 0.744. τ = 0.01: logits 30 และ 20 ได้ p = 1/(1 + 3e^-10) = 0.99986, loss = 0.000136. τ ต่ำทำ softmax คมขึ้น. 1.386 = ln 4 เกิดเมื่อทุก similarity เท่ากัน, 0.475 และ 0.99986 เป็นค่า p ไม่ใช่ loss.",
+  "src": "text/slides_w12.txt s.33-34 ; notes sec 3.11"
+ },
+ {
+  "id": "n12-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 12,
+  "level": 1,
+  "topic": "BM25 IDF",
+  "stem": "IDF(t) = ln((N - n_t + 0.5)/(n_t + 0.5)) ของ BM25 มีค่าเท่ากับ ___ พอดีเมื่อ n_t = ___",
+  "key": "0; N/2",
+  "note": "รับ 'ศูนย์' และ 'ครึ่งหนึ่งของ N' เมื่อ n_t = N/2 ตัวเศษเท่าตัวส่วน ln 1 = 0 และ n_t > N/2 จะติดลบ.",
+  "src": "text/slides_w12.txt s.15"
+ },
+ {
+  "id": "n12-L2-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 12,
+  "level": 2,
+  "topic": "Retriever vs reranker",
+  "stem": "ในสถาปัตยกรรมสองขั้น retriever (Stage 1) มุ่งเน้นค่า ___ ส่วน reranker มุ่งเน้นค่า ___",
+  "key": "recall; precision",
+  "note": "รับ 'การเรียกคืน/ความครอบคลุม' และ 'ความแม่นยำ'. Retriever หาผู้สมัครกว้างและเร็ว, reranker เรียงใหม่อย่างละเอียด.",
+  "src": "text/slides_w12.txt s.24"
+ },
+ {
+  "id": "n12-L3-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 12,
+  "level": 3,
+  "topic": "BM25 TF calculation",
+  "stem": "BM25 ตั้ง k1 = 1.2 และ b = 0 คำหนึ่งปรากฏ f = 3 ครั้ง ส่วน TF = ___ (ทศนิยม 3 ตำแหน่ง) และเพดานของ TF เมื่อ f เพิ่มไม่จำกัดคือ ___",
+  "key": "1.571; 2.2",
+  "note": "TF = f(k1+1)/(f+k1) = 3(2.2)/(3+1.2) = 6.6/4.2 = 1.571 และเพดาน = k1 + 1 = 2.2 (รับ 2.20).",
+  "src": "text/slides_w12.txt s.16",
+  "hinted": true
+ },
+ {
+  "id": "n12-L4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "RRF rank threshold",
+  "stem": "ใช้ RRF ที่ k = 60 เอกสารอันดับ 1 ในลิสต์เดียวได้ 1/61 เอกสารที่อยู่อันดับ r เท่ากันในทั้งสองลิสต์จะได้คะแนนมากกว่า (strictly) เมื่อ r มากที่สุดเท่ากับ ___ (จำนวนเต็ม) และที่ r = ___ คะแนนเท่ากันพอดี",
+  "key": "61; 62",
+  "note": "ต้องการ 2/(60 + r) > 1/61 ได้ 122 > 60 + r ดังนั้น r < 62 จึง r สูงสุด = 61 (2/121 = 0.016529 > 0.016393) และ r = 62 ได้ 2/122 = 1/61 เท่ากัน.",
+  "src": "text/slides_w12.txt s.22-23 ; notes sec 3.5"
+ }
+]

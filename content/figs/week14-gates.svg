@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 396">
+  <defs>
+    <marker id="a-week14-gates" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aw-week14-gates" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+  </defs>
+  <text x="20" y="24" class="h">One document walking through the Tier 1 gates</text>
+  <text x="20" y="44" class="s">Thai travel-blog page, 342 words after segmentation (illustrative values from the slide)</text>
+
+  <rect x="20" y="62" width="150" height="100" rx="6" class="box"/>
+  <text x="95" y="86" class="h" text-anchor="middle">Language ID</text>
+  <text x="95" y="106" class="s" text-anchor="middle">fastText confidence</text>
+  <text x="95" y="124" class="s" text-anchor="middle">rule: ≥ 0.65</text>
+  <text x="95" y="148" class="ac" text-anchor="middle">0.71 → pass</text>
+
+  <rect x="200" y="62" width="150" height="100" rx="6" class="box"/>
+  <text x="275" y="86" class="h" text-anchor="middle">Word count</text>
+  <text x="275" y="106" class="s" text-anchor="middle">Gopher rule</text>
+  <text x="275" y="124" class="s" text-anchor="middle">50 – 100,000 words</text>
+  <text x="275" y="148" class="ac" text-anchor="middle">342 → pass</text>
+
+  <rect x="380" y="62" width="150" height="100" rx="6" class="box"/>
+  <text x="455" y="86" class="h" text-anchor="middle">Mean word length</text>
+  <text x="455" y="106" class="s" text-anchor="middle">Gopher rule</text>
+  <text x="455" y="124" class="s" text-anchor="middle">3 – 10 characters</text>
+  <text x="455" y="148" class="ac" text-anchor="middle">4.2 → pass</text>
+
+  <rect x="560" y="62" width="140" height="100" rx="6" class="warn"/>
+  <text x="630" y="86" class="h" text-anchor="middle">Alpha ratio</text>
+  <text x="630" y="106" class="s" text-anchor="middle">Gopher rule</text>
+  <text x="630" y="124" class="s" text-anchor="middle">rule: ≥ 0.80</text>
+  <text x="630" y="148" class="wn" text-anchor="middle">0.58 → FAIL</text>
+
+  <line x1="170" y1="112" x2="198" y2="112" class="ln" marker-end="url(#a-week14-gates)"/>
+  <line x1="350" y1="112" x2="378" y2="112" class="ln" marker-end="url(#a-week14-gates)"/>
+  <line x1="530" y1="112" x2="558" y2="112" class="ln" marker-end="url(#a-week14-gates)"/>
+  <text x="184" y="104" class="s" text-anchor="middle">pass</text>
+  <text x="364" y="104" class="s" text-anchor="middle">pass</text>
+  <text x="544" y="104" class="s" text-anchor="middle">pass</text>
+
+  <path d="M630 162 V196" class="lnw" fill="none" marker-end="url(#aw-week14-gates)"/>
+  <text x="620" y="184" class="s" text-anchor="end">one failed rule</text>
+
+  <rect x="560" y="198" width="140" height="52" rx="6" class="warn"/>
+  <text x="630" y="220" class="wn" text-anchor="middle">Rejected</text>
+  <text x="630" y="238" class="s" text-anchor="middle">whole doc, &lt; 0.1 ms</text>
+
+  <rect x="380" y="198" width="150" height="52" rx="6" class="mut"/>
+  <text x="455" y="220" class="t" text-anchor="middle">Neural classifier</text>
+  <text x="455" y="238" class="s" text-anchor="middle">~10 ms, never run</text>
+  <line x1="560" y1="224" x2="532" y2="224" class="ln dash" marker-end="url(#a-week14-gates)"/>
+  <text x="546" y="216" class="s" text-anchor="middle">skip</text>
+
+  <text x="20" y="284" class="h">Other gates, not used in this example</text>
+  <text x="20" y="304" class="s">Gopher: symbols per word ≤ 0.1 | bullet lines ≤ 90% | “...” lines ≤ 30%</text>
+  <text x="20" y="320" class="s">Gopher: ≥ 2 stop-words | repetition rules (repeated lines ≤ 0.30, ...)</text>
+  <text x="20" y="340" class="s">C4: line ends with . ! ? | line ≥ 3 words | page ≥ 5 sentences</text>
+  <text x="20" y="356" class="s">C4: no “{” | no lorem ipsum | no bad-word list | langdetect en ≥ 0.99</text>
+  <text x="20" y="380" class="s">A document must pass every rule; failing one rule discards the whole document.</text>
+</svg>

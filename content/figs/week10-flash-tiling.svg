@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 384">
+<defs><marker id="aa-week10-flash-tiling" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker><marker id="aw-week10-flash-tiling" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker></defs>
+<text x="20" y="28" class="h">Standard: ทุกเมทริกซ์ผ่าน HBM</text>
+<rect x="14" y="40" width="340" height="290" rx="8" class="mut"/>
+<rect x="70" y="56" width="220" height="34" rx="6" class="box"/>
+<text x="180" y="77.5" text-anchor="middle">Q, K, V  (N×d)</text>
+<rect x="70" y="124" width="220" height="34" rx="6" class="warn"/>
+<text x="180" y="145.5" text-anchor="middle">S = QKᵀ  (N×N)</text>
+<rect x="70" y="192" width="220" height="34" rx="6" class="warn"/>
+<text x="180" y="213.5" text-anchor="middle">P = softmax(S)  (N×N)</text>
+<rect x="70" y="260" width="220" height="34" rx="6" class="box"/>
+<text x="180" y="281.5" text-anchor="middle">O = P · V  (N×d)</text>
+<polyline points="180,90 180,124" class="lnw" marker-end="url(#aw-week10-flash-tiling)"/>
+<text x="188" y="111" class="s">เขียน S</text>
+<polyline points="180,158 180,192" class="lnw" marker-end="url(#aw-week10-flash-tiling)"/>
+<text x="188" y="179" class="s">เขียน P</text>
+<polyline points="180,226 180,260" class="lnw" marker-end="url(#aw-week10-flash-tiling)"/>
+<text x="188" y="247" class="s">อ่าน P คูณ V</text>
+<text x="184" y="352" text-anchor="middle" class="wn">N = 32,000: S ≈ 2 GB ต่อ head</text>
+<text x="184" y="372" text-anchor="middle" class="wn">32 heads ≈ 64 GB (FP16)</text>
+<text x="380" y="28" class="h">FlashAttention: tile อยู่ใน SRAM</text>
+<rect x="380" y="40" width="326" height="290" rx="8" class="mut"/>
+<text x="392" y="58" class="s">HBM</text>
+<rect x="392" y="70" width="80" height="44" rx="6" class="box"/>
+<text x="432" y="88" text-anchor="middle">Q, K, V</text>
+<text x="432" y="105" text-anchor="middle">(N×d)</text>
+<rect x="392" y="256" width="80" height="44" rx="6" class="acc"/>
+<text x="432" y="274" text-anchor="middle">O</text>
+<text x="432" y="291" text-anchor="middle">(N×d)</text>
+<rect x="548" y="64" width="148" height="246" rx="8" class="acc"/>
+<text x="622" y="84" text-anchor="middle" class="ac">SRAM (~50 MB)</text>
+<rect x="558" y="98" width="128" height="40" rx="6" class="box"/>
+<text x="622" y="122.5" text-anchor="middle">tile Qi, Kj, Vj</text>
+<rect x="558" y="148" width="128" height="40" rx="6" class="box"/>
+<text x="622" y="172.5" text-anchor="middle">Sij = Qi·Kjᵀ</text>
+<rect x="558" y="198" width="128" height="40" rx="6" class="box"/>
+<text x="622" y="214" text-anchor="middle">online softmax</text>
+<text x="622" y="231" text-anchor="middle">(m, l)</text>
+<rect x="558" y="248" width="128" height="40" rx="6" class="box"/>
+<text x="622" y="272.5" text-anchor="middle">Oi += Pij·Vj</text>
+<polyline points="622,138 622,148" class="lna" marker-end="url(#aa-week10-flash-tiling)"/>
+<polyline points="622,188 622,198" class="lna" marker-end="url(#aa-week10-flash-tiling)"/>
+<polyline points="622,238 622,248" class="lna" marker-end="url(#aa-week10-flash-tiling)"/>
+<polyline points="472,92 548,92" class="lna" marker-end="url(#aa-week10-flash-tiling)"/>
+<text x="510" y="86" text-anchor="middle" class="s">tiles</text>
+<polyline points="548,278 472,278" class="lna" marker-end="url(#aa-week10-flash-tiling)"/>
+<text x="510" y="270" text-anchor="middle" class="s">O เท่านั้น</text>
+<text x="543" y="352" text-anchor="middle" class="ac">exact attention · memory O(N)</text>
+<text x="543" y="372" text-anchor="middle" class="ac">ไม่เขียน N×N ลง HBM</text>
+</svg>

@@ -1,0 +1,495 @@
+[
+ {
+  "id": "n09-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "hinted": true,
+  "topic": "SBERT classification head dimension",
+  "stem": "SBERT แบบ classification (BERT-base, d = 768) นำเวกเตอร์ประโยค u และ v มาต่อกันเป็น c = [u; v; |u - v|] ก่อนเข้า softmax classifier เวกเตอร์ c มีกี่มิติ",
+  "opts": {
+   "A": "768",
+   "B": "1,536",
+   "C": "2,304",
+   "D": "3,072"
+  },
+  "ans": "C",
+  "expl": "c ประกอบด้วย 3 ส่วน (u, v, |u-v|) ส่วนละ 768 มิติ จึงเป็น 3 x 768 = 2,304. 1,536 คือกรณีต่อแค่ u กับ v (2 ส่วน), 3,072 คือ 4 ส่วน, และ 768 คือมิติของ u เพียงตัวเดียว.",
+  "src": "text/slides_w09.txt s.17 (forward pass: 768 + 768 + 768 = 2304), s.23 ; notes sec 2.7, 3.1 ; hints W9 00:08:22"
+ },
+ {
+  "id": "n09-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "topic": "Contrastive learning goal",
+  "stem": "เป้าหมายหลักของ contrastive learning ในการฝึก sentence embedding คือข้อใด",
+  "opts": {
+   "A": "ดึง positive pairs เข้าใกล้กัน และผลัก negative pairs ให้ห่างกัน",
+   "B": "ทำให้ทุกประโยคในชุดข้อมูลมีเวกเตอร์ใกล้เคียงกันมากที่สุดเพื่อให้ cosine สูง",
+   "C": "ทำให้ทุกคู่ประโยค รวมทั้งคู่ที่คล้ายกัน อยู่ห่างกันให้มากที่สุด",
+   "D": "ลดจำนวนมิติของเวกเตอร์ประโยคให้เล็กลงโดยไม่สนใจความหมาย"
+  },
+  "ans": "A",
+  "expl": "Contrastive learning คือ paradigm ที่ดึง positive pairs เข้าหากันและผลัก negative pairs ออกจากกัน (attract + repel). ถ้าทำให้ทุกประโยคใกล้กันหมดคือสภาพ anisotropy ที่เป็นปัญหา ส่วนการผลักทุกคู่รวม positive ก็ขัดกับแนวคิด.",
+  "src": "text/slides_w09.txt s.26, s.19 ; notes sec 2.13"
+ },
+ {
+  "id": "n09-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "topic": "Siamese network",
+  "stem": "Siamese network ที่ใช้ใน SBERT มีลักษณะตามข้อใด",
+  "opts": {
+   "A": "สองสาย BERT ที่มีสถาปัตยกรรมต่างกัน สายหนึ่งสำหรับประโยค A อีกสายสำหรับประโยค B",
+   "B": "สองสาย BERT สถาปัตยกรรมเดียวกัน แต่แต่ละสายมี weights แยกกันและอัปเดตอิสระ",
+   "C": "BERT หนึ่งสายสำหรับประโยคแรก และ classifier อีกชุดสำหรับประโยคที่สอง",
+   "D": "สองสายที่ใช้สถาปัตยกรรมและ weights ชุดเดียวกัน (tied weights)"
+  },
+  "ans": "D",
+  "expl": "Siamese = same architecture, same weights (weight sharing): ฟังก์ชัน f ตัวเดียวกันถูกใช้กับทั้งสองอินพุต และอัปเดตพร้อมกัน. ตัวเลือกที่มี weights แยกกันไม่ใช่ Siamese.",
+  "src": "text/slides_w09.txt s.14 ; notes sec 2.5"
+ },
+ {
+  "id": "n09-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "topic": "SBERT pooling strategy",
+  "stem": "pooling แบบใดคือค่า default ของ SBERT และให้ผลดีที่สุดใน ablation ของสไลด์",
+  "opts": {
+   "A": "CLS pooling คือใช้เวกเตอร์ของ token [CLS] อย่างเดียว",
+   "B": "Mean pooling ที่ใช้ attention mask ตัด [PAD]",
+   "C": "Max pooling คือเลือกค่าสูงสุดของแต่ละมิติจากทุก token ในประโยค",
+   "D": "Sum pooling รวมทุก token รวมถึง [PAD] โดยไม่หาร"
+  },
+  "ans": "B",
+  "expl": "SBERT ใช้ mean pooling ที่มี attention mask: s = sum(H_t m_t) / sum(m_t). CLS ถูกฝึกจาก NSP ซึ่งเป็นสัญญาณที่ไม่ดี ส่วน max จับ peak activation และไม่ใช่ค่า default.",
+  "src": "text/slides_w09.txt s.15, s.47 ; notes sec 2.6"
+ },
+ {
+  "id": "n09-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "topic": "FAISS IndexFlatIP score",
+  "stem": "เมื่อเวกเตอร์ถูก L2-normalize แล้วและใช้ faiss.IndexFlatIP คะแนนที่ index.search คืนมา (D) คืออะไร",
+  "opts": {
+   "A": "squared L2 distance ซึ่งค่าต่ำหมายถึงคล้ายกันมากที่สุด",
+   "B": "cosine distance (1 - cos) ซึ่งค่าต่ำหมายถึงคล้ายกันมากที่สุด",
+   "C": "cosine similarity อยู่ในช่วง [-1, 1] ซึ่งค่าสูงหมายถึงคล้ายกัน",
+   "D": "dot product ที่ไม่มีขอบเขตและไม่เกี่ยวข้องกับ cosine similarity ในทุกกรณี แม้ normalize แล้ว"
+  },
+  "ans": "C",
+  "expl": "หลัง L2-normalize แล้ว inner product = cosine similarity จึงได้คะแนนช่วง [-1,1] สูงคือดี. squared L2 distance (ต่ำคือดี) เป็นของ IndexFlatL2.",
+  "src": "text/slides_w09.txt s.38, s.41 ; notes sec 2.15"
+ },
+ {
+  "id": "n09-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "topic": "MRR reciprocal rank",
+  "stem": "สำหรับ query หนึ่ง เอกสารที่ถูกต้องอันแรกอยู่ที่อันดับ 4 ค่า reciprocal rank (1/rank) ที่ใช้คำนวณ MRR คือเท่าใด",
+  "opts": {
+   "A": "0.25",
+   "B": "4",
+   "C": "0.75",
+   "D": "0.4"
+  },
+  "ans": "A",
+  "expl": "reciprocal rank = 1/rank = 1/4 = 0.25 (rank 1 ให้ 1.0, rank 2 ให้ 0.5). 4 คือตัวอันดับเอง, 0.75 คือ 1 - 0.25, 0.4 คือการหาร 4 ผิดหลัก.",
+  "src": "text/slides_w09.txt s.37 ; notes sec 2.16, 3.8"
+ },
+ {
+  "id": "n09-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "hinted": true,
+  "topic": "Bi-encoder vs cross-encoder complexity",
+  "stem": "ต้องการเทียบความคล้ายของทุกคู่ในประโยค n ประโยค ข้อใดอธิบายต้นทุนของ bi-encoder และ cross-encoder ได้ถูกต้อง",
+  "opts": {
+   "A": "ทั้งสองแบบต้องทำ forward pass ระดับ O(n^2) ต่างกันแค่ขนาดของโมเดลที่ใช้",
+   "B": "Bi-encoder: n forward + dot product O(n^2 d); cross-encoder: O(n^2) forward passes",
+   "C": "Bi-encoder ใช้ O(n^2) forward passes ส่วน cross-encoder ใช้ n forward passes แล้วทำ dot product",
+   "D": "ทั้งสองแบบใช้ n forward passes ต่างกันที่ cross-encoder มี attention ข้ามประโยคเท่านั้น"
+  },
+  "ans": "B",
+  "expl": "Bi-encoder encode แต่ละประโยคอิสระ (n forward) แล้วเทียบด้วย dot product ราคาถูก (ระดับ ns). Cross-encoder ต้องส่งทุกคู่ [CLS] A [SEP] B [SEP] เข้า BERT จึงเป็น n(n-1)/2 forward passes (ระดับ ms ต่อครั้ง).",
+  "src": "text/slides_w09.txt s.7-8, s.18 ; notes sec 2.3, 2.8 ; hints W9 00:14:37"
+ },
+ {
+  "id": "n09-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "hinted": true,
+  "topic": "Triplet loss calculation",
+  "stem": "Triplet loss = max(0, d(a,p) - d(a,n) + margin) ถ้า d(a,p) = 0.4, d(a,n) = 0.7 และ margin = 0.5 ค่า loss คือเท่าใด",
+  "opts": {
+   "A": "0",
+   "B": "0.6",
+   "C": "0.8",
+   "D": "0.2"
+  },
+  "ans": "D",
+  "expl": "0.4 - 0.7 + 0.5 = 0.2 ซึ่งมากกว่า 0 จึงเป็น loss = 0.2 (positive ใกล้กว่า negative จริง แต่ห่างไม่ถึง margin 0.5 จึงยังมี loss). 0 เกิดจากเข้าใจว่า positive ใกล้กว่าแล้ว loss = 0, 0.6 คือ 0.4 + 0.7 - 0.5, 0.8 คือ 0.7 - 0.4 + 0.5 (สลับเครื่องหมาย).",
+  "src": "text/slides_w09.txt s.27 ; notes sec 2.13, 3.5 ; hints W9 00:57:27"
+ },
+ {
+  "id": "n09-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "topic": "Cause of anisotropy",
+  "stem": "ตามสไลด์ สาเหตุที่แท้จริงที่ raw BERT ให้ sentence embedding ที่อยู่ใน narrow cone (anisotropy) คืออะไร",
+  "opts": {
+   "A": "training objective แบบ MLM ไม่เคยกระตุ้นให้ geometry ระดับประโยคดี",
+   "B": "สถาปัตยกรรม self-attention ของ BERT ไม่สามารถสร้างเวกเตอร์ประโยคได้",
+   "C": "มิติ 768 เล็กเกินไปสำหรับเก็บความหมายของประโยค",
+   "D": "ข้อมูลที่ใช้ pre-train มีจำนวนน้อยเกินไป"
+  },
+  "ans": "A",
+  "expl": "Key insight ของสไลด์: ปัญหาไม่ใช่ architecture แต่เป็น objective (MLM) ที่ไม่ได้ optimize sentence-level geometry จึงต้องแก้ด้วย contrastive fine-tuning. ตัวเลือก B, C, D เป็นเหตุผลที่สไลด์ไม่ได้ให้.",
+  "src": "text/slides_w09.txt s.9, s.47 ; notes sec 2.1"
+ },
+ {
+  "id": "n09-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "hinted": true,
+  "topic": "Margin ranking vs triplet loss",
+  "stem": "ถ้าใช้ cosine distance d = 1 - sim ใน Triplet loss max(0, d(a,p) - d(a,n) + margin) จะเทียบเท่ากับสูตรใดของ Margin Ranking Loss",
+  "opts": {
+   "A": "max(0, sim(a,p) - sim(a,n) + margin)",
+   "B": "max(0, sim(a,p) + sim(a,n) - margin)",
+   "C": "max(0, sim(a,n) - sim(a,p) + margin)",
+   "D": "max(0, sim(a,n) - sim(a,p) - margin)"
+  },
+  "ans": "C",
+  "expl": "แทน d = 1 - sim: (1 - sim(a,p)) - (1 - sim(a,n)) + margin = sim(a,n) - sim(a,p) + margin. เทอม 1 ตัดกัน. ตัวเลือก A สลับเครื่องหมายของ sim.",
+  "src": "text/slides_w09.txt s.29 ; notes sec 2.13, 3.6"
+ },
+ {
+  "id": "n09-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "topic": "Vector memory estimate",
+  "stem": "คลังเอกสาร 2,000,000 เอกสาร ใช้โมเดล all-MiniLM-L6-v2 (384 มิติ) เก็บเวกเตอร์เป็น float32 (4 bytes ต่อค่า) ต้องใช้หน่วยความจำของเวกเตอร์ประมาณเท่าใด (1 GB = 10^9 bytes)",
+  "opts": {
+   "A": "0.768 GB",
+   "B": "30.72 GB",
+   "C": "6.144 GB",
+   "D": "3.072 GB"
+  },
+  "ans": "D",
+  "expl": "bytes = n x d x 4 = 2,000,000 x 384 x 4 = 3,072,000,000 = 3.072 GB. 0.768 GB ลืมคูณ 4 bytes, 6.144 GB ใช้ 8 bytes (float64), 30.72 GB คือคลาดเลขยกกำลัง 10.",
+  "src": "text/slides_w09.txt s.20 (MiniLM dim 384), s.36 (n x d x 4 bytes), s.44 ; notes sec 3.3"
+ },
+ {
+  "id": "n09-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "topic": "MNRL in-batch negatives",
+  "stem": "ฝึกด้วย Multiple Negatives Ranking Loss (MNRL) ด้วย batch ที่มี N = 128 คู่ (q_i, p_i) แต่ละ query มี in-batch negatives กี่ตัว",
+  "opts": {
+   "A": "127",
+   "B": "128",
+   "C": "256",
+   "D": "1"
+  },
+  "ans": "A",
+  "expl": "p_j ของทุก j ที่ไม่เท่ากับ i เป็น negative ของ q_i จึงมี N - 1 = 127 ตัว (ตัวอย่างในสไลด์: N = 256 ได้ 255). ไม่นับ p_i ของตัวเอง เพราะเป็น positive.",
+  "src": "text/slides_w09.txt s.30 ; notes sec 2.13"
+ },
+ {
+  "id": "n09-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "hinted": true,
+  "topic": "Cross-encoder all-pairs time",
+  "stem": "ต้องการเทียบทุกคู่ที่ไม่ซ้ำกันของ 2,000 ประโยค (คู่ A,B นับเท่ากับ B,A) ด้วย cross-encoder ที่ใช้เวลา 4 ms ต่อคู่ (GPU เดียว) ใช้เวลาประมาณเท่าใด",
+  "opts": {
+   "A": "4.44 ชั่วโมง",
+   "B": "0.22 ชั่วโมง",
+   "C": "2.22 ชั่วโมง",
+   "D": "22.2 ชั่วโมง"
+  },
+  "ans": "C",
+  "expl": "จำนวนคู่ = n(n-1)/2 = 2,000 x 1,999 / 2 = 1,999,000. เวลา = 1,999,000 x 4 ms = 7,996,000 ms = 7,996 s = 7,996/3,600 = 2.22 ชั่วโมง. 4.44 ชั่วโมงเกิดจากใช้ n^2 = 4,000,000 คู่, 0.22 และ 22.2 เกิดจากคลาดเลขยกกำลัง 10. (ถ้าเป็น bi-encoder: 2,000 x 4 ms = 8 s)",
+  "src": "text/slides_w09.txt s.7-8 ; notes sec 3.2 ; hints W9 00:14:37"
+ },
+ {
+  "id": "n09-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "hinted": true,
+  "topic": "Semi-hard negative and loss",
+  "stem": "Triplet loss มี d(a,p) = 0.3 และ margin = 0.5 มี negative 3 ตัว n1, n2, n3 ที่อยู่ห่างจาก anchor d(a,n) = 0.2, 0.5, 0.9 ตามลำดับ ข้อใดถูกต้อง",
+  "opts": {
+   "A": "n1 เป็น semi-hard negative และมี loss = 0.6",
+   "B": "n2 เป็น semi-hard negative และมี loss = 0.3",
+   "C": "n3 เป็น hard negative และมี loss = 0",
+   "D": "n2 เป็น easy negative จึงมี loss = 0"
+  },
+  "ans": "B",
+  "expl": "semi-hard คือ d(a,p) < d(a,n) < d(a,p) + margin = 0.3 < d < 0.8: n2 (0.5) เข้าเงื่อนไข loss = 0.3 - 0.5 + 0.5 = 0.3. n1 (0.2 < 0.3) เป็น hard (loss = 0.6) ไม่ใช่ semi-hard. n3 (0.9 >= 0.8) เป็น easy (loss = 0.3 - 0.9 + 0.5 < 0 จึงเป็น 0) ไม่ใช่ hard.",
+  "src": "text/slides_w09.txt s.27-28 ; notes sec 2.13 ; hints W9 00:57:27"
+ },
+ {
+  "id": "n09-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "topic": "Spot the wrong statement about SBERT",
+  "stem": "ข้อใดกล่าวเกี่ยวกับ SBERT และ bi-encoder ไม่ถูกต้อง",
+  "opts": {
+   "A": "เวกเตอร์ของเอกสารจาก bi-encoder สามารถคำนวณล่วงหน้าและเก็บไว้ใช้ซ้ำได้ ตราบที่ข้อความและ encoder ไม่เปลี่ยน",
+   "B": "Cross-encoder ให้คุณภาพสูงเพราะ attention เต็มข้ามทั้งสองประโยคร่วมกัน แต่ต้องรันใหม่ทุกคู่",
+   "C": "SBERT แบบ classification ป้อน [u; v; |u-v|] เข้า softmax classifier",
+   "D": "freeze BERT แล้วฝึกเฉพาะ pooling กับ classifier ก็แก้ anisotropy ได้"
+  },
+  "ans": "D",
+  "expl": "สไลด์ระบุว่า backprop ผ่านทุกชั้นของ BERT (ไม่ freeze) ซึ่งเป็นสิ่งที่ปรับ geometry ของ embedding space ให้หายจาก anisotropy ข้อ D จึงผิด. ข้อ A, B, C ตรงกับตาราง bi- vs cross-encoder และ forward pass ของ SBERT.",
+  "src": "text/slides_w09.txt s.18, s.33 ; notes sec 2.8, 2.11"
+ },
+ {
+  "id": "n09-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "topic": "ANN speed claim needs Recall@k",
+  "stem": "บทความหนึ่งวัดว่า HNSW เร็วกว่า IndexFlatIP ประมาณ 100 เท่า แล้วสรุปว่า HNSW ดีกว่า Flat ในทุกด้าน ควรตอบอย่างไรตามสไลด์",
+  "opts": {
+   "A": "ไม่ครบ เพราะ ANN แลก accuracy กับ latency ต้องรายงาน Recall@k ด้วย",
+   "B": "สรุปถูกต้อง เพราะ HNSW มี recall 100% เท่ากับ Flat ทุกกรณีจึงเปรียบเทียบความเร็วได้เลย",
+   "C": "สรุปถูกต้อง เพราะความเร็วสำคัญกว่าความแม่นยำเสมอในระบบ production ทุกระบบที่มีผู้ใช้จำนวนมาก",
+   "D": "สรุปผิด เพราะ Flat เร็วกว่า HNSW เสมอเมื่อจำนวนเอกสาร n มากกว่า 100,000 รายการขึ้นไป"
+  },
+  "ans": "A",
+  "expl": "Flat เป็น exact (recall 100%) ส่วน HNSW เป็น ANN ที่ได้ recall ประมาณ 99% ดังนั้นการเร็วขึ้นแลกกับความแม่นยำเล็กน้อย กฎของสไลด์คือไม่ถูกต้องที่จะเทียบความเร็วโดยไม่รายงาน Recall@k. Flat เป็น O(n d) ซึ่ง impractical เมื่อ n > 100K จึงไม่เร็วกว่า.",
+  "src": "text/slides_w09.txt s.39-40 ; notes sec 2.15"
+ },
+ {
+  "id": "n09-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "topic": "Why normalize before IP search",
+  "stem": "query q = [3, 4] และเอกสาร d1 = [1.5, 2] (ทิศเดียวกับ q แต่สั้นครึ่งหนึ่ง) กับ d2 = [4, 3] ถ้าไม่ได้ L2-normalize เอกสารใดอันดับ 1 เมื่อใช้ cosine, dot product และ L2 distance ตามลำดับ",
+  "opts": {
+   "A": "d1, d1, d1",
+   "B": "d1, d2, d2",
+   "C": "d2, d1, d1",
+   "D": "d1, d1, d2"
+  },
+  "ans": "B",
+  "expl": "cosine: d1 = 1.0, d2 = 24/25 = 0.96 จึงได้ d1. dot: q.d1 = 4.5 + 8 = 12.5, q.d2 = 12 + 12 = 24 จึงได้ d2 (ขนาดมีผล). L2: |q-d1| = sqrt(2.25 + 4) = 2.5, |q-d2| = sqrt(1 + 1) = 1.414 จึงได้ d2. ผลต่างกันเพราะไม่ normalize ซึ่งเป็น common mistake ของสไลด์.",
+  "src": "text/slides_w09.txt s.10, s.42 ; notes sec 2.4, 3.9"
+ },
+ {
+  "id": "n09-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "topic": "Masked mean pooling and pair vector",
+  "stem": "ประโยค A มี H_A = [[2,4],[4,8],[100,100]] และประโยค B มี H_B = [[1,3],[7,5],[40,40]] (d = 2) โดยแถวที่ 3 ของทั้งสองเป็น [PAD] attention mask = [1,1,0] ใช้ mean pooling แล้วสร้าง c = [u; v; |u-v|] ได้เวกเตอร์ใด",
+  "opts": {
+   "A": "[3, 6, 4, 4, -1, 2]",
+   "B": "[35.3, 37.3, 16, 16, 19.3, 21.3]",
+   "C": "[3, 6, 4, 4, 1, 2]",
+   "D": "[4, 8, 7, 5, 3, 3]"
+  },
+  "ans": "C",
+  "expl": "u = ([2,4] + [4,8]) / 2 = [3,6]; v = ([1,3] + [7,5]) / 2 = [4,4]; |u-v| = |[-1,2]| = [1,2]; c = [3,6,4,4,1,2]. A ลืมค่าสัมบูรณ์, B เฉลี่ยรวม [PAD] ด้วย (3 แถว), D ใช้ max pooling ที่ไม่ใช่ค่า default.",
+  "src": "text/slides_w09.txt s.15, s.17 ; notes sec 2.6, 2.7, 3.10"
+ },
+ {
+  "id": "n09-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Unsupervised SimCSE without dropout",
+  "stem": "ทีมงานฝึก unsupervised SimCSE แต่เผลอปิด dropout (โมเดลอยู่ใน eval mode) ทั้งสองครั้งที่ป้อนประโยคเดียวกัน ผลที่ตามมาคือข้อใด",
+  "opts": {
+   "A": "ต้องกลับไปใช้ entailment label จาก NLI เป็น positive แทน จึงจะฝึกต่อได้ตามปกติและไม่มีปัญหาอื่น",
+   "B": "negatives ภายใน batch กลายเป็นเวกเตอร์เดียวกันหมดทุกตัว ทำให้ loss เป็นศูนย์ทันทีในทุก batch",
+   "C": "ไม่มีผลต่างจากเดิมเลย เพราะ positive ของแต่ละประโยคมาจากประโยคอื่นภายใน batch เดียวกัน",
+   "D": "สอง view เหมือนกันเป๊ะ ไม่มี noise จาก dropout positive pair จึงเหมือนกันทุกประการและแทบไม่ให้สัญญาณ alignment ที่เป็นประโยชน์ (negatives ใน batch ยังอยู่)"
+  },
+  "ans": "D",
+  "expl": "Unsupervised SimCSE ใช้ dropout mask ต่างกันสองรอบเพื่อให้ได้เวกเตอร์ที่ต่างกันเล็กน้อยของประโยคเดียวกัน เป็น positive pair. ถ้าไม่มี dropout ทั้งสองเวกเตอร์เหมือนกัน การ augment หายไป. ข้อ A คือ supervised SimCSE, ข้อ B และ C ขัดกับกลไกที่ negatives คือประโยคอื่นใน batch.",
+  "src": "text/slides_w09.txt s.24, s.30 ; notes sec 2.12"
+ },
+ {
+  "id": "n09-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "hinted": true,
+  "topic": "Same triplet under different losses",
+  "stem": "a = [1, 0], p = [0.8, 0.6], n = [0, 1] คำนวณ (i) Triplet loss แบบ cosine distance (d = 1 - cos) ด้วย margin 0.5, (ii) Margin Ranking Loss ด้วย sim = cos และ margin 0.5, (iii) Triplet loss แบบ Euclidean ด้วย margin 1 ผลคือข้อใด",
+  "opts": {
+   "A": "(i) = 0, (ii) = 0, (iii) ประมาณ 0.218",
+   "B": "(i) = 0, (ii) = 0, (iii) = 0",
+   "C": "(i) = 0.3, (ii) = 0.3, (iii) ประมาณ 0.218",
+   "D": "(i) = 0, (ii) = 1.3, (iii) ประมาณ 0.218"
+  },
+  "ans": "A",
+  "expl": "cos(a,p) = 0.8, cos(a,n) = 0. (i) d(a,p) = 0.2, d(a,n) = 1: 0.2 - 1 + 0.5 = -0.3 จึงเป็น 0. (ii) 0 - 0.8 + 0.5 = -0.3 จึงเป็น 0 (เท่ากับ (i) เพราะ d = 1 - sim). (iii) d(a,p) = sqrt(0.04 + 0.36) = 0.632, d(a,n) = sqrt(2) = 1.414: 0.632 - 1.414 + 1 = 0.218 ซึ่งมากกว่า 0 ดังนั้น metric และ margin เป็นส่วนหนึ่งของ loss. C คือลืม max(0, ...), D คือสลับเครื่องหมายของ margin ranking (0.8 - 0 + 0.5 = 1.3).",
+  "src": "text/slides_w09.txt s.27, s.29 ; notes sec 2.13, 3.6 ; hints W9 00:57:27"
+ },
+ {
+  "id": "n09-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "hinted": true,
+  "topic": "Retrieve-then-rerank speedup",
+  "stem": "คลังมี 1,000,000 เอกสาร cross-encoder ใช้ 5 ms ต่อคู่ (query, doc) ระบบ A ใช้ cross-encoder กับทุกเอกสารต่อ 1 query ระบบ B ใช้ bi-encoder (เวกเตอร์เอกสาร encode ไว้ล่วงหน้าแล้ว) encode query 5 ms + FAISS search 2 ms แล้ว rerank top-100 ด้วย cross-encoder ต่อ 1 query ระบบ B เร็วกว่า A ประมาณกี่เท่า",
+  "opts": {
+   "A": "ประมาณ 986 เท่า",
+   "B": "ประมาณ 9,860 เท่า",
+   "C": "ประมาณ 98,600 เท่า",
+   "D": "ประมาณ 100 เท่า"
+  },
+  "ans": "B",
+  "expl": "A = 1,000,000 x 5 ms = 5,000,000 ms = 5,000 s. B = 5 + 2 + 100 x 5 = 507 ms. อัตราส่วน = 5,000,000 / 507 = 9,862 เท่า. 100 เท่าคือการเข้าใจว่าลดจาก 1,000,000 เหลือ 10,000 doc โดยไม่คำนวณใหม่, 986 และ 98,600 คือคลาดเลขยกกำลัง 10.",
+  "src": "text/slides_w09.txt s.7-8, s.18 ; notes sec 2.8, 3.2 ; hints W9 00:14:37"
+ },
+ {
+  "id": "n09-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "hinted": true,
+  "topic": "SBERT head size when changing encoder",
+  "stem": "ทีมเปลี่ยน encoder จาก BERT-base (d = 768) เป็น BAAI/bge-large-en-v1.5 (d = 1024) แต่ยังใช้ SBERT classification objective แบบ NLI 3 labels (softmax(W c), c = [u; v; |u-v|]) จำนวนน้ำหนักใน W (ไม่นับ bias) เพิ่มขึ้นกี่ตัว",
+  "opts": {
+   "A": "9,216",
+   "B": "3,072",
+   "C": "2,304",
+   "D": "6,912"
+  },
+  "ans": "C",
+  "expl": "c มีมิติ 3d. เดิม 3 x 768 = 2,304 มิติ จึง W มี 2,304 x 3 = 6,912 ตัว. ใหม่ 3 x 1,024 = 3,072 มิติ จึง W มี 3,072 x 3 = 9,216 ตัว. ส่วนที่เพิ่ม = 9,216 - 6,912 = 2,304. A คือจำนวนรวมใหม่, D คือจำนวนเดิม, B คือมิติของ c ใหม่.",
+  "src": "text/slides_w09.txt s.17, s.20 (bge-large dim 1024) ; notes sec 3.1 ; hints W9 00:08:22"
+ },
+ {
+  "id": "n09-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "topic": "Anisotropy breaks thresholding",
+  "stem": "ทีมใช้ raw BERT (mean pooling) ตรวจประโยคซ้ำ โดยตั้งกฎ cosine >= 0.40 จึงถือว่าซ้ำ ในสไลด์ raw BERT มี cosine ของคู่ประโยคอยู่ในช่วง [0.46, 0.85] (เฉลี่ย 0.58) ส่วน SBERT อยู่ในช่วง [0.1, 0.99] ผลของกฎนี้กับ raw BERT เป็นอย่างไร",
+  "opts": {
+   "A": "แทบไม่มีคู่ใดถูกตัดสินว่าซ้ำ เพราะ cosine ของ BERT มักต่ำกว่า 0.40 อยู่แล้ว",
+   "B": "ประมาณครึ่งหนึ่งของคู่ถูกตัดสินว่าซ้ำ เพราะค่าเฉลี่ย 0.58 อยู่เหนือเส้นแบ่งพอดี",
+   "C": "ใช้ได้ดี เพราะ 0.40 ต่ำกว่าค่าเฉลี่ย 0.58 และช่วยจับคู่ที่คล้ายกันจริงได้ครบ",
+   "D": "ทุกคู่ถูกตัดสินว่าซ้ำ เพราะค่าต่ำสุด 0.46 ยังสูงกว่า 0.40"
+  },
+  "ans": "D",
+  "expl": "cosine ต่ำสุดของ raw BERT คือประมาณ 0.46 > 0.40 ดังนั้นทุกคู่ผ่านเกณฑ์ ไม่ว่าจะเกี่ยวข้องกันหรือไม่ นี่คืออาการของ narrow cone (ไม่มีคู่ใดได้คะแนนต่ำ) ที่เกิดจาก MLM objective. SBERT มีช่วง [0.1, 0.99] จึงมีที่ว่างให้ threshold แยกคู่ได้.",
+  "src": "text/slides_w09.txt s.19, s.47 ; notes sec 2.9, 3.4"
+ },
+ {
+  "id": "n09-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Index choice under RAM limit",
+  "stem": "คลังมี 20,000,000 เอกสาร เวกเตอร์ 768 มิติ float32 เซิร์ฟเวอร์มี RAM 32 GB (1 GB = 10^9 bytes) ข้อสรุปใดสมเหตุสมผลที่สุดตามสไลด์",
+  "opts": {
+   "A": "ใช้ HNSW เก็บเวกเตอร์แบบ float32 ครบทั้งหมดได้ใน RAM 32 GB เพราะ HNSW มี recall ประมาณ 99%",
+   "B": "ต้องใช้ 61.44 GB เกิน RAM ควรใช้ index แบบบีบอัด เช่น IVF+PQ (recall ~90%) แล้ววัด Recall@k",
+   "C": "ใช้ IndexFlatIP ได้เลย เพราะเวกเตอร์ใช้เพียงประมาณ 15.4 GB จึงพอดีกับ RAM ขนาด 32 GB",
+   "D": "เปลี่ยนจาก IndexFlatIP เป็น IndexFlatL2 จะประหยัดหน่วยความจำจนพอดีกับ RAM ขนาด 32 GB ได้"
+  },
+  "ans": "B",
+  "expl": "bytes = 20,000,000 x 768 x 4 = 61,440,000,000 = 61.44 GB > 32 GB ดังนั้น float32 ครบชุดไม่พอ (HNSW layer 0 มีทุกจุด ไม่ได้บีบอัดเวกเตอร์). IVF+PQ (cluster + compression, low RAM, recall ~90%) เหมาะเมื่อ RAM จำกัด และต้องวัด Recall@k. ข้อ C คือเลข 5M x 768 x 4 = 15.36 GB (ผิดจำนวนเอกสาร). L2 กับ IP ใช้หน่วยความจำเท่ากัน.",
+  "src": "text/slides_w09.txt s.36, s.39-40, s.44 ; notes sec 2.15, 3.3"
+ },
+ {
+  "id": "n09-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 9,
+  "level": 1,
+  "hinted": true,
+  "topic": "SBERT classification head dimension",
+  "stem": "SBERT แบบ classification ต่อเวกเตอร์เป็น c = [u; v; |u-v|] สำหรับ BERT-base (d = 768) เวกเตอร์ c มี ___ มิติ แล้วส่งเข้า linear layer และ softmax",
+  "key": "2304",
+  "note": "รับ 2,304 หรือ 768 x 3 ; 3d เมื่อ d = 768 (u, v และ |u-v| อย่างละ 768)",
+  "src": "text/slides_w09.txt s.17 ; notes sec 3.1 ; hints W9 00:08:22"
+ },
+ {
+  "id": "n09-L2-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 9,
+  "level": 2,
+  "hinted": true,
+  "topic": "Cross-encoder all-pairs cost",
+  "stem": "ใช้ cross-encoder เทียบทุกคู่ที่ไม่ซ้ำกันของ n = 1,000 ประโยค (คู่ A,B นับเท่ากับ B,A) ต้องทำ forward pass ___ ครั้ง ถ้าแต่ละครั้งใช้ 5 ms จะใช้เวลารวม ___ วินาที",
+  "key": "499500; 2497.5",
+  "note": "รับ 499,500 และ 2,497.5 (หรือประมาณ 2,498 วินาที, ประมาณ 41.6 นาที) ; n(n-1)/2 = 1,000 x 999 / 2 = 499,500 ; 499,500 x 5 ms = 2,497,500 ms = 2,497.5 s",
+  "src": "text/slides_w09.txt s.7 ; notes sec 3.2 ; hints W9 00:14:37, 00:31:12"
+ },
+ {
+  "id": "n09-L3-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 9,
+  "level": 3,
+  "hinted": true,
+  "topic": "Triplet loss with Euclidean distance",
+  "stem": "Triplet loss ใช้ระยะ Euclidean a = (0, 0), p = (0.3, 0.4), n = (0.6, 0.8) และ margin = 0.8 จะได้ d(a,p) = ___ , d(a,n) = ___ , loss = ___ และ negative ตัวนี้เป็นแบบ ___ (easy, hard หรือ semi-hard)",
+  "key": "0.5; 1.0; 0.3; semi-hard",
+  "note": "รับ 1 แทน 1.0 และ semi hard ; d(a,p) = sqrt(0.09 + 0.16) = 0.5, d(a,n) = sqrt(0.36 + 0.64) = 1.0, loss = max(0, 0.5 - 1.0 + 0.8) = 0.3 ; semi-hard เพราะ 0.5 < 1.0 < 0.5 + 0.8 = 1.3",
+  "src": "text/slides_w09.txt s.27-28, s.32 ; notes sec 2.13, 3.5 ; hints W9 00:57:27"
+ },
+ {
+  "id": "n09-L4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "hinted": true,
+  "topic": "Margin ranking loss with cosine",
+  "stem": "Margin Ranking Loss = max(0, sim(a,n) - sim(a,p) + margin) ใช้ cosine เป็น sim ให้ a = [3, 4], p = [4, 3], n = [5, 12] และ margin = 0.5 จะได้ sim(a,p) = ___ , sim(a,n) = ___ (ทศนิยม 4 ตำแหน่ง) และ loss = ___ (ทศนิยม 4 ตำแหน่ง)",
+  "key": "0.96; 0.9692; 0.5092",
+  "note": "รับ 0.969 และ 0.509 ; cos(a,p) = 24/25 = 0.96, cos(a,n) = 63/65 = 0.9692, loss = 0.9692 - 0.96 + 0.5 = 0.5092 (n เกือบขนานกับ a จึงเป็น hard negative ที่ให้ loss > 0 ; ระวังทศนิยม 0.5092 ไม่ใช่ 5.092)",
+  "src": "text/slides_w09.txt s.10, s.29 ; notes sec 2.13, 3.6 ; hints W9 00:31:12"
+ }
+]

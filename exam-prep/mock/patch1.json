@@ -1,0 +1,8 @@
+{
+ "n09-L3-01":{"stem":"ต้องการเทียบทุกคู่ที่ไม่ซ้ำกันของ 2,000 ประโยค (คู่ A,B นับเท่ากับ B,A) ด้วย cross-encoder ที่ใช้เวลา 4 ms ต่อคู่ (GPU เดียว) ใช้เวลาประมาณเท่าใด"},
+ "n09-L2-F1":{"stem":"ใช้ cross-encoder เทียบทุกคู่ที่ไม่ซ้ำกันของ n = 1,000 ประโยค (คู่ A,B นับเท่ากับ B,A) ต้องทำ forward pass ___ ครั้ง ถ้าแต่ละครั้งใช้ 5 ms จะใช้เวลารวม ___ วินาที"},
+ "n10-L4-04":{"opts":{"C":"เลือก R เพราะ BW x AI ของ R เท่ากับ 4.5 TFLOP/s ซึ่งสูงสุดในกลุ่ม","D":"เลือก S เพราะ peak สูงสุด 1,200 TFLOP/s จึงได้ประมาณ 1,200 TFLOP/s จริงตอน decode"}},
+ "n13-L4-F1":{"stem":"บทสนทนา n = 60 turn (1 turn = 1 message) แต่ละ message ยาว 50 token ไม่นับ system prompt; Summary memory เก็บ last k = 4 turn + summary 300 token; Retrieval memory ดึง top-k = 5 message ขนาด prompt ของ Buffer = ___ token, Summary = ___ token, Retrieval = ___ token"},
+ "n10-L4-05":{"stem":"เทนเซอร์มี 256 ค่า แบ่งเป็น 4 block ละ 64 ค่า โดย block 1 มี outlier 12.7 ส่วน block 2 ถึง 4 แต่ละ block มีค่าที่ขนาดสูงสุดเท่ากับ 1.27 พอดี quantize เป็น INT8 แบบ absmax ([-127, 127]) พิจารณาค่า w = 0.04 หนึ่งตัวใน block 3 และอีกหนึ่งตัวใน block 1 (ข้าง outlier) ข้อใดถูกต้อง"},
+ "n11-L4-04":{"stem":"วิธี S: self-consistency 5 paths (ไม่นับเวลา vote) วิธี R: reflection ที่สร้างร่างแรก 1 ครั้ง แล้วทำรอบละ 2 calls (critique 1 call แล้ว refine 1 call) ซ้ำ 2 รอบ แต่ละ LLM call ใช้ 10 วินาที และฮาร์ดแวร์รองรับ 5 requests พร้อมกันได้ ข้อใดถูกต้อง"}
+}

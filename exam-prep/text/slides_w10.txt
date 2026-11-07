@@ -1,0 +1,1923 @@
+Hardware-Aware NLP
+
+(Resource Math, Fast Inference, & PEFT)
+
+                                                                                      Asst. Prof. Nont Kanungsukkasem, Ph.D.
+The 6-Act Structure
+
+· Act I: The Hardware Wall (GPU memory hierarchy, VRAM limits)
+
+· Act II: The Memory Bottleneck (Why generation is slow)
+
+· Act III: The Speed Revolution (FlashAttention & MoE)
+
+· Act IV: The Serving Stack (vLLM, PagedAttention, Speculative Decoding)
+
+· Act V: The PEFT Paradigm (LoRA & QLoRA mechanics)
+
+· Act VI: Synthesis & Lab Launch
+
+                                                                                               2
+Act I ­ The Hardware Wall
+
+· Theoretical elegance meets physical limits.
+
+
+· The GPU Memory Hierarchy:
+
+
+  · SRAM (L1/L2 Cache): Ultra-fast,
+
+      extremely small (~50 MB).
+
+
+  · VRAM (HBM on datacenter cards,
+
+      GDDR on T4/RTX): Fast, limited capacity
+
+
+  · System RAM: Slow, large capacity
+
+      (Terabytes).
+
+
+· The Goal: Keep data in VRAM and
+
+   compute.
+
+                                                                                               3
+The 1-Parameter Footprint
+
+· How much space does one parameter take?
+
+  · FP32 (Single Precision): 32 bits = 4 bytes (The old standard).
+
+  · FP16 / BF16 (Half Precision): 16 bits = 2 bytes (The modern default).
+
+  · INT8 (Quantized): 8 bits = 1 byte.
+
+  · INT4 (Highly Quantized): 4 bits = 0.5 bytes.
+
+
+· The Golden Rule: For modern LLMs, assume base weights are in FP16 or
+
+   BF16.
+
+
+· Formula: Mw = N × 2 bytes (where N is parameter count).
+
+                                                                                               4
+In-Class Math: Predict the Weight Footprint
+
+· Exercise: Calculate the memory needed JUST to load the weights (FP16).
+
+  · We use decimal GB: 1 GB = 109 bytes (slide headline numbers).
+
+
+  · (Note: `nvidia-smi` reports MiB and `torch.cuda.memory_allocated()` returns bytes -- both
+
+       binary, 1 GiB = 230 bytes  1.074 GB -- so a "16 GB" model shows as ~14.9 GiB on-
+
+      device. This ~7% gap is expected.)
+
+
+  · Calculate for:
+
+    · 1. LLaMA-3 (8 Billion parameters)
+
+    · 2. LLaMA-3 (70 Billion parameters)
+
+    · 3. GPT-3 (175 Billion parameters)
+
+                                                                                               5
+Beyond Weights -- The Hidden Memory Costs
+
+· Weights are just the beginning. During inference, memory goes to:
+
+  · 1. Model Weights: Static (FP16 = 2N bytes).
+
+  · 2. KV Cache: Dynamic, grows with sequence length and batch size!
+
+  · 3. Activations: Temporary tensors passed between layers.
+
+  · 4. Workspace / Overhead: Memory allocated for CUDA kernels and the
+
+      OS.
+
+
+· The Equation: Total Inference VRAM = Mw + MKV + Mact + Moverhead
+
+                                                                                               6
+Static vs. Dynamic Memory Allocation
+
+· Static Memory: Allocated once at startup.
+
+
+  · Example: Model weights. 
+     Size is xed (2N).
+
+
+· Dynamic Memory: Allocated and freed 
+
+   repeatedly during runtime.
+
+
+  · Example: KV Cache and Activations.
+
+
+  · The Problem: Growing KV Cache can cause Out-Of-Memory (OOM) errors
+
+      mid-generation (a Capacity Bottleneck).
+
+
+· Why this matters: A model might load successfully but crash when
+
+   generating the 500th token!
+
+                                                                                               7
+
+if
+The Exact KV Cache Formula
+
+· Recall Week 5 (Standard MHA): 
+
+   
+
+            MKV = 2 × Precision (Bytes) × nlayers × dmodel × nctx × B
+
+
+· The Exact Formula (Breaking down dmodel for GQA/MQA):
+
+   
+
+              MKV = 2 × Precision × nlayers × (nkv × dhead) × nctx × B
+
+
+· 2: For both Key and Value.
+  · nctx: Sequence length.
+
+· nlayers: Number of layers.
+  · B: Batch size.
+
+· nkv: Number of KV heads.
+    · Precision: Bytes per element (2 for FP16).
+· dhead: Dimension per head.
+                                            8
+Putting It Together: Full VRAM Audit
+
+· Example: LLaMA-3 8B (FP16) with sequence length 4096, batch 1
+
+
+  · Dimensions: nlayers = 32,nkv = 8,dhead = 128
+
+· Calculations:
+
+
+  · Weights: 8 × 109 × 2 = 16 GB
+
+  · KV Cache: 2 × 2 × 32 × 8 × 128 × 4096 × 1  0.5 GB
+
+  · Runtime Overhead: 1.46 GB (Measured: CUDA context & PyTorch bu ers -- not
+
+      activations)
+
+
+  · Total (this con g): 16+0.54+1.46  18 GB -- measure it, don't assume it
+
+· Conclusion: Fits comfortably on a 24 GB GPU (RTX 4090). Fits on a 16 GB T4? 
+
+   Only if we use INT8 or INT4 quantization!
+
+                                                                                               9
+
+if
+                                                                                                                                                                                                      10
+
+BF16 vs. FP16 -- The Precision Deep Dive
+
+· Bit Layout Comparison:
+          Format  Sign     Exponent Mantissa Total Bits
+                                   FP32
+                                   FP16          1  8  23  32
+                                   BF16
+                                                 1  5  10  16
+
+                                                 1  8  7   16
+
+· Why BF16 Matters for Training:
+
+
+· FP16 max value is  ± 65,504. Gradient spikes can easily over ow!
+
+· BF16 max value is  ± 3.4 × 1038 (same as FP32!). Far lower over ow risk -- not zero.
+
+· Trade-o : BF16 trades precision (mantissa) for range (exponent).
+
+
+· Rule of Thumb: Train in BF16; at inference keep the model's native dtype, or FP16/INT8 if it
+
+   was trained/validated in that range.
+
+
+· Hardware requirement: Native BF16 tensor-core support needs Ampere or newer (A100, RTX
+
+   30xx+, H100). Older cards like the T4 (Turing) have no native BF16 -- use FP16 instead on T4.
+
+f
+Act II ­ The Memory Bottleneck (Pre ll vs. Decode)
+
+· Generation has Two Distinct Phases:
+
+· 1. Pre ll Phase: Processing the prompt.
+
+
+  · Matrix-Matrix Multiplication (GEMM).
+
+  · Highly parallel, utilizes tensor cores. Compute-bound.
+
+· 2. Decode Phase: Generating token by token autoregressively.
+
+  · Matrix-Vector Multiplication (GEMV).
+
+  · Sequential. Must stream every weight out of HBM (tile by tile through
+
+      SRAM) for each single token. Memory-bandwidth bound (leads to low
+      TPS).
+
+                                                                                              11
+
+if
+   modeled has a peak double precision floating-point performance                                                                                                        cores can issue two every other cloc
+
+   of 17.6 GFlops/sec and a peak memory bandwidth of 15                                                                                                                  faster--2.2 GHz for X2 versus 2.
+
+   GBytes/sec from our benchmark. This latter measure is the steady                                                                                                      slightly more than four times the pe
+
+   state bandwidth potential of the memory in a computer, not the                                                                                                        of the X2 with the same memory ban
+   pin bandwidth of the DRAM chips.
+                                                                                                                                                                                                                       12
+
+                                                                                                                                                                         Figure 1b compares the Roofline m
+
+                                                                                                                                                                         expected, the ridge point shifts right
+                                                                                                                                                                         4.4 in the Opteron X4. Hence, to s
+Arithmetic Intensity & The Roo ine Model We can plot a horizontal line showing peak floating-point
+                                   performance of the computer. Obviously, the actual floating-point
+   performance of a floating-point kernel can be no higher than the                                                                                                      X4, kernels need an operational inten
+
+   horizontal line, since that is a hardware limit.
+
+· Arithmetic IntensHitoyw (cAouIl)d:wFeLpOlotPthse/pBeayktmeesmoloryapderefodrm
+ ance? Since X-axis
+
+                                  is GFlops per byte and the Y-axis is GFlops per second, bytes per
+
+· How many mathsecoopnde--rawthiiochnesquwalse(GdFoloppse/sercobnyd)t/e(GoFlfopds/abyttae)--wies jfuesttca h.
+
+                                  line at a 45-degree angle in this figure. Hence, we can plot a
+
+· The Roo ine Modseecol:n
+d line that gives the maximum floating-point performance
+                                      that the memory system of that computer can support for a given
+
+· operational intensity. This formula drives the two performance
+
+   Memory-boundlimrietsginimtheeg:raLphoinwFiAguIr.e S1ap: eed depends on 
+   how fast memory can transfer data. (LLM Decoding).
+
+
+                                    Attainable GFlops/sec = Min(Peak Floating Point Performance,
+
+·                                          Peak Memory Bandwidth x Operational Intensity)
+
+   Compute-bound regime: High AI. Speed depends on 
+
+   how fast TensorTCheoseretwso clianens mintuerlsteicpt layt. t(hLeLpMointPorfepella/kTrcaominpuintagtio).n
+al
+   performance and peak memory bandwidth. Note that these limits
+
+· The Decoder Proabrelecrmeate(dDonacteapeRr meuultiscoere):coAmtpubtear,tncoht on1c,e dpeer kceorndele. has a lFoigwurAe 1I. bRoeocflainue sMeodel for (a) A
+each weight chunkFolroaagdiveendkeirsneul,sweedcanfofirndoanpeointtooknethne Xo-naxliys b--asedboantictshinga(nAdc(bt) IOVp)teirsonhXo2wvs.wOepteron X
+reuse it. Pre ll hastohpareoruhagtiihognthhaaltAipnoIteinbnts,eittyhc.eaIpuferswfoeermdlaoranawcedoaef (dtphienwkkeerdnaiegslhhoednt)tchvahetructiocnmaklpsulitneaer re
+tokens in the prommpustt.lie somewhere along that line.                                                                                                                  re4u. sAedDDacINroGssCaElIl LINGS  T
+
+                                                                                                                                                                         The Roofline model gives an up
+
+   The horizontal and diagonal lines give this bound model its name.                                                                                                     Suppose your program is performing
+   The Roofline sets an upper bound on performance of a kernel                                                                                                           optimizations should you perform,
+
+   depending on its operational intensity. If we think of operational                                                                                                    advantage of bound and bottleneck a
+
+   intensity as a column that hits the roof, either it hits the flat part of
+
+   if lf
+                                                                                                                                                                                                    13
+
+Operational Metrics: TTFT vs. TPS
+
+· How we measure LLM speed in Production:
+
+· 1. Time To First Token (TTFT): How long before the user sees the rst word?
+
+
+   · TTFT = Network Latency + Pre ll Time + Decode Time (1st token)
+
+   · For long prompts Pre ll usually dominates this sum, so TTFT is mostly a Pre ll measurement
+
+      (plus queueing under load).
+
+
+   · Crucial for perceived responsiveness (users perceive >500 ms as "lag").
+
+· 2. Tokens Per Second (TPS) / Decode Rate: How fast the text streams out?
+
+
+   · Determined by the Decode phase memory bandwidth.
+
+   · Human reading speed  4­5 words/sec; >10­15 TPS feels instantaneous to the user.
+
+· Optimization Trade-o s: Some techniques improve TTFT but hurt TPS, or vice versa (e.g.,
+
+   Speculative Decoding improves TPS; chunked pre ll improves TPS/inter-token latency for
+   ongoing requests at the cost of TTFT for the new request).
+
+if ff if
+GQA and MQA Revisited (The Memory Perspective)
+
+· Recall Week 7: Multi-Query (MQA) and Grouped-Query Attention (GQA).
+
+· Why did we invent them? To shrink the KV Cache!
+
+· Memory Impact (LLaMA-3 8B, seq=4096, batch=16):
+
+
+  · Standard MHA (32 KV heads): KV Cache 32 GiB (34 GB)
+
+  · GQA (8 KV heads): KV Cache 8 GiB (8.6 GB) -- 75% reduction!
+
+· The Result: We can t much larger batch sizes (serve more concurrent users)
+
+   before running out of VRAM.
+
+                                                                                                                                                                                                     14
+
+if
+                                                                                                                                                                                                       15
+
+The Training Memory Explosion
+
+· Inference is cheap. Training is astronomically expensive.
+
+· The "16N" accounting (FP16 weights + Adam, no sharding): Training requires
+
+   16×Params bytes just for model states.
+
+  · Weights (2N) + Gradients (2N) + Optimizer States (12N)
+
+  · The Optimizer (Master Weights, Momentum, Variance) 
+
+      consumes 75% of the memory!
+
+
+· Example: LLaMA-3 8B
+
+
+  · 8B × 16  128 GB
+
+  · Exceeds a single 80GB H100 GPU (Activations not even included yet).
+16
+
+  Gradient Checkpointing
+
+    · The Activation Memory Problem:
+
+      · Backpropagation requires saving all forward 
+         pass activations to compute gradients. This memory scales O(L) with layers.
+
+
+    · The Solution: Gradient Checkpointing
+
+      · Save activations only at speci c "checkpoint" layers (e.g., every L-th layer  every 6th of 32).
+
+      · During backprop, if an activation is missing, recompute it on-the- y from the
+
+           nearest checkpoint.
+
+
+    · The Trade-o :
+
+
+      · Memory: Reduced from O(L/k + k) to O( L) when k = L.
+
+      · Compute: Increases training time by  30 % .
+
+if ff
+The Memory Wall -- GPU Price/Performance Landscape (2026)
+
+· 2026 GPU Landscape:
+
+  · Consumer (RTX 4090 24GB / 5090 32GB): Fast compute, low VRAM. ($1.5k - $2.5k)
+  · Datacenter Mid (T4, L4, A10G, L40S): 16GB - 48GB VRAM. T4 = what Colab
+
+      gives you. ($2k - $8k)
+
+
+  · Datacenter High (A100, H100): 80GB VRAM. Massive memory bandwidth
+
+      (HBM2e, HBM3). ($15k - $30k+)
+
+
+  · Next-Gen (Blackwell -- B100/B200): 192GB VRAM per GPU (HBM3e). 2nd-gen
+
+      Transformer Engine + NVLink 5. ($30k - $70k+)
+
+
+· The harsh reality: Compute scales faster than memory capacity. We have extremely
+
+   fast chips, but not enough space to hold the parameters -- even Blackwell's larger
+   HBM3e pool is still dwarfed by frontier model sizes.
+
+                                                                                              17
+Act I & II Summary
+
+· Key Takeaways so far:
+
+· 1. Memory is the bottleneck, not compute (especially for generation).
+
+· 2. 1B parameters  2GB in FP16.
+
+· 3. KV Cache grows dynamically and causes OOMs.
+
+· 4. Full ne-tuning needs 8 × the inference memory footprint (16N vs 2N).
+
+· Next Question: If hardware is limited, how do we x the software / algorithms
+
+   to run faster?
+
+                                                                                              18
+
+if
+                                                                                                                                                                                                     19
+
+Act III ­ The Speed Revolution (FlashAttention & MoE)
+
+· The O(N2) Memory Problem with Standard Attention:
+
+
+· Recall Week 4: Attention matrix                                             S
+
+S = QKT `[batch, heads, 
+
+seq, seq]`. Size is N × N 
+
+(where N is sequence length).
+
+
+· For N = 32,000, S takes  2 GB 
+  per head. With 32 heads, that's 64 GB just to store the attention matrix!
+
+
+· The Memory Wall bottleneck: We have to write the N × N matrix to HBM, read
+  it back for Softmax, write it to HBM again, then read it back to multiply with V.
+
+
+· Result: Massive VRAM usage and extreme memory-bandwidth latency.
+                                                                     Dao, Tri, et al. "Flashattention: Fast and memory-efficient exact attention with io-awareness." Advances in neural information processing systems 35 (2022): 16344-16359.
+
+  FlashAttention -- Tiling and IO-Awareness
+
+   · Goal: Compute exact attention without writing the N × N matrix to slow HBM.
+
+   · Tiling (Inner/Outer Loops): Break Q, K, V into "blocks" that t in the ultra-fast SRAM.
+
+
+      · Compute partial QKT, compute partial Softmax, multiply by tile of V entirely within SRAM.
+
+   · Write out ONLY the nal output (size N × d) to HBM.
+
+   · The Catch: Softmax requires the global max of 
+
+       the entire row. How do we do Softmax on a tile
+       if we don't have the whole row?
+
+20
+
+if
+                                                                                       21
+
+The Secret Sauce: Online Softmax
+
+·  The Softmax Problem: Softmax(xi) =   e xi-max(x)
+
+                                                        
+
+
+                                        exj-max(x)
+
+   · You need the true global maximum of the row to avoid over ow.
+
+
+· Online Softmax:
+
+
+   · Keep track of a running maximum (m) and a running sum of exponentials (l) as you
+
+      process each tile.
+
+
+   · Update rule when moving from tile 1 to tile 2:
+
+
+     · New max: mnew = max(mold, max(tile2))
+
+     · Rescale previous sum: lnew = lold × emold-mnew +  etile2-mnew
+
+· Result: Exact attention computed in O(N) memory instead of O(N2)! No quality loss.
+FlashAttention -- The Backward Pass Mechanics
+
+· The Training Memory Problem: Standard attention requires saving the huge
+  N × N matrix for backpropagation.
+
+
+· FlashAttention Backward Pass:
+
+  · Drops the massive attention matrix entirely during the forward pass.
+
+  · Analytically recomputes the attention block on-the- y in SRAM during the
+
+      backward pass.
+
+
+· The Magic: Trades a tiny amount of compute for a massive reduction in
+
+   VRAM, making long-context training possible.
+
+                                                                                              22
+    Hybrid 3:1 Attention architecture
+
+    · Pushing further than FlashAttention: What if we don't compute exact attention everywhere?
+
+    · Hybrid Attention (e.g., Longformer, Mistral):
+
+
+       · (a) Full n2 attention: Standard attention, but consumes massive memory.
+
+       · (b) Sliding window attention: Tokens only attend to their local neighbors.
+
+       · (c) Dilated sliding window: Skips some tokens to expand the receptive eld.
+
+       · (d) Global + sliding window: Local windows combined with "global" tokens that see everything.
+
+    · Mix ratio: e.g., 3 local layers for every 1 full layer (3:1) for massive speedups on 100k+ contexts.
+
+23  (a) Full n2 attention  (b) Sliding window attention (c) Dilated sliding window (d) Global+sliding window
+
+    Figure 2: Comparing the full self-attention pattern and the configuration of attention patterns in our Longformer.
+                                                                                                                                                                                                    24
+
+Mixture of Experts (MoE) -- Sparse Compute
+
+· The Goal: Scale up model parameters (for better knowledge) without scaling
+
+   up compute time.
+
+
+· Dense Model (e.g., LLaMA-3 8B): Every token goes through every parameter
+
+   in the Feed-Forward Network (FFN `[d, d_ff]`).
+
+
+· Mixture of Experts (e.g., Mixtral 8x7B):
+
+
+  · Replace the massive dense FFN with multiple 
+
+      smaller FFNs called "Experts" (e.g., 8 experts).
+
+
+· Use a Router network to send each token to 
+  only the top-k experts (typically k = 2).
+
+
+· The Magic: A 47B parameter mFoigduerel 1w: Mitihxtutrhe eof pExepre-rttsoLkayeenr. Ecaochminppuut vteectoor ifs aassi1gn3eBd to 2 of the 8 exp
+                            layer's output is the weighted sum of the outputs of the two selected experts. In Mixtral, a
+model (13B active params).  feedforward block as in a vanilla transformer architecture.
+
+                            Mixtral demonstrates superior capabilities in mathematics, code generation, an
+                            multilingual understanding, significantly outperforming Llama 2 70B in these do
+                            show that Mixtral is able to successfully retrieve information from its context wi
+                            regardless of the sequence length and the location of the information in the sequ
+                                                                                                                             Switch Transformers
+
+   Fedus, William, Barret Zoph, and Noam Shazeer. "Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity." Journal of Machine Learning Research 23.120 (2022): 1-39.
+
+The MoE Router Mechanics                                                                                                                                                              y1                                     y2
+
+                                                                                                                                                                                                    Add + Normalize
+
+                                                         y
+
+· How does the Router work?
+                            Add + Normalize                                                                                                                          FFN 1 FFN 2 FFN 3 FFN 4     FFN 1 FFN 2 FFN 3 FFN 4
+   · It's a simple linear layer: Wr  d×E              Switching FFN Layer
+     (where E is number of experts).
+                                                                                                                                                 p = 0.65                                                                        p = 0.8
+                                                        Add + Normalize                                                                                                                                              Router                     Router
+                                                          Self-Attention
+                                                                                                                                                                                                    Add + Normalize
+
+                                                                                                                                                                                   x  Positional    Self-Attention
+                                                                                                                                                                                      embedding
+· Compute probabilities: P(x) = Softmax(Wrx)
+                                                                                                                                                                             Positional
+                                                                                                                                                                                                                         embedding
+
+· Top-1 (Switch Transformers): Output is from 1 expert:                                                                                                                               x1                                     x2
+                                                                                                                                                                                              More                              Parameters
+
+   y = P1 × Expert1(x)
+                    Figure 2: Illustration of a Switch Transformer encoder block. We replace the dense fe
+
+                                                                                                                                                                                      P × (x) + P × (x) (FFN)
+
+                                                                                                                                                                                      blu1e).
+·  Top-2  (Modern   MoE  like  Mixtral):  Output  is  y = sufFmoFrwmNareladdyen:ret(wliogrhkt                                                                                         TlEahyxeerplapeyrerertse1onpteirnattehseinTd2reapnesnfodEremxnteplryeworintt2hthae  stp
+oakresnes  Swit
+                                                                                                                                                                                                                                                                                         in t
+
+                                                      sequence. We diagram two tokens (x1 = "More" and x2 = "Parameters" belo
+
+· Load Balancing:
+                                    being routed (solid lines) across four FFN experts, where the router independen
+
+                                                      routes each token. The switch FFN layer returns the output of the selected FF
+
+· If the router sends all tokens to Expert 1, Expertm1ultbipelicedobmy ethse raoubteor tgtalteenvaelucek(daonttded-7linee)x. perts sit idle.
+
+
+·  Solution: Add an auxiliary loss during training to penalize unbalanced routing.
+
+                                                                                2.1 Simplifying Sparse Routing
+
+                                           Mixture of Expert Routing. Shazeer et al. (2017) proposed a natural language Mixtu
+
+                                           of-Exp2e5rts  (MoE) layer which takes as an input a token representation x and                                                                                                                                                 then rou
+                                           this to the   best determined top-k experts, selected from a set {Ei(x)}Ni=1 of                                                                                                                                                N exper
+
+                                           The router variable Wr produces logits h(x) = Wr · x which are normalized via a softm
+
+                                           distribution over the available N experts at that layer. The gate-value for expert i is giv
+
+                                           by,
+
+                                                                                                                                h(x)i
+   allows the deployment of vLLM endpoints on any instance in the cloud.
+
+   2 Architectural details
+
+             Mixtral is based on a transformer architecture [31] and uses the same                                     Parameter                  Value
+
+MoE vs. Dense -- The True Costs modifications as described in [18], with the notable exceptions that Mix-              dim                         4096
+             tral supports a fully dense context length of 32k tokens, and the feed-                                   n_layers                       32
+             forward blocks are replaced by Mixture-of-Expert layers (Section 2.1).                                    head_dim
+                                                                                                                       hidden_dim                    128
+· MixtralT8hxe7mBod(eMl aorcEh)itFecatcurteCpahreamcekt:e
+rs are summarized in Table 1.                                n_heads                    14336
+                                                                                                                       n_kv_heads
+  · Para2m.1eteSrpsa:rs~e4M7Bixttuorteaolf(AEtxtpeenrttison is shared),                                                context_len                    32
+                                                                                                                       vocab_size                       8
+      but oWnelyp~re1se3nBt aabcrtieivfeovpeervrietwokoef nth.e
+ Mixture of Experts layer (Figure 1).                  num_experts
+                                                                                                                       top_k_experts              32768
+             For a more in-depth overview, see [12]. The output of the MoE module                                                                 32000
+
+  · Perfoforrmaagnivcene:inMpuattxchisedsetLeLrmaMineAd-b2y7th0eBwaecigchuterdacsuym,  of the outputs                                                   8
+                                                                                                                                                        2
+      but coofmthpeuetxepsermt nuectwhofraksst,ewr.h
+ ere the weights are given by the gating
+
+             network's output. i.e. given n expert networks {E0, Ei, ..., En1}, the                                    Table 1: Model architecture.
+
+· The VRoAuMtputCoaf ttchehe:
+xpert layer is given by:
+                            n1
+
+· MoE saves Compute (fast inference), butGN(Ox)Ti ·VERiA(xM). (must load all 47B).
+
+
+                            i=0
+
+· The BaHtcehre,SGiz(xe)iTdraenpo:t
+es the n-dimensional output of the gating network for the i-th expert, and Ei(x)
+
+·  Speetidhs euthpoeuitospuuhttpsuuogt feoefaxtptheebrtais-ttwhchheoxsspeiezgretatne1es.twa
+roerkz.erIof.  the gating  vector is sparse, we can   avoid computing
+                                                                                                           There are   multiple alternative ways  of implementing
+
+· AlotaldaerTGgdo(epxa-)bKn[ay6ltow,cg1hai5tys,so3--izf5e]a,stlhb,inuetetoabakraseliannmydsepwrlse[ic2da8ant]htd.teWparedertvfouoasreanmltlaanegtxeopnseehrtirssin,imksspo.lemmoensttedexbpyetartkiwngeitghehtssofgtmeatx over the
+                            G(x) := Softmax(TopK(x · Wg)),                                                                                                 26
+
+   where (TopK())i := i if i is among the top-K coordinates of logits   Rn and (TopK())i := 
+   otherwise. The value of K ­ the number of experts used per token ­ is a hyper-parameter that modu-
+                                                                                    Liu, Aixin, et al. "Deepseek-v2: A strong, economical, and efficient mixture-of-experts language model." arXiv preprint arXiv:2405.04434 (2024).
+
+  Next-Gen MoE -- DeepSeek's Architecture
+
+  · From Massive to Micro: Traditional
+
+      MoE uses 8 large experts. DeepSeek
+      slices them into 160+ tiny micro-
+      experts for precision.
+
+
+  · DeepSeekMoE Architecture:
+
+
+     · Shared Experts (Green): Always
+
+         active for every token. Captures
+         common knowledge (grammar,
+         formatting).
+
+
+     · Routed Micro-Experts (Blue):
+
+         Highly specialized. The Router
+         (Yellow) precisely activates only a few
+
+        relevant niches per token (Top-Kr).
+
+27
+Komatsuzaki, Aran, et al. "Sparse Upcycling: Training Mixture-of-Experts from Dense Checkpoints." The Eleventh International Conference on Learning Representations.  28
+
+MoE Upcycling -- The Researcher's Hack
+
+· The Problem: Training a massive MoE from scratch is too expensive.
+
+
+· The Upcycling Solution:
+
+
+· 1. Copy Weights: Take a 
+
+   pre-trained Dense model 
+
+   (Top Box) and copy its 
+
+   Attention/Norm layers directly 
+
+   (Green/Yellow).
+
+
+· 2. Clone the Experts: Take the 
+
+   single MLP (Blue Box) and make 
+
+   E exact copies of it.
+
+
+· 3. Add Router: Insert a brand-new Router (Red Box) to manage the experts.
+
+
+· Result: You get an MoE that is already "smart" on day one. Only the router starts from
+
+   scratch -- then keep training everything.
+Act III Summary / Stretch Break
+
+· Act III Recap:
+
+  · FlashAttention: Tiling algorithm that computes exact attention with O(N)
+
+      extra memory -- never writes the N×N matrix to HBM.
+
+
+  · Mixture of Experts (MoE): Decouples parameter count from compute cost
+
+      using sparse routing.
+
+
+· Up Next (Act IV): We move from single-model optimizations to system-level
+
+   serving infrastructure (vLLM).
+
+                                                                                              29
+                                                                                                                                                                                               30
+
+Act IV ­ The Serving Stack (The Fragmentation Problem)
+
+· Standard KV Cache Allocation (Static):
+
+
+· Traditional frameworks pre-allocate memory for the maximum possible sequence length (e.g., 4096)
+
+   for every request.
+
+
+· If a user only generates 50 tokens, the remaining 4046 tokens' worth of memory is locked and wasted.
+
+
+· Fragmentation:
+
+
+· Internal fragmentation: Wasted pre-allocated space.
+
+
+· External fragmentation: Wasted gaps between 
+
+   di erent requests.
+
+
+· New requests can't t into fragmented free space.
+
+
+· Real-world Impact: Naively served LLMs use only 20­40% of the KV-cache memory they reserve, due
+
+to fragmentation.
+
+                                                                  1 slot for       2 slots future used  External fragmentation  1 slot future used
+                                                                                                                                    (reserved)
+                                                                  generated token  (reserved)
+
+                   Four score and seven years ago our fathers brought forth <eos> <resv> ... <resv>                      You only live once <eos> <resv> ... <resv>
+
+                                           7 KV cache states for                               2038 slots never used     3 KV cache states for                        507 slots never used
+                                            request A's prompt                                 (internal fragmentation)   request B's prompt                         (Internal fragmentation)
+
+                                                                     Request A                                                                        Request B
+                                                                  current iteration                                                               current iteration
+
+                   Figure 3. KV cache memory management in existing systems. Three types of memory wastes ­ reserved, internal fragmentation,
+                   and external fragmentation ­ exist that prevent other requests from !tting into the memory. The token in each memory slot
+                   represents its KV cache. Note the same tokens can have di"erent KV cache when at di"erent positions.
+
+                   3 Memory Challenges in LLM Serving                                                   §6.3) of their KV cache, and the sharing pattern evolves as
+
+if ff
+Kwon, Woosuk, et al. "Efficient memory management for large language model serving with pagedattention." Proceedings of the 29th symposium on operating systems principles. 2023.  31
+
+PagedAttention -- OS-Style Memory Management for KV Cache
+
+· PagedAttention (Kwon et al., 2023) -- Core Idea:
+
+
+· Borrow from Operating Systems: Apply virtual memory paging to KV Cache
+
+   management.
+
+
+· Instead of contiguous pre-allocation, divide KV Cache into xed-size blocks (pages).
+
+
+· Pages are allocated on demand as tokens are generated.
+
+
+· Pages can be non-contiguous in physical GPU memory -- mapped via a page table.
+
+
+· Bene ts: 
+            Worker 0                     Four score and seven years ago our fathers brought forth
+                                                                                                                           Key and value vectors
+
+Scheduler               Cache         Model                                                                            Block 1 years  ago     our fathers
+
+· 1. Near-zero fragmentaEtnigoinen (KV-Schaacrdh0e memory actually used jumps from ~30% to 
+ ~95%).
+
+· K2V.CaMcheaMsasnaivgeer batch sizeWo&rkert1hroughput increase (2-4x).
+  Query                                        Block 2 brought forth
+                                                                          vector
+                        Cache         Model                                                                     forth
+
+                        Engine        Shard 1
+
+· 3in.BBSloclkeotaabclmeks lTeasbslemsefmoropryarsahllaerlindge...cvoiadrinegfe(ree.gn.cbeecaomunsetianrgch ).         Block 0 Four   score   and                                  seven
+
+                        Worker N - 1
+
+CPU Block   GPU Block   Cache            Model       Figure 5. Illustration of the PagedAttention algor
+ Allocator   Allocator  Engine        Shard N - 1    where the attention key and values vectors are stor
+
+            Figure 4. vLLM system overview.          non-contiguous blocks in the memory.
+
+            if
+Kwon, Woosuk, et al. "Efficient memory management for large language model serving with pagedattention." Proceedings of the 29th symposium on operating systems principles. 2023.  32
+
+vLLM -- The Production Serving Engine
+
+· vLLM (Kwon et al., 2023):
+
+
+· Open-source LLM serving engine built natively on PagedAttention.
+
+
+· Key Features:
+                                      Scheduler         Worker 0         Model
+                                                KV Cache Manager                       Shard 0
+  · 1. PagedAttention for KV Cache.
+                                          Cache
+                                                      Block tables           Engine      Model
+  · 2. Continuous batching: Dynamically add/                                           Shard 1
+                                                                        Worker 1
+      remove requests from the running batch.
+                                        ...
+                                                                              Cache
+                                                                             Engine
+
+· 3. Tensor parallelism: Multi-GPU support.
+                            Worker N - 1
+· 4. Quantization support: GPTQ, AWQ.
+
+                                                CPU Block   GPU Block   Cache            Model
+                                                 Allocator   Allocator  Engine        Shard N - 1
+
+                                                                                                Figure 4. vLLM system overview.
+
+· Continuous Batching: Replaces ine cient "Static Batching". Uses iteration-level
+
+   scheduling (ORCA-style) at the single-token step--Altrheoquughescotms pjoacintiotnh[e54b] ahtacs hbedenypnraompoiscead lalys a poten
+   mid-generation without waiting for others to nistpihear.lfsNoorlomutaiidnoncleet-osGefnrPasgUitmivceenyLtcaLtlMeiosns.,eprverinfogrmsyisntgemcoims pimacptiroanctiinca
+
+                              due to the massive KV cache. Even with compaction, th
+
+                              pre-allocated chunk space for each request prevents memor
+
+                              sharing speci!c to decoding algorithms in existing memor
+
+                                                                        i ff
+                                                                  Leviathan, Yaniv, Matan Kalman, and Yossi Matias. "Fast inference from transformers via speculative decoding." International Conference on Machine Learning. PMLR, 2023.
+
+Speculative Decoding -- The Draft-and-Verify Pipeline
+
+· The Autoregressive Bottleneck: Decoding is sequential and memory-bandwidth
+
+   bound. We want to process multiple tokens in parallel (like pre ll).
+
+
+· Speculative Decoding (Leviathan et al., 2023):
+
+
+  · Step 1 (Draft): A small, fast draft model (e.g., 1B params) generates 
+
+      candidate tokens sequentially.
+
+
+  · Step 2 (Verify): The large target model (e.g., 70B params) processes ALL 
+
+      candidate tokens in a single parallel forward pass (acts like a fast pre ll).
+
+
+  · Step 3 (Accept/Reject): Accept tokens that match target distribution; reject the
+
+      rest.
+
+
+· Guarantee: Final output is statistically identical to sampling from the target
+
+   model alone. Speedup: ~2­3×.
+
+                                                                                              33
+                                                                                                                                                                                                     34
+
+Speculative Decoding -- Visual Example Fast Inference from Transformers via Speculative Decoding
+
+    · - Green (Draft): Tokens proposed by the small draft model. 
+
+Figure 1.-OuBr ltuecehn(iqAueciclluesptratt/eCd ion rthreeccaste):ofTuonkcoenndistiovnaelrliangeudagoe mr ocdoelrinreg.cEtaecdh libneyretphreeselnatsrgonee titaerragtieont omf thoedaelglo.ri thm.
+The gree-nRtoekdens(Rareetjhee csutg)g:eTstoioknsemnasderebyjethcetaepdprobxyimtahtioen tmaordgele(themre,oadGePlT.-
+like Transformer decoder with 6M parameters
+
+trained on lm1b with 8k tokens) that the target model (here, a GPT-like Transformer decoder with 97M parameters in the same setting)
+
+· taacrcgeepttemdo,Wdwehlhiwleyatshireturniseodnflayanosdntbc:el,Euaevndteo5nketonwkseahnresewtnheerareegjdeecnrteeardfatsteudtgo.geksteionnsiasndrethjeeircctoerrdec,tiothnse, retsopekcetivnesly.aFcorceexapmtpeled, inutphetfiorst line the
+
+        that point are kept, and the correction is made in the same parallel step.
+
+be accepted, while guaranteeing that the outputs from our   2. Speculative Decoding
+system have the same distribution as those from the target
+model alone. For example, the sentence in Figure 1, con-    2.1. Overview
+
+                                                                                     if
+instead. It's easy to show (see Appendix A.1) that for any Algorithm 1 satisfies Equation (1). See Figure 2.
+distributions p(x) and q(x), and x sampled in this way,
+
+indeed x  p(x).                                                                                                                  E(# generated tokens) =            1  +1     (1)
+
+Given the distribution q(x) obtained from running Mq on                                                                                                             1                                                 35
+a conditioning pref ix, we can sample a token x1  q(x).
+
+Speculative Decoding -- The We then calculate the distribution p(x) by running Mp on                                    Rejection                   Sampling            Math
+
+pref ix while in parallel speculatively calculating the distri-
+
+bution of the next token x2 by running Mp on pref ix+[x1].
+
+On·ceAbcocthecpotmanpucteatiConristecorimopnl:e
+te, we proceed as per above:
+
+Iref -xsa1m·ispDlreerxjae1fcttferpodrm,owbaaenbadidilsijtucyas:tredqd(tdxhie)s.t
+criobmutpiounta,taionnd  of x2 and
+                                                                                                          if x1 is ac-
+
+icdeepatetdo·,swTaamerpkgleeeetpbpebtrowotehbeatnobk1ielaintnsyd.: Apl(+gxo)1r
+ittohkmen1sgaetnoenrcaeli.zes this
+
+Algor·ithAmcc1eSppt ewcuitlhatpivreoDbeacboidliitnyg: Smteipn  (1,  p(x)                                  )
+
+                                                                    q(x)
+   Inputs: Mp, Mq, pref ix.
+
+  f.oSr·aim=Ifplq1e(txo)guedsopse(sx)x:1a,..l.w, afyrsomacMceqpatu.to
+regressively.
+
+     q·i(xIf)q(x)M>q(ppr(exf):ixac+c[exp1t, w. .i.th, xpi ro1b])ability p/q.
+
+
+     xi  qi(x)
+
+  ·enOd nfoRr ejection:
+
+
+  . Run Mp in parallel.               token  from              adjusted                                       distributiFoingu:rpe 2(.xT)h=e exnpoercmtedanliuzme(bmer oafxto(0ke,nps(gxe)ne-ratqed(xb)y)A)
+lgorithm  1
+
+  p1(·x)S, .a.m. ,pple+c1o(xrr)ected                                                                                     as a function of  for various values of .
+                                                                                                                        i
+     Mp(pref ix), . . . , Mp(pref ix + [x1, . . . , x ]) 
+  ·r.1DEextpeUrem(c0it,ne1ed)t,h.Te.o.nk,uermnbseprUoef(r0aS,c1tce)eppt:ed [gaucescseepstne.d]
+                                                                                                              =          j       + 1 (where     is  acceptance  rate).
+
+                                                pi (x)                                                           i=1    j=13.2.  Calculating  
+                                                qi (x)
+  n  min({i    1|1i                   , ri   >                 }  [  {                                    })            We'll now derive a simple formula for calculating  given a
+
+  . Adjust the distribution from Mp if needed.                                                                          prefix and the two models Mp and Mq. We start by defining
+                                                                                                                        a natural divergence DLK :
+  p0(x) pn+1(x)
+
+  if n < then
+36                             Shoeybi, Mohammad, et al. "Megatron-lm: Training multi-billion parameter language models using model parallelism." arXiv preprint arXiv:1909.08053 (2019).
+
+    Tensor Parallelism vs. Pipeline Parallelism
+
+    · When One MGePgaUtroIns-LnM't: TErnaioniunggMhu:ltLi-LBaillMionAP-a3ram70etBer LFaPng1u6ag=e M1o4d0elsGUsBin.gNMeodeedl Psarmalluellitsimple GPUs.
+
+
+    · rTeqeunirseoanryPnaewraclolmelpiislemr o(rTcoPd)e:
+re-writing, and can be
+
+      fully implemented by inserting a few simple primitives, as
+
+     de·scSribpelditininthdeivneidxtusaecltiwone. ight matrices across GPUs.
+
+
+    3·. M Eoadcaehlll-PGreaPrdaUulclceeloTtmorapcnuostmfeosrbmaineper.os
+rtion of each layer 
+
+    We take advantage of the structure of transformer networks                                                            (a) MLP
+
+    to·creLaatetaesnimcpyle: mLoodwel p(apraallreal lilmepl)l.emTehntraotiuongbhypadudtin:gHaigh.
+
+
+    few synchronization primitives. A transformer layer consists
+
+    of·a sRelef aqttuenirtieonsb: lFocaksftolilnowteedrcboy na ntweoc-ltay(eNr,VmLuilnti-kla)y. eBr est for intra-node.
+
+
+    perceptron (MLP) as shown in Figure 2. We introduce
+
+    · mPoidpeel plianraellePlisamrainllbeoltihsomf th(ePsePb)l:o
+cks separately.
+
+    We start by detailing the MLP block. The first part of the
+
+    bl·ockAisssaiGgnEMdMi feorlleonwtedlabyyearGsetLoUdnoi nleinreeanrittyG: PUs (e.g., GPU 0: Layers 1-16, GPU 1: Layers 17-32).
+
+
+    · Latency: AdYd=s GpeipLUel(iXneA)bubbles.
+ (1)
+    One option to parallelize the GEMM is to split the weight
+
+    m·atrRixeAqauloinrgeists:  rSowlos wanedrininputteXrcaolonnngeitcs tcsolaumrensoaks:ay.  Best  for  inter-node.
+
+                                                                                                                   (b) Self-Attention
+
+    X = [X1, X2], A = A1 .                                                        (2) Figure 3. Blocks of Transformer with Model Parallelism. f and g
+                               A2
+                                                                                            are conjugate. f is an identity operator in the forward pass and all
+
+    This partitioning will result in Y = GeLU(X1A1 + reduce in the backward pass while g is an all reduce in the forward
+
+    X2A2). Since GeLU is a nonlinear function, GeLU(X1A1+ pass and identity in the backward pass.
+
+                               ff ff
+Multi-Node Scaling & Infrastructure
+
+· Scaling Beyond One Server:
+
+  · Maximum GPUs per standard server node: 8 (e.g., 8x H100 DGX).
+
+  · If a model needs more than 8 GPUs (or for massive training), we span
+
+      multiple nodes.
+
+
+· 3D Parallelism:
+
+  · Combine Tensor Parallelism (within node), Pipeline Parallelism (across
+
+      nodes), and Data Parallelism (replicating the setup for di erent batches).
+
+
+· Network Bottlenecks:
+
+  · In niBand networks are crucial to prevent the 
+
+      "Memory Wall" extending to the "Network Wall".
+
+                                                                                              37
+
+if
+Act IV Summary -- The Modern Serving Stack
+
+· The Modern LLM Serving Stack (2026):
+
+  · User Request  API Gateway
+
+  ·  vLLM Scheduler (Continuous Batching)
+
+  ·  PagedAttention KV Cache Manager
+
+  ·  FlashAttention Compute Kernel
+
+  ·  [Optional] Speculative Decoding
+
+  ·  [Optional] Tensor Parallelism across GPUs
+
+  ·  Streamed Token Response
+
+
+· The Impact: Engineering of this kind is what makes production assistants fast and
+
+   a ordable at scale.
+
+                                                                                              38
+
+ff
+                                                                                      Fine-tuning  Soft Prompt-based                                                                                                                           prompt-tun
+                                                                                                       Fine-tuning                                                                                                                             SPoT [52]
+
+                                                                                                                       Training Speedup
+
+                                                        PEFT Methods for PLMs          Selective          Others       (IA)3 [59], MoV [60], SSF [61], IPA [6
+                                                                                      Fine-tuning                      U-Diff pruning [63], U-BitFit [64], PaF
+                                                                                                       Unstructural    S-Diff pruning [63], S-BitFit [64], FAR
+                                                                                                         Masking
+
+                                                                                                   Structural Masking
+
+                                                                                                      Low-rank         Intrinsic SAID [75], LoRA [76], Comp
+                                                                                                   Decomposition
+Act V ­ The PEFT Paradigm (The Fine-Tuning Crisis) Reparameterized
+                                                                                                                                                                                                                                  Fine-tuning
+                                                                                                                       Dynamic Rank                                                                                                            DyLoRA
+
+                                                                                                   LoRA Derivatives    LoRA Improvement                                                                                                        Laplace-L
+
+· Recap: Full Fine-Tuning Memory Requirements (16N accounting, Slide 15):
+ Multiple LoRA LoRAHub
+                                                                                        Hybrid     UniPELT [97], S4 [98], MAM Adapter [32], NOAH [99], AUTO
+                                                                                      Fine-tuning
+
+· LLaMA-3 8B:  128 GB (weights + gradients + optimizer) + activFaigt. i3o: Tnaxso.n
+omy of Parameter-Efficient F
+
+· 70B model:  1,120 GB -> 14+ H100s.
+                   (a) Additive PEFT (b) Selective PEFT (c) Reparameterization PEFT a
+
+                                                                               Output              Output              Output                                                                                                                          t
+
+                                                                               Combine                                                                                                                                                                 W
+
+· Impractical for most organizations and researchers.
+                                                                         Merge                                                                                                                   w
+
+                                                                                                                                                                                                                                                       w
+
+· Parameter-E cient Fine-Tuning (PEFT):
+                                                                                                                                                                                                               a
+
+                                                                               Input               Input               Input   Input (train)                                                                                                           a
+
+                                                                                                                       Frozen            Learnable                                                                                                     a
+
+· Freeze the base model weights (no gradients, no optimizeFrigs. 4t:aDtieffesre)n.t
+types of PEFT algorithms.                                                                                                                                          s
+
+                                                                                                                                                                                                                                                       s
+
+· Add a small number of trainable parameters.
+          scenarios that a system could encounter during actual opera- a
+                                                        tions. Such synthetic workloads are crucial for testing system R
+
+                                                        performance under controlled conditions that resemble real- a
+
+· Train only the added parameters -> 99%+ reduction inwortldrausienr aacbtivliety. params.
+                                                                                                                                                            r
+                                                                                                                                                                                                                                                       a
+
+                                                                                                   III. PEFT TAXONOMY                                                                                                                                  i
+
+· Key Insight: We're not training a new model -- we're steTehre iPnEgFT astnrateegixesiscatninbegboroandley .classified into four                                                                                                                      a
+                                                                                                                                 categories: additive PEFT (Section III-A), which modifies                                                             r
+
+     39                                                 the model architecture by injecting new trainable modules
+
+                                                        or parameters; selective PEFT (Section III-B), which makes
+
+                                                        a subset of parameters trainable during fine-tuning; repa-                                                                                                                                     i
+                                                        rameterized PEFT (Section III-C), which constructs a (low-                                                                                                                                     (
+                                                        dimensional) reparameterization of the original model param-                                                                                                                                   b
+
+iff
+no additional inference latency. We also provide an empirical investigation into
+
+rank-deficiency in language model adaptation, which sheds light on the efficacy of
+
+LoRA. We release a package that facilitates the integration of LoRA with PyTorch
+
+models and provide our implementations and model checkpoints for RoBERTa,                                                                                                                                                                                                                                              40
+ Aghajanyan, Armen, Sonal Gupta, and Luke Zettlemoyer. "Intrinsic dimensionality explains the effectiveness of language model fine-tuning." Proceedings of the 59th annual meeting of the association for computational linguistics and the 11th international joint conference on natural language processing. 2021.
+
+DeBERTa, and GPT-2 at https://github.com/microsoft/LoRA. Hu, Edward J., et al. "Lora: Low-rank adaptation of large language models." Iclr 1.2 (2022): 3.
+
+      LoRA -- The Low-Rank Intuition
+
+NTRO·DTUhCeTKIeOyNObservation (Aghajanyan et al., 2021):
+
+
+applicat·ionPsrei-ntraninaetudrlaalnglaunaggueamgeodperloscheasvseinaglorwelyintorninsaidcadpitm- ensionality.
+
+
+e large-s·caTlhee, pwreei-gthratiunpeddaltaensgduuarginegmnoed-etul ntiongm(ulWtip)laeredo wn-                                                        h
+
+applicatiolnosw. -Sruacnhk a--datphteaytidoonni'st nuesuedaltlhyedfounllepvairamfineete-rtusnpiancge,.
+
+
+wunpsdiadtee·soLfaolfilwnt-heRe-taupnnakirnaMgmaietstreitxrhsaFotaftchttehoernizepawrtei-omtnroa(idHneeuldectomanolt.ad, ie2nl0s.2Ta2sh)::em
+ manay-  Pretrained     = 0
+
+ters as ·inFtuhlel uoprdigaitnea: lmWodel. dA×ds-l>ardg2epr amraomdeetlesrsa.r
+e trained                                                              Weights       
+
+ew months, this changes from a mere "inconvenience" for                                                                                                 ×            = (0, 2)
+
+(Radfor·d Leot RaAl.,dbe)comr RpoosBitEioRnT: a Wlarg=e B(L×iuAet al., 2019) to a
+deploymewnhtecrheaBllengedf×or,r AGPT-3r×(dB, raonwdnr et adl..,
+ 2020) with
+lion  trainable parameters.1                                                                                                                                      
+                                    of  d  2.
+
+         · Parameters: 2dr instead                                                                                                                    x
+
+sought to mitigate this by adapting only some parameters or
+g extern·alEmxaomdpullee:sdfo=r 4n0ew96,tarsk=s.16T-h>is13w1a,y0,72wpeaoranmlys nvese. d16.7Fmigiulliroen1! :(1O28u×r rreepdaurcatmioent)riza-
+e and load a small number of task-specific parameters in ad- tion. We only train A and B.
+
+o the pre-trained model for each task, greatly boosting the
+
+onal efficiency when deployed. However, existing techniques
+                                                           if
+DeBERTa, and GPT-2 at https://github.com/microsoft/LoRA.
+
+INTRODUCTION  Hu, Edward J., et al. "Lora: Low-rank adaptation of large language models." Iclr 1.2 (2022): 3.
+
+   LoRA -- The Architecture & Forward Pass
+
+y applications in natural language processing rely on adapt-
+
+one la·rgLeo-RscAalIne,jepcrtieo-ntrPaioninedt:
+ language model to multiple down-                                                                                      h
+
+m applications. Such adaptation is usually done via fine-tuning,
+ch updat·esFarollzethnepprea-rtraamineetderwseoigfhtth: We p0
+re-trained model. The ma-
+                                                                                                                                                                                 = 0
+mowetnesrisdae·soFifonrfiwtnhaeer-dtouprnaiigsnsign: hails=mthWoad0txethl+.e AneWswxlam=rgoeWdre0mxl c+oodBnetAlasxin
+asreastrmainanedy                    Pretrained              
+                                                                                                                                                            Weights
+
+y-2fe(Rwadm·fooDnrdtuhreisnt,gatthlr.ai,sinbic)nhgoa:rnWRg0eoissBffErrooRzmTena.alOamnrglyeerAe(La"niiudncBeotnraevcle.e,niv2iee0ng1cr9ae)d"iteofnotars.
+    ×                   = (0, 2)
+cal de·plIonyitmialeiznattciohna:l
+lenge for GPT-3 (Brown et al., 2020) with
+billion t·raiAn:aIbnilteiaplizaerdamweittherrasn.1dom Gaussian.
+                                                                                                              
+
+                                                                                                                                                                x
+
+nyinsgouegxhte·trntBoa:lImnmiittioaigldizauetledeswthiftiohsrzbenyreowasd-at>apstiknWsg. =oTnhBlyis×swoAma=ye, 0wpaaertasomtnaelrtyt.e
+ nrseeodr Figure 1: Our reparametriza-
+ore and·loWadhya? sTmhealml ondueml bbeehraovefstaesxka-cstlpyelcikiefitchepaprraem-treatineersd imnoadde-l ontisotenp. 1W.
+e only train A and B.
+
+antitoonat·hl eIenffpfiercreei-entnrcaceiynMewedhrgemeno: dWdeemplleofroygreedde.a=cHhWowt0ae+svkeB, rAg, re-ex>aistZlteyinrobgoatoedcsdthiitnnioigqnuathleelsatency!
+
+                                                                                                           41
+
+Equal contribution.
+Compared to V1, this draft includes better baselines, experiments on GLUE, and more on adapter latency.
+While GPT-3 175B achieves non-trivial performance with few-shot learning, fine-tuning boosts its perfor-
+                                                                            As a final stress test for LoRA, we scale up to GPT-3
+                                                                            training cost, we only report the typical standard dev
+                                                                            opposed to providing one for every entry. See Section
+                                                                            As shown in Table 4, LoRA matches or exceeds 4th2e fi
+                                                                            that not all methods benefit monotonically from having
+
+LoRA Parameter & Memory Savings ure 2. We observe a significant performance drop wh
+                                                                            prefix-embedding tuning or more than 32 special toke
+                                                                            similar observations in Li & Liang (2021). While a
+
+· Worked Example: LLaMA-3 8B (Rank 16, applied itsooQut,-oKf-,sVco, pOe):f
+or this work, we suspect that having
+
+                                                                            bution to shift further away from the pre-training dat
+
+  · Q/O matrices (131k params) + K/V GQA matricesp(8er1fokrmpanracme osf)dpifefrerleanyteard.
+aptation approaches in the
+
+  · Total LoRA params:  13.6M.
+
+
+  · Trainable ratio: 13.6M/8B = 0.17 % 
+
+· Memory Breakdown (FP16 base, FP32 LoRA):
+
+
+  · Base model (frozen): 16 GB
+
+
+  · LoRA weights/grads/Adam (FP32, 16 B/param): 
+
+      0.22 GB
+
+
+  · Activations & Overhead:  2.0 GB 
+
+      (small batch + checkpointing; grows with batch ×Fsieguqr)e
+ 2: GPT-3 175B validation accuracy vs. number
+                                                                            methods on WikiSQL and MNLI-matched. LoRA exh
+
+  · Total: 18.2 GB -- ts a 24 GB 4090, not a 16 GBSTee4S. evcst.ioFnuFll.2FfTo:r1m2o8reGdBeta->ils1o8n.2theGpBlo(t7te×d) data po
+
+                                                                6 RELATED WORKS
+
+if
+43                         Zhou, Zhe, et al. "{PetS}: A unified framework for {Parameter-Efficient} transformers serving." 2022 USENIX Annual Technical Conference (USENIX ATC 22). 2022.
+
+    LoRA Variants & Multi-Adapter Serving
+
+    · LoRA Variants:
+
+
+    · DoRA: Decompose into magnitude + direction (Better qualityPe).t
+S Overview
+
+      · LoRA+: Di erent learning rates for A and B.
+  x Input Queries                                                                                                    PET Serving
+
+      · rsLoRA: Scale by /r (not /r) for stable       Query 0:  <Task_id>                                                                                     y       PET Inference Pipeline
+                                                                <Input Data>                                                                                            Batch Scheduler
+          large-rank training.
+                                                                                                                         User Inputs        Performance           Engine
+                                                      Query 1:  <Task_id>                                                                                   Input              Model            PET Task
+    · Multi-Adapter Serving (vLLM Native):
+                     <Input Data>                                                                                                                    Scheduler
+                                                                ...                                                                                       Analyzing         Scheduling        PET Operator
+      · Load the Base Model once (16 GB).
+                                                                                                                                     Policy            Library
+                                                                                                                                                            Input
+                                                                                                                                                        Reformatting
+
+                                                      u Register Tasks
+
+                                                      PEPPTMrrPePPeor-aa-SePtdtrrrh-araeaaStaarmlrmIihaiDndanTameIieoaeMDndttgwdeeoeMotrwresdsoresdlel  v Task Manager      w PET Parameters
+                                                          PEPTEPTTEyTTpyeTpyepe
+                                                                                                                                                             Task Register             Shared Model
+                                                                                                                                                                                         Parameters
+                                                                                                                                                             PET Manager
+                                                                                                                                                                                 Parameter Repository
+
+    · Swap tiny LoRA adapters dynamically per reqFuige.s1t1:(1P0etS0 sMystBemeoavecrvhie)w.
+: (1) Tasks register; (2) Task
+                                                                                                 manager (3) Task schedule; (4) Task serving. (Image is taken
+
+    · User A gets Coding LoRA, User B gets MedicafrolmLoPeRtSA[2.4
+8])
+
+    · Massively scalable without memory duplicationT! he other challenge PetS proposed is how to schedule dif-                                                                                              PEFT
+                                                                                                 ferent PEFT requests to achieve high performance. PetS sched-                                              DLoR
+                                                                                                 uler achieves high parallelism through a two-level scheduling
+                                                                                                 policy: Coordinated Batching (CB) and Macro-batch Stream-                                                     Sim
+                                                                                                 ing (MS) as Figure 12 depicts. Through CB, the input queries                                               prese
+                                                                                                 will first be clustered based on their input length and then                                               enabl
+                                                                                                                                                                                                            witho
+
+                       ff
+                                                                                                                                                                                                     44
+
+Quantization Math & Worked Example
+
+· Quantization = Mapping continuous values to discrete levels:
+
+  · q = round (x/s) + z ; s = scale factor, z = zero-point. (z = 0 for symmetric absmax, as below).
+
+  · Absmax Quantization (FP16 -> INT8):
+
+  · FP16 range [-3.2,3.2] -> INT8 range [-127,127].
+
+  · Scale s = 3.2/127 = 0.0252.
+
+  · Value 2.1  round(2.1/0.0252) = 83.
+
+  · Dequantize: 83 × 0.0252 = 2.092 (Error introduced!).
+
+
+· Block-wise Quantization: Use di erent scales for small blocks (e.g., 64 values) to
+
+   reduce error.
+
+ff
+lving two key challenges: the need for higher quantization precision at
+
+rs and the need to explicitly represent the sparse but systematic large
+
+at ruin quantization precision once they emerge in all transformer layers                                                                                                                            45
+       Dettmers, Tim, et al. "LLM. int8 () 8-bit matrix multiplication for transformers at scale." Proceedings of the 36th International Conference on Neural Information Processing Systems. 2022.
+
+rameters. This loss of precision is reflected in C4 evaluation perplexity
+
+ot accTurahcyeasOsoountalsitehersePourtloierbfelaetumres e&merLgeL, aMs sh.oiwnntin8F(i)gure 1.
+
+part of our method,                                        Method
+is possible to retain
+o 2.7B parameters.                                         LLM.int8()
+ , matrix multiplica-
+nce of independent                              0.7        8-bit baseline
+ olumn vectors. As
+e quantization nor-                                        16-bit baseline
+ h inner product to
+on. We can recover      Mean zeroshot accuracy  0.6
+ultiplication by de-
+duct of column and                              0.5
+ before we perform
+                                                0.4
+eters without perfor-
+tical to understand                                  emergence of
+utliers in the feature
+                                                     outlier features
+
+                                                0.3
+
+                                                     125M  350M        1.3B  2.7B  6.7B  13B  30B  66B  175B
+
+                                                                             Parameters
+
+                        Figure 1: OPT model mean zeroshot accuracy for
+                        WinoGrande, HellaSwag, PIQA, and LAMBADA
+46      Dettmers, Tim, et al. "Qlora: Efficient finetuning of quantized llms." Advances in neural information processing systems 36 (2023): 10088-10115.
+
+    QLoRA -- The Full 4-bit Training Stack
+
+    · QLoRA (Dettmers et al., 2023) -- Three Innovations:
+
+
+      · 1. 4-bit NormalFloat (NF4): 4-bit data type whose levels follow the normal
+
+          distribution that trained weights approximately have.
+
+
+      · 2. Double Quantization: 
+
+          Quantize the scale factors 
+          themselves (FP32 -> FP8) 
+          to save more memory.
+
+
+      · 3. Paged Optimizers: 
+
+          Over ow optimizer states 
+          to CPU RAM to prevent 
+          GPU OOM crashes.
+
+
+                                                                                                Figure 1: Different finetuning methods and their memory requirements. QLORA improves over LoRA by
+                                                                                                quantizing the transformer model to 4-bit precision and using paged optimizers to handle memory spikes.
+
+    · Result: Train an 8B model on consumer GPUs!
+                                                                         2 Background
+
+                                                                                       Block-wise k-bit Quantization Quantization is the process of discretizing an input from a rep-
+                                                                                       resentation that holds more information to a representation with less information. It often means
+                                                                                       taking a data type with more bits and converting it to fewer bits, for example from 32-bit floats to
+                                                                                       8-bit Integers. To ensure that the entire range of the low-bit data type is used, the input data type is
+
+    lf
+                                                                                                                                                                                                     47
+
+QLoRA -- Forward & Backward Pass Walkthrough
+
+· Storage: Base weights are locked in 4-bit (NF4) in VRAM.
+
+
+· Forward Pass (Compute):
+
+
+   · 1. Dequantize block: from NF4 -> 16-bit on-the- y in SRAM. 
+
+       (FP16 on T4, see Slide 10.)
+
+
+   · 2. Compute MatMul & Discard: Multiply input, then drop 
+
+       the 16-bit block -- only a small working copy lives in 
+       VRAM at a time.
+
+
+   · 3. Add LoRA path: Add the 16-bit LoRA adapter output 
+     (h = Wcomputex + LoRA).
+
+
+· Backward Pass:
+
+
+   · Parameter gradients exist only for the LoRA adapters (A, B); 
+
+       activation gradients still ow through the frozen layers.
+
+
+   · The NF4 base weights are literally just a frozen reference grid.
+
+
+· Memory Savings: roughly an order of magnitude vs. full FP16 ne-tuning 
+
+   (exact ratio depends on batch, seq len, checkpointing).
+
+lf lf
+Practical PEFT -- The Magic of Modern Libraries
+
+· Under the Hood: Complex math, custom data types (NF4), SRAM/VRAM
+
+   memory management.
+
+
+· In Practice (Hugging Face `PEFT` & `bitsandbytes`): Just 2 simple steps!
+
+  · 1. Quantize the Base Model: Use `BitsAndBytesConfig` to load the
+
+      massive model in 4-bit (or load a pre-quantized checkpoint).
+
+
+  · 2. Inject the Adapter: Use `LoraConfig` and `get_peft_model()` to
+
+      snap the trainable adapters onto the frozen base.
+
+
+· The Result: We shrink the training footprint of an 8B model to ~0.17%
+
+   trainable parameters -- it ts a 16 GB T4.
+
+                                                                                              48
+
+if
+                                                                                                                        Jonas Pfei er, Ivan Vuli, Iryna Gurevych, and Sebastian Ruder. 2020. MAD-X: An Adapter-Based Framework for Multi-Task Cross-Lingual Transfer. In EMNLP 2020
+                                                                Xiao Wang, Tianze Chen, Qiming Ge, Han Xia, Rong Bao, Rui Zheng, Qi Zhang, Tao Gui, and Xuanjing Huang. 2023. Orthogonal Subspace Learning for Language Model Continual Learning. In EMNLP 2023
+
+Advanced Adapters -- MAD-X & O-LoRA
+
+· Two things plain LoRA struggles with: (1) transfer to a low-resource language, and 
+
+   (2) learning task after task without forgetting.
+
+
+· MAD-X (Pfei er et al., 2020): Language Adapter (MLM on raw text) + Task Adapter
+
+   (trained in English), stacked at inference.
+
+
+  · Thai-LA + NER-TA  Thai NER with zero Thai NER data. L languages × T tasks = L +
+
+      T adapters, not L x T.
+
+
+· O-LoRA (Wang et al., 2023): each new task's LoRA subspace is forced orthogonal to
+  earlier ones -- orth = AiAjF2.
+
+
+                                           i<j
+
+  · Reduces catastrophic forgetting; does not eliminate it.
+
+
+· Takeaway: adapters are modular units of knowledge -- stack them (MAD-X) or steer
+
+   them geometrically (O-LoRA).
+
+                                                                                              49
+
+ff ff
+                            Dettmers, Tim, et al. "Qlora: Efficient finetuning of quantized llms." Advances in neural information processing systems 36 (2023): 10088-10115.
+
+                                                                                                                                                 Table 1: Elo ratings for a competition between
+                                                                                                                                                 models, averaged for 10,000 random initial order
+                                                                                                                                                 ings. The winner of a match is determined by
+Quality vs. Compression -- The Quantization Curve that are tuned by backpropagating gradients through
+                                                                                     the quantized weights.
+                                                                                                                                                 GPT-4 which declares which response is better fo
+                                                                                                                                                 a given prompt of the the Vicuna benchmark. 95%
+                                                                                                                                                 confidence intervals are shown (±). After GPT
+                                                                                                                                                 4, Guanaco 33B and 65B win the most matches
+                                                                                                                                                 while Guanaco 13B scores better than Bard.
+·  Weight memory is arithmetic; quality must be measured. (LLaMA-3 8B weight QLORA reduces the average memory requirements
+                                                                                   of finetuning a 65B parameter model from >780GB
+                                                                                   of GPU memory to <48GB without degrading the
+                                                                                   runtime or predictive performance compared to a 16-
+
+   footprint, decimal GB)
+              bit fully finetuned baseline. This marks a significant
+
+                                        shift in accessibility of LLM finetuning: now the                                                        Model    Size  Elo
+
+                                        largest publicly available models to date finetunable                                                    GPT-4    - 1348 ± 1
+
+   · FP16  (16-bit):  Baseline  --  16  GB.
+on a single GPU. Using QLORA, we train the Gua-                                                      Guanaco 65B 41 GB 1022 ± 1
+                                                naco family of models, with the second best model
+                                                                                                                                                 Guanaco 33B 21 GB 992 ± 1
+                                        reaching 97.8% of the performance level of ChatGPT
+                                                                                                                                                 Vicuna 13B 26 GB 974 ± 1
+   · INT8 (8-bit): Near-baseline (Dettmoienn rltehssesVetihctaunnaa12l[1.0h2]oub0resn2coh2nma)ars--ki,nwglhe8ilceobGnesiunBmg .ter
+raiGnaPbUle;
+                                                                                                                                                 ChatGPT  -     966 ± 1
+
+                                        using a single professional GPU over 24 hours we                                                         Guanaco 13B 10 GB 916 ± 1
+
+   · NF4 (4.13-bit): Matches 16-bit neacclothsuiienvngeit9nh9eg.3g%aopwtnoithCrhoeautprGloParTgretosent dmthoed Veli,cuenssaebnetinacllhy-       Bard     -     902 ± 1
+
+                                                                                                                                                 Guanaco 7B 6 GB 879 ± 1
+
+   benchmarks (Dettmers et al. 2023m) a--rk. W~h4en dGepBloy.edT, ohuresmSallwesteGeuatnaScopmoodte.l
+
+                                        (7B parameters) requires just 5 GB of memory and outperforms a 26 GB Alpaca model by more than
+
+                                                                                  20 percentage points on the Vicuna benchmark (Table 6).
+
+   · INT3 (3-bit): Degradation grows shQLaOrRpAlyin;tromduecetshmoultdip-ledinenopvaetinonds deesnigtn.e
+d to reduce memory use without sacrificing per
+
+                                        formance: (1) 4-bit NormalFloat, an information theoretically optimal quantization data type for
+
+   · INT2 (2-bit): Severe loss with naiv(ne2o)rmDmaoluleybtldehisQtoruibdauntsteidza--dtaiotanu,thasamtayeibtehlolddes tbhoeatttneqruleyamntpwizireisictathhl ereqssuupaltnsetitzchaatiniao4nl-icbsoitneIsntdatengtse,rssaavnindg4a-bnitavFelroaagtse
+   quantizers (e.g. AQLM)..
+
+                                        of about 0.37 bits per parameter (approximately 3 GB for a 65B model). (3) Paged Optimizers
+
+                                        using NVIDIA unified memory to avoid the gradient checkpointing memory spikes that occur when
+
+· processing a mini-batch with a long sequence length. We combine these contributions into a better
+
+   The Sweet Spot: NF4 gives a 4x metumnedoLroyRAreapdpruoacchttihoatninc(l1ud6es aGdapBtersat ev4eryGneBtw)orkolnayetrhaned stheereby avoids almost all of
+   benchmarks -- always re-measure othne aYccOuraUcy Rtradteaoffss kseen in prior work.
+
+                                        QLORA's efficiency enables us to perform an in-depth study of instruction finetuning and chatbo
+
+                                        perform5an0ce on model scales that would be impossible using regular finetuning due to memory
+
+                                        overhead. Therefore, we train more than 1,000 models across several instruction tuning datasets
+
+                                        model architectures, and sizes between 80M to 65B parameters. In addition to showing that QLORA
+
+                                        recovers 16-bit performance (§4) and training a state-of-the-art chatbot, Guanaco, (§5), we also
+
+                                        analyze trends in the trained models. First, we find that data quality is far more important than
+
+                                        dataset size, e.g., a 9k sample dataset (OASST1) outperformed a 450k sample dataset (FLAN v2
+
+                                        if
+Knowledge Distillation -- The Teacher­Student Framework
+
+· The third axis of compression:
+
+
+   · Quantization shrinks *bits*  LoRA shrinks trainable params  Distillation shrinks the
+
+      architecture (fewer layers).
+
+
+· Student learns from the teacher's soft targets (full probability vector), not only one-hot labels.
+
+
+· Dark knowledge: label says "cat"; teacher says cat 0.90, tiger 0.08, car 0.00001 -- the ranking
+
+   is the extra signal.
+
+
+· Temperature T > 1     attens softmax so near-zero classes become visible: pi =                  exp(zi/T) 
+
+                                                                                                 j exp(zj/T)
+
+·  Loss =     T2 KL(    pTteacher    pTstudent)  +  (1  -   )  CE(y,  pstudent)  ;  (T2  undoes  the  1/T2
+
+   gradient  scaling)
+
+
+· Trade-o : needs data + retraining (expensive) -- but it is the only axis that cuts compute
+
+   (fewer layers), not just bytes
+
+                                                        51
+
+             lf f
+Distillation in Production -- From DistilBERT to Llama 3.2
+
+· DistilBERT (2019): BERT 12  6 layers, init from every other teacher layer. ~40 % smaller, ~60
+
+   % faster, ~97 % of BERT on GLUE dev (benchmark-speci c).
+
+
+· TinyBERT (layer-by-layer hidden states + attention) / MiniLM (last-layer attention + value
+
+   relations) -- copy the reasoning, not just the answer.
+
+
+· LLM era -- distillation is the main pipeline for small models:
+
+
+  · Llama 3.2 1B/3B -- pruned from Llama 3.1 8B, then logit KD from 8B + 70B teachers.
+
+  · Gemma 2 (2B, 9B) -- trained with KD instead of plain next-token loss.
+
+  · DeepSeek-R1-Distill -- SFT on ~800k R1 samples (~600k reasoning + ~200k general).
+
+
+·  TinyLlama-1.1B is NOT distilled -- pretrained from scratch on ~3T tokens. Small by
+
+   design  small by distillation.
+
+
+· Decision rule: must t VRAM  quantize (cheap). Must answer fast on edge and you own a
+
+   good teacher  distill.
+
+                                                                                              52
+
+if
+                                                                                                                                                                                                    53
+
+Act VI ­ Synthesis (The Decision Tree)
+
+· How Should I Deploy My Model?
+
+   · Step 1: What is your VRAM budget?
+
+      · If ts in FP16 -> Run FP16 with FlashAttention & vLLM.
+
+      · If tight -> Use 8-bit or 4-bit Quantization.
+
+   · Step 2: Do you need to ne-tune?
+
+      · Full FT a ordable? -> Do it.
+
+      · Single GPU? -> LoRA or QLoRA.
+
+   · Step 3: What is your tra c pro le?
+
+      · High concurrency (Many users) -> vLLM (Continuous Batching).
+
+      · Single user / Local -> Speculative Decoding.
+
+   · Step 4: Is compute (not memory) the wall?
+
+      · Distill to a shallower student (needs data + a good teacher); quantization alone only trims bytes.
+
+if i i f f f ff if
+Lab Preview -- Operational VRAM Auditing
+
+· Task 1A (in class): The VRAM Auditor (Slides 4, 8, 9, 15) -- Implement the
+
+   N×b, KV-Cache, and 16N training formulas and verify: 16 GB FP16 / 4 GB
+   INT4 / 128 GB training / ~0.54 GB KV cache.
+
+
+· Task 1B (in class): Measure it (Slides 5, 9) -- Load a 0.5B model, read
+
+   max_memory_allocated() / max_memory_reserved(), explain the gap. 30 min
+   total.
+
+
+· Task 2 (take-home): vLLM Serving (Slide 32) -- Initialise a vLLM engine;
+
+   measure Tokens Per Second with continuous batching.
+
+
+· Task 3 (take-home): QLoRA Con guration (Slides 44­47) -- Load the 8B
+
+   model in 4-bit NF4, inject LoRA on Q, K, V, O; con rm 0.17 % trainable
+   parameters.
+
+                                                                                              54
+
+if
+                                                                                                                                                                                                    55
+
+Summary
+
+· 1. VRAM Bottlenecks: Model Weights scale by precision (FP16 = 2x, INT4 =
+
+   0.5x parameters). But KV Cache grows linearly with batch size and context
+   length, becoming the true bottleneck.
+
+
+· 2. Memory Algorithms: FlashAttention computes attention smartly in SRAM to
+
+  prevent O(N2) blow-up. PagedAttention (vLLM) nearly eliminates KV cache
+
+   fragmentation like an OS page table.
+
+
+· 3. Training Costs: Full netuning is heavily memory-bound, requiring  16 ×
+
+   parameters in GB (e.g., 128 GB for an 8B model).
+
+
+· 4. The PEFT Solution: QLoRA freezes the base in 4-bit (NF4) and trains tiny
+
+   LoRA adapters -- <1% trainable. Adapters stack (MAD-X) and steer (O-LoRA).
+
+
+· 5. Distillation: the only axis that cuts compute -- a shallower student learns the
+
+   teacher's soft targets (Llama 3.2, Gemma 2, R1-Distill).
+
+if
+Bridge to Week 11 -- From Hardware to Alignment
+
+· Where are we?
+
+  · Week 10 (Today): How to t and serve massive models e ciently (Hardware &
+
+      Infra).
+
+
+· Where are we going?
+
+  · Week 11 (Next Week): How to make these models helpful, honest, and harmless
+
+      (Alignment).
+
+
+· The Connection:
+
+  · SFT (Supervised Fine-Tuning) and RLHF (Reinforcement Learning from Human
+
+      Feedback) are expensive.
+
+
+  · In practice, QLoRA is a standard budget option for Alignment training. The math
+
+      we learned today enables the breakthroughs of tomorrow.
+
+                                                                                              56
+
+if
+Resources
+
+· Hu et al. (2022) -- LoRA: Low-Rank Adaptation of Large Language Models (Sections
+
+   1­4) (https://arxiv.org/abs/2106.09685)
+
+
+· Dettmers et al. (2023) -- QLoRA: E cient Finetuning of Quantized LLMs (Sections 1­
+
+   3: NF4, Double Quantization, Paged Optimizers) (https://arxiv.org/abs/2305.14314)
+
+
+· Kwon et al. (2023) -- E cient Memory Management for LLM Serving with
+
+   PagedAttention (https://arxiv.org/abs/2309.06180)
+
+
+· Dao et al. (2022) -- FlashAttention (Section 3 -- tiling algorithm) (https://arxiv.org/
+
+   abs/2205.14135)
+
+
+· Hugging Face PEFT: https://huggingface.co/docs/peft 
+
+· vLLM: https://docs.vllm.ai 
+
+· BitsAndBytes: https://github.com/bitsandbytes-foundation/bitsandbytes
+
+                                                                                              57
+
+i ff iff
+

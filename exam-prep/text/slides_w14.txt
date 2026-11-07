@@ -1,0 +1,1667 @@
+Data Engines, 
+Advanced Evaluation, 
+Pipeline Metrics
+
+                                                                                       Asst. Prof. Nont Kanungsukkasem, Ph.D.
+Recap ­ Week 13 Agents & Today's Agenda
+
+· Week 13 Recap: Agentic loops (ReAct), tool-calling, multi-agent orchestration
+
+   -- models as autonomous actors.
+
+
+· Bridge: "We now know HOW models are deployed as agents. Today: WHERE
+
+   do they come from, and HOW do we verify they are safe and capable?"
+
+
+· Today's Agenda:
+
+  · Part 1: The Pre-training Data Factory -- sourcing, ltering, and
+
+      deduplicating web-scale text.
+
+
+  · Part 2: Advanced Evaluation -- BERTScore, LLM-as-Judge, classic
+
+      benchmarks, and the 2026 metric suite.
+
+                                                                                                                                                                                                      2
+Your New Role ­ From Model Builder to Data & QA Engineer
+
+· Week 14 Shift: From model architecture to data quality and evaluation.
+
+· Source: Collect data with clear provenance and permissions.
+
+· Filter: Remove low-quality, unsafe, or irrelevant content.
+
+· Deduplicate: Reduce memorization risk and wasted compute.
+
+· Evaluate: Choose metrics that match the intended capability.
+
+· Audit: Check bias, contamination, and reproducibility.
+
+· Analogy: Architecture is the recipe; data is the ingredients; evaluation tests
+
+   the result.
+
+                                                                                                                                                                                                      3
+Why Data Scale and Quality Both Matter
+
+· Scaling Laws (Ho mann et al. 2022): loss decomposes into an irreducible oor plus a
+
+size term and a data term:  A     B
+                            N
+L(N, D)  =  E+                 +      ; where E is the entropy of natural text that no model can go below.
+
+
+                                  D
+
+· Chinchilla Result (Ho mann et al. 2022): within the paper's model family and compute
+
+   range, compute-optimal training scaled model size and training tokens roughly
+
+   together; the tted ratio was about 20 tokens per parameter.
+
+
+· Historical Illustration: Applying that t to 175B parameters gives about 3.5T tokens,
+
+   explaining why GPT-3's 300B-token training run was data-limited under that analysis.
+
+
+· Important Caveat: This is an empirical scaling result, not a universal law. Data mixture,
+
+   repeated epochs, architecture, optimizer, and inference budget can shift the optimum.
+
+
+· Practical implication: Compare models under controlled compute and data-quality
+
+   conditions; model size alone does not establish data quality or downstream superiority.
+
+                                                                                                                                                                                                      4
+
+            if ff ff if
+Web-Scale Logistics ­ Common Crawl
+
+· Source: Common Crawl (commoncrawl.org) -- automated web crawls every 1­2 months
+
+   since 2008.
+
+
+· Scale: Each crawl contains billions of pages and hundreds of tebibytes of uncompressed
+
+   content; exact counts vary by crawl, so cite the crawl index used in an experiment.
+
+
+· Formats:
+
+
+  · WARC (Web ARChive): raw HTTP response including HTML markup, headers, and
+
+      metadata.
+
+
+  · WET: Common Crawl's extracted plain text. Some pipelines use it; others parse WARC/
+
+      HTML themselves to retain structure and control extraction quality.
+
+
+· Access: Free on Amazon S3 (s3://commoncrawl/); parseable with the `warcio` Python library.
+
+
+· Usage: A major public source for many documented pretraining corpora, including C4,
+
+   FineWeb, and Dolma; do not infer the mixture of an undocumented model.
+
+                                                                                                                                                                                                      5
+The Data Contraction Funnel
+
+· The Core Challenge: Web crawls contain duplicates, boilerplate, spam, mixed
+
+   languages, and low-quality text; ltering reduces the corpus substantially.
+
+
+· Illustrative Funnel Only (not FineWeb/Dolma measurements):
+
+
+· Two di erent rates: per-stage ri = | Di | / | Di-1 | , versus the cumulative | Di | / | D0 |
+
+   shown in the table.
+
+
+· Key Insight: Every ltering step is a precision­recall trade-o . Aggressive lters
+maximize quality but risk discarding rare educational content.
+                                                                                                6
+
+if if ff
+Language Identi cation with fastText
+
+· Model: fastText `lid.176.bin` -- a lightweight linear classi er over character n-gram
+
+   features, covering 176 languages.
+
+
+· Architecture: Embed character n-grams  average into one document vector  linear
+
+   layer  score over 176 classes. (The released model's exact n-gram range and output
+
+   layer are not published; treat any speci c gure as unveri ed.)
+
+
+· Output: `__label__th 0.9823` -- language code + con dence score.
+
+
+· Routing Logic: Choose a con dence threshold on labeled validation data (FineWeb
+
+   keeps English with score  0.65). Route low-con dence text for fallback detection or
+
+   review rather than assuming it is spam.
+
+
+· Speed: Measure throughput for the document-length distribution, model variant,
+
+   batching, and hardware used.
+
+
+· Limitation: Struggles on short documents (< 50 chars); may misclassify code-heavy
+
+pages.                                                                                   7
+
+        if if if if
+Script Penalties ­ The Non-Latin Tax
+
+· Root Cause: Many widely used tokenizers (GPT-2 BPE, Llama 2 SentencePiece) are trained
+
+   predominantly on English text.
+
+
+· The Byte Gap: Thai characters require 3 UTF-8 bytes each. Byte-level BPE may encode
+
+   each byte as a separate token in the worst case.
+
+
+· Measured in the Demo 
+
+   (GPT-2 tokenizer, 
+   `transformers` 5.x):
+
+
+· Consequence: On this pair GPT-2 spends about 14× more tokens per character on Thai. The
+
+   multiplier depends on the sample and must be measured on parallel text, not inferred from
+
+   one phrase.
+
+
+· Systemic Issue: More tokens for the same content means more context consumed and
+
+higher token-metered cost. Whether it also degrades what the model learns is a separate
+
+claim that needs its own measurement.                                                         8
+         Ahia, Orevaoghene, et al. "Do all languages cost the same? tokenization in the era of commercial language models." Proceedings of the 2023 Conference on empirical methods in natural language processing. 2023.
+
+Tokenizer Fairness ­ Token/Character Rate
+
+· Metric: TPC = tokens/Unicode characters -- not fertility (pieces per word), because
+
+   Thai has no reliable word boundary.
+
+
+· Rate Ratio:  = TPCTH /TPCEN -- same tokenizer, comparable text, no `[UNK]` loss.
+
+· Measured in the Demo (one EN/TH sentence pair):
+
+
+· Trend: Larger multilingual vocabularies (e.g., Llama 3, 128k) shrink the gap -- measure
+
+   per tokenizer version.
+
+
+· Why it matters: More tokens for equivalent content means more context used and
+
+   higher token-metered cost. Downstream learning e ects are a separate measurement. 9
+                                                          Penedo, Guilherme, et al. "The FineWeb Datasets: Decanting the Web for the Finest Text Data at Scale." arXiv:2406.17557 (2024).
+
+The Hybrid Neural­Heuristic Pipeline Overview
+
+· Two-Tier Design:
+
+
+   · Tier 1 ­ Heuristic Filters: Rule-based, deterministic, ~0.1 ms/document. Handles obvious quality
+
+      failures (Gopher, C4 rules).
+
+
+   · Tier 2 ­ Learned Scorers: Perplexity under a reference LM (CCNet), then a small neural classi er
+
+      (~10 ms/document) for subtle quality distinctions.
+
+
+· Deduplication in between: run after the cheap heuristics (so we do not deduplicate junk) and before the
+
+   neural classi er (so we do not pay to score copies).
+
+
+· Key Throughput Insight (illustrative): Tier 1 removes most junk cheaply  dedup runs on the survivors
+
+    the expensive classi er scores only unique, plausible documents.
+
+
+·  Cost Budget: Order by cost and selectivity. For     two lters, compare     acAsl+ighptAlycBdeaagraeirnstltceBr  t+hapt BrecAje(cctos st
+   c, fraction kept p). Cheap- rst is a good starting  heuristic, not a law:
+
+   almost everything can belong rst.
+
+
+· FineWeb Architecture: URL lter  text extraction  Language ID (fastText  0.65)  Gopher lters 
+
+   per-crawl MinHash dedup  C4 lters  custom lters  PII removal  FineWeb; then an educational
+
+   classi er  FineWeb-Edu.
+
+                                                                                                                                                                                                     10
+
+   if if if if if if if if
+                                           Rae, Jack W., et al. "Scaling language models: Methods, analysis & insights from training gopher." arXiv preprint arXiv:2112.11446 (2021).
+
+Heuristic Filter Set 1 ­ The Gopher Rules
+
+(Document-Level Statistics)
+
+· Origin: Developed by DeepMind for the Gopher model (2021) on the MassiveText dataset.
+
+· Rules (ALL must pass -- any failure = document discarded):
+
+
+· Word count: 50  len(words)  100,000 -- removes single-line fragments and book-length spam.
+
+
+· Mean word length: 3  ¯w  10 chars -- removes tokenizer artifacts and garbled text.
+
+
+· Alpha-word ratio: r = | {w : w contains letter} | /N  0.8 -- removes symbol-heavy tables and code.
+
+
+·  Symbol-word ratio: rs =  #(#) + #(...)   0.1 -- removes hashtag-spam and snippet pages.
+
+                                 N
+
+· Line rules:  90% of lines start with a bullet;  30% of lines end with "..." -- removes list/feed pages.
+
+
+· Stop-word rule: must contain  2 of {the, be, to, of, and, that, have, with} -- removes non-prose.
+
+
+· Repetition rules: a family of ~10 thresholds -- duplicate line and paragraph fractions, and the character
+
+   share taken by the most frequent or repeated n-grams (e.g. duplicate line fraction  0.30). These, not the
+
+   rules above, catch a page that repeats one sentence twenty times.
+
+
+· Language caveat: "words" are whitespace tokens. For Thai, segment words rst (e.g., PyThaiNLP) and re-
+
+   tune every threshold (word count, mean length, stop-word rules) on Thai text -- English values do not transfer. 11
+                                                                                                                                                                Raffel et al. (2020), "Exploring the Limits of Transfer Learning with a Uni ed Text-to-Text Transformer". JMLR 21(140).
+
+Heuristic Filter Set 2 ­ The C4 Rules
+
+(Line-Level & Pattern Cleaning)
+
+· Origin: C4 cleaning rules (Ra el et al. 2020, §2.2) prepared the training data for T5
+
+   (Week 8).
+
+
+· Line-level rules: keep only lines ending in terminal punctuation (. ! ? or closing quote);
+
+   drop lines with fewer than 3 words; drop any line containing the word "Javascript".
+
+
+· Page-level rules: drop pages with fewer than 5 sentences, pages containing "lorem
+
+   ipsum", pages containing a curly bracket `{`, and pages with words from a bad-word
+   list.
+
+
+· Deduplication rule: keep only one copy of any three-sentence span that occurs more
+
+   than once in the corpus.
+
+
+· Language rule: keep pages `langdetect` labels English with probability  0.99.
+
+
+· Caution: These rules also remove valid code, maths (`{` in LaTeX), poetry, and non-
+
+   English text; audit samples.
+
+                                                                                                                                                                                                     12
+
+ff if
+                                                                                    Rae et al. (2021), "Scaling Language Models: Methods, Analysis & Insights from Training Gopher". arXiv:2112.11446.
+
+Worked Example ­ A Document Through the Gauntlet
+
+· Input Document: A scraped page from a Thai travel blog aggregator with mixed quality
+
+   (words counted after Thai word segmentation).
+
+
+· Stage-by-Stage Verdict (illustrative numbers):
+
+
+· Why it failed: Alpha ratio 0.58 -- the page had a large price comparison table lled with
+
+   numbers and special characters (, %, *) that pushed alpha content below threshold.
+
+
+· Key lesson: Cheap heuristics blocked this document in < 0.1 ms, saving the cost of a
+
+   neural classi er inference.
+                                                                                                                                                                                                     13
+
+if
+                              Wenzek, Guillaume, et al. "CCNet: Extracting high quality monolingual datasets from web crawl data." Proceedings of the twelfth language resources and evaluation conference. 2020.
+
+CCNet Quality Filter ­ Perplexity as a Proxy
+
+· Idea: Train a language model on high-quality reference text (Wikipedia)  use it to score
+
+   arbitrary web documents by perplexity.
+
+
+·  Perplexity  Formula:  PPL(W )  =  exp  (-  1   N   log  P(wi    wi-1,  ...,  wi-n+1))
+
+                                              N
+                                                 
+
+                                                 i=1
+
+· Interpretation: Low PPL = text is predictable to the Wikipedia-trained 
+
+   LM = resembles encyclopedic, high-quality text.
+
+
+· CCNet's rule: no xed cut-o . Per language, documents are sorted 
+
+   by PPL and split into three equal buckets -- head / middle / tail; 
+
+   users choose which buckets to keep.
+
+
+· Tool: KenLM -- fast 5-gram LM (Kneser-Ney) whose CPU inference is cheap enough to score all
+
+   of Common Crawl.
+
+
+· Reference Dataset: CCNet (Wenzek et al. 2020) rst applied this at Common Crawl scale; the
+
+   pipeline removed 84% of the content by size.
+
+                                                                                                                                                                                                     14
+
+                                     ff if
+                                                   The CCNet Perplexity Trap: Predictability vs. True Quality
+
+                                                 Why low perplexity does not equal high quality, and high perplexity falsely penalizes rare educational knowledge
+
+                                                  FILTER KEEPS (Low PPL  Cutoff)  PPL CUTOFF THRESHOLD    FILTER DISCARDS (High PPL > Cutoff) 
+
+High Quality
+
+True Quality (Low  High)
+
+Low Quality
+
+                          Low PPL (Predictable)                                   Perplexity (Low  High)                                                                                                 High PPL (Surprising)
+
+                                                 Key Takeaway: Perplexity measures similarity to a reference model distribution, NOT intrinsic quality. Must combine PPL with classifiers & heuristics.
+
+                          ACADEMIC REFERENCES & AUDIT EVIDENCE:
+                          · Kreutzer et al. (2022), "Quality at a Glance: An Audit of Web-Crawled Multilingual Datasets". TACL 10. arXiv:2103.12028 (many low-resource subsets of web corpora are mislabeled or unusable)
+                          · Gururangan et al. (2022), "Whose Language Counts as High Quality?". EMNLP 2022. (a quality classifier trained to prefer Wikipedia/books/news favours text from wealthier, more educated, urban areas)
+
+                                                                                                                                                                                                                15
+Neural Classi er Tier ­ Scoring Educational Value
+
+· Goal: Predict an educational-quality score (0­5) from document text.
+
+
+· Labels (FineWeb-Edu recipe): Llama-3-70B-Instruct scored ~460k FineWeb samples
+
+   against a rubric from "no educational value" (0) to "rich, textbook-like explanation" (5).
+
+
+· Student model: a small encoder -- FineWeb-Edu used Snowflake-arctic-
+
+   embed-m (~110M params) with a regression head; any BERT-class encoder (Week 9)
+
+   works the same way.
+
+
+· Inference: Apply the classi er after inexpensive heuristic ltering and dedup.
+
+
+· Threshold: FineWeb-Edu keeps score  3  1.3T of FineWeb's 15T tokens (~9%).
+
+   The boundary is a tuned choice, not universal.
+
+
+· Evaluate: Measure downstream model quality (MMLU, ARC), language coverage,
+
+   speed, and retention.
+
+Penedo et al. (2024), "The FineWeb Datasets". arXiv:2406.17557, Section 4 (FineWeb-Edu).                                   16
+
+Lozhkov et al. (2024), "FineWeb-Edu: The nest collection of educational content". HuggingFace Hub dataset card, May 2024.
+
+if if if
+                                                                                                  Lozhkov et al. (2024), "FineWeb-Edu: The nest collection of educational content". HuggingFace Hub dataset card, May 2024.
+                                                                                                                                                Penedo et al. (2024), "The FineWeb Datasets". arXiv:2406.17557, Section 4 (FineWeb-Edu).
+
+FineWeb & FineWeb-Edu ­ Deep Dive
+
+· FineWeb (May 2024, HuggingFace): 15 trillion tokens from 96 Common Crawl snapshots --
+
+   among the largest openly released ltered web corpora at its release.
+
+
+· Pipeline: 96 CC crawls  URL/language lter  Gopher lters  
+
+   per-crawl MinHash dedup  C4 lters  custom lters  FineWeb.
+
+
+· Key design decision: ablation-driven -- each lter was removed and 
+
+   model downstream performance was measured.
+
+
+· FineWeb-Edu: FineWeb + educational classi er (score  3)  1.3 trillion tokens.
+
+
+· At a matched 350B-token budget, 1.8B models trained on FineWeb-Edu beat FineWeb on
+
+   MMLU (33%  37%) and ARC (46%  57%); the paper reports matching a competing
+
+   dataset's nal MMLU with almost 10× fewer tokens.
+
+
+· Public Release: `HuggingFaceFW/fineweb` and `HuggingFaceFW/fineweb-edu` on the
+
+   Hub, plus the `datatrove` processing code. Fully downloadable.
+
+
+· Lesson: The ablation methodology -- testing each lter in isolation and in combination -- is the
+
+gold standard for data pipeline development.                                                       17
+
+if if if if if if if
+                                                                                                                                                           Soldaini et al. (2024), "Dolma: An Open Corpus of Three Trillion Tokens for Language Model Pretraining Research". arXiv:2402.00159.
+
+Dolma ­ The Open Corpus & Toolkit
+
+· Dolma (v1.6, as described in the paper): ~3 trillion tokens, assembled by the Allen
+
+   Institute for AI (AI2).
+
+
+· Multi-Source Design 
+
+   (Llama tokens, Table 1 of the paper):
+   
+
+    Common Crawl row = Dolma's Common Crawl
+
+   (2,281 B tokens) + C4 (198 B tokens).
+
+
+· Toolkit: dolma Python package (open-source): modular taggers (language, quality,
+
+   PII detection) + mixer (combine sources with target ratios).
+
+
+· Key Advantage: Complete transparency -- every tagging and ltering decision is
+
+   logged and reproducible. Enables community auditing.
+
+
+· Underpins: OLMo (Allen AI's open-weight LLM series, fully reproducible training). 18
+FineWeb vs. Dolma ­ Side-by-Side Comparison
+
+· When to choose FineWeb: You want maximum English web scale from a documented,
+
+   ablation-driven pipeline; you accept the Common-Crawl-only scope.
+
+
+· When to choose Dolma: You want full reproducibility; you need code/paper/wiki
+
+   diversity; you are auditing data quality.
+
+
+· Trend: The eld is moving toward multi-source + multi-signal pipelines combining both
+
+   philosophies.
+
+                                                                                                                                                                                                     19
+
+if
+                                                                                                                                                                                                                                         Lee et al. (2022), "Deduplicating Training Data Makes Language Models Better". ACL 2022. arXiv:2107.06499.
+
+Web-Scale Deduplication ­ Why It Matters
+
+· Problem: Syndication and copied pages create
+
+   exact and near duplicates.
+
+
+· Memorization Risk: Repeated examples increase 
+
+   verbatim recall and privacy concerns.
+
+
+· Bias Risk: Frequent duplicates receive disproportionate training weight.
+
+· Compute Cost: Reprocessing copies wastes tokens and training steps.
+
+· Exact Dedup: Hash normalized documents to nd identical copies.
+
+· Near Dedup: Use shingles, MinHash, and LSH to generate candidates.
+
+· Report: Measure retention on your corpus; do not assume a universal
+
+   percentage.
+
+                                                                                                                                                                                                     20
+                                                                                                                                                                                                                                         Lee et al. (2022), "Deduplicating Training Data Makes Language Models Better". ACL 2022. arXiv:2107.06499.
+
+Exact Deduplication ­ SHA256 Hashing
+
+· Method: Compute the SHA-256 cryptographic hash of the normalised document text; store seen hashes in a
+
+   hash set.
+
+
+· Algorithm:
+
+   · 1. Normalise text: strip whitespace, lowercase, remove HTML artefacts.
+
+   · 2. Compute the digest: .hexdigest()  64-char string when you want to read it; .digest()  the same
+
+       256 bits as 32 packed bytes when you want to store it (see Storage below).
+
+
+   · 3. Look up hash in seen set: if present  duplicate  discard; else  add to set and keep.
+
+· Complexity: Hashing = O(|D|); lookup = O(1) amortised (hash set).
+
+· Collision probability:  2-256 for a given pair; across n documents the any-pair probability is  n(n - 1)/2257.
+
+   Both are negligible at web scale.
+
+
+· Limitation: Only catches exact matches (byte-for-byte identical after normalisation). Di erent headline, same
+
+   article = missed duplicate.
+
+
+· Storage: a packed digest is 32 bytes, so 40B docs  1.28 TB of raw digest payload -- a lower bound.
+
+   `hexdigest()` returns 64 characters, and any in-memory set adds per-object overhead on top. Manageable with
+   distributed key-value stores (Redis, DynamoDB).
+
+                                                                                                                                                                                                     21
+                                                                      The cat sat on the mat
+
+Shingling & Jaccard ­ Measuring Near-Duplication
+
+·  Shingling: Represent a document D as a set of overlapping k-word sequences (k-
+
+   grams): S(D) = {(wi, ..., wi+k-1)}|i=D1|-k+1
+
+
+   · An N-word document yields N - k + 1 shingle windows (fewer unique shingles if
+
+      windows repeat), and every word appears in up to k of them -- so the shingle set
+
+     costs roughly k × the raw document (measured: 2.8× on our demo docs at k=3).
+
+
+· JJ(aAc,cBar)d=Sim|| SSil((aAAr))ity: SST((hBBe))f||ra
+ction of shared k-grams between two documents:
+
+· Why not just compute it directly? Set intersection itself is cheap -- a hash set
+  turns "is this shingle in B?" into one lookup, so |A| lookups, not | A | × | B |
+
+   comparisons. The problem is storage: keeping every document's shingle set, at
+
+  k × its own size, is impossible at web scale.
+
+                                                                                                                                                                                                     22
+MinHash ­ Estimating Jaccard Cheaply
+
+· MinHash signature: for H hash functions h1, ..., hH:                sig(D)[i]  =  min    hi(s)
+
+                                                                                    sS(D)
+
+   Position i holds a hash value, not a rank; the H values are unrelated to each other and are not sorted.
+
+
+· What hi actually is (two layers): a stable id x = md5(s) mod p -- the same shingle gets the same x in every document
+   --p =th2en61h-i(x1)  = (aix + bi) mod    p   with one random pair (ai, bi) per position. The modulus is  what scrambles the order;
+                                            ai
+                        is prime, so every      gives a permutation, where a composite p would collapse     the range and in ate J.
+
+
+· Key Property: P[sig(A)[i] = sig(B)[i]] = J(A, B) -- exact for an ideal random permutation (minwise independence);
+
+   practical a ne hash families approximate it.
+
+
+·  Correlated, not independent:      both documents use          the  same (ai,  bi).  Independent sampling of one  shingle  per  side
+                                                                                       demo pair, against 0.662.
+
+   would collide with probability |  A  B|/(|A| × |B|            )--  0.006 for  our
+
+·  Jaccard Estimate: J( A, B)  =     1           H            =  sig(B)[i]]
+
+                                     H
+                                                 1[sig(A)[i]
+
+                                                i=1
+
+· Cost: H × | S(D) | hashes once per document, then H integer comparisons per pair, whatever the document length.
+
+
+· Example Parameters: k = 5, H = 128. The standard error of J is J(1 - J)/H, at most 1/(2 H)  0.044. It shrinks
+
+   with more hash positions H, not with more shingles -- and a single estimate can miss by more than one standard error. 23
+
+                        i ff
+1 · sliding window, k = 3                  2 · the same 64 rules             3 · signature
+
+   Doc 9                                   x = md5(shingle) mod p            i=0            1  2  3                       ...       9
+                                                                                                                               3824...870
+    ... self-attention allows each token   h(x) = (a·x + b) mod p            Doc 9
+    to directly attend to ...              h(x) = (a·x + b) mod p
+                                                                        min  8040...162 7708...148 3567...725 2804...869  ...
+      allows each token                    h(x) = (a·x + b) mod p
+           each token to
+                token to directly          one set of rules,                 Doc 10
+                                           every document
+each window shifts by one word,                                         min 8040...162 3779...295 3567...725 3599...410   ...  3824...870
+so 133 windows per document --             Doc 9 and Doc 10 are ranked
+green ones appear in both                  by the same (a, b) pairs.                same value -- the winner is a shingle both documents have
+                                                                                    different -- the winner sits in only one of them
+   Doc 10                                  keep only the smallest            5 of the 64 positions shown
+                                           value per rule 
+    ... self-attention enables each token                                    42 / 64 = 0.656
+    to directly attend to ...
+                                                                             green positions ÷ all positions -- the Jaccard estimate
+      enables each token
+           each token to                                                                                                                                       24
+                token to directly
+
+kept as a SET: repeats collapse
+                                                                                           Charikar, Moses S. "Similarity estimation techniques from rounding algorithms." Proceedings of the thiry-fourth annual ACM symposium on Theory of computing. 2002.
+                                                                       Manku, Gurmeet Singh, Arvind Jain, and Anish Das Sarma. "Detecting near-duplicates for web crawling." Proceedings of the 16th international conference on World Wide Web. 2007.
+
+SimHash ­ A Di erent Fingerprint
+
+· A di erent question: MinHash estimates Jaccard (set overlap). SimHash preserves
+
+   cosine similarity (angle), and stores one short bit string per document instead of H
+   numbers.
+
+
+· How: Give each term a xed random vector vt  {-1, + 1}64  multiply by TF-IDF
+  weight wt  sum weighted vectors  wtvt  keep the sign of each coordinate.
+
+
+· Key relation: expected Hamming distance tracks the angle, not the cosine:
+
+  [  dH(sim(A), sim(B))  ]  =  arccos(cos(A, B))  ;
+  (where sim(A), sim(B) are the d-bit SimHash ngerprints of
+                                                      documents A and B, dH is Hamming distance / di ering bits, d = 64
+     d                                                is total bits, and arccos(cos(A, B)) =  is the angle between
+
+                                                      document vectors; exact for random Gaussian hyperplanes,
+                                                      Charikar 2002; weighted-hash SimHash approximates it)
+
+· In practice: Manku et al. (2007) -- 64-bit ngerprints, 8B pages of Google's crawl,
+  dH  3 as near-duplicate. Their operating point, not a de nition.
+
+if ff ff if if ff                                                                                                        25
+                                                                                                                                                    Leskovec, Rajaraman & Ullman (2014), "Mining of Massive Datasets". Chapter 3 (LSH). Online: www.mmds.org.
+
+LSH Banding ­ Finding Candidates at Scale
+
+· The O(N²) Problem: With 40B documents, comparing all pairs of MinHash signatures is
+  40B
+(2)      8  ×  1020  operations  --  impossible.
+
+
+· LSH Banding Solution: Split the MinHash signature of length H into 
+  b bands of r rows each (H = b × r).
+
+
+· Collision Rule: Two documents are candidate near-duplicates if they 
+
+   hash to the same bucket in at least one band.
+
+
+· Collision Probability for Jaccard similarity s: P(candidate) = 1 - (1 - sr)b
+
+
+· S-curve Threshold: s  (1/b)1/r is a rough transition location, not the in ection point and not the
+  50% point. For H=64, b=16, r=4: s = 0.500, but P(candidate  s = 0.5) = 0.644 and P = 0.5
+  only at s = 0.454. Treat it as a ramp, never a cuto .
+
+
+· Tuning Example: H = 256, b = 64, r = 4: the rule-of-thumb threshold is s  (1/64)1/4  0.35.
+This con guration has high candidate recall and may create many false positives; candidate pairs
+
+still need exact Jaccard veri cation.                                                                 26
+
+            if if
+1 · cut each signature into 16 bands                                                                              2 · every band has its own cabinet
+
+Doc 9             40 63 18 02                            11 88 34 57      ...                                     shelf name = ( band , its r values )            ( 0 , 52 07 96 31 )
+
+   77 12 05 91          Band 1                                 Band 2  Band 15                                       Band 0 cabinet                               Doc 4
+
+          Band 0                                                                                                         ( 0 , 77 12 05 91 )                      alone  no pair
+
+Doc 10                                                                                                                  Doc 9 · Doc 10
+
+                                                                                                            file          CANDIDATE
+
+77 12 05 91       09 63 18 44                            11 88 34 20   ...
+
+Doc 4                                                                                                             Band 1 cabinet                           ( 1 , 09 63 18 44 )
+
+52 07 96 31       83 21 60 19                            74 05 48 66   ...                                           ( 1 , 40 63 18 02 )                   Doc 10
+
+                                                                                                                     Doc 9
+
+2-digit stand-ins; real band values are 61-bit integers                                                           one row apart  different shelves  no pair here
+
+                                                                                                                                                Band 2 ... Band 15 cabinets
+
+N × b filings                   not N² comparisons                                                                Doc 9 vs Doc 10 at s = 0.656
+
+a pair is born only where two names land on one shelf                                                             one band matches with probability 0.185
+
+                                                                                                                  at least one of 16: 0.96
+
+                                                                                                                                                                                                                  27
+The Cost of Deduplication ­ Two Axes
+
+· Total work = (number of pairs) × (cost per pair). Each technique attacks a di erent factor --
+
+   that is why they stack instead of competing.
+
+
+· Two independent axes. s = shingles per document, N = documents in the corpus. A bigger
+  corpus does not make each document longer, so brute force is N2s2 -- never N3.
+
+
+· MinHash cuts the rst column (17,689 -> 64 for the demo pair) and leaves the second
+
+   untouched. LSH cuts the second.
+
+
+· At N = 40B the second column is 8 × 1020: at 64 comparisons each, MinHash alone still runs for
+
+   millennia. LSH is not an optimisation -- it is what makes the job nite.
+
+                                                                                                                                                                                                     28
+
+if
+Deduplication Worked Example
+
+· Documents (from the demo corpus): Doc 9 and Doc 10 are the same self-attention explanation
+
+   with about a dozen words changed ("architecture"  "model", "computed"  "calculated", ...).
+
+
+· Exact dedup: di erent SHA-256 hashes  not caught.
+
+· Shingles (k = 3 words): exact Jaccard J(9,10) = 0.662.
+
+· MinHash (H = 64): 42 of 64 signature positions agree  J  = 0.656 (error 0.006, against a
+
+  standard error of J(1 - J)/64 = 0.059).
+
+
+· LSH (b = 16, r = 4, s* = 0.50): at least one band matches  the pair is the only candidate among
+
+   all 66 pairs in the corpus.
+
+
+· Veri cation: compute exact Jaccard on the candidate. A candidate is not proof of duplication.
+
+
+· Decision depends on the threshold: at J  0.5 drop one copy. Under FineWeb's setting (5-
+word shingles) the same pair scores J = 0.550, and with 14 bands × 8 rows its chance of even
+becoming a candidate is only about 11% -- likely kept, not certainly kept. The S-curve gives
+
+probabilities, not guarantees.                                                                     29
+
+ff if
+In-Class Activity ­ Design Your Filter Funnel
+
+· Scenario: You are a Data Engineer at an AI startup. You need to produce a 1T-token English
+
+   training set from Common Crawl while minimizing total compute budget across the pipeline.
+
+
+· Filters to order (cost per document, and the share of documents each keeps):
+
+
+· Discussion Questions:
+
+
+· 1. Order two lters A, B by comparing cA + pAcB against cB + pBcA (cost c, retention p). 
+
+   Does cheapest- rst win here? When would a dearer lter belong rst?
+
+
+· 2. Should deduplication come before or after neural classi cation? Why?
+
+
+· 3. Which lter most risks deleting rare educational content, and how would you mitigate it?   30
+
+if if if
+Part 1 Summary + Hands-On Lab Pointer
+
+· Part 1 Pipeline (ordered by cost ÷ selectivity; cheap- rst is the starting
+
+   heuristic): Language ID  Heuristics (Gopher+C4)  Perplexity Filter  MinHash Dedup
+    Neural Classi er  Clean Corpus
+
+
+· Three Big Lessons:
+
+
+  · Quality beats quantity: at a matched budget, FineWeb-Edu (1.3T tokens) beats the
+
+      full 15T FineWeb on MMLU and ARC.
+
+
+  · No single lter is su cient: heuristics + perplexity + dedup + neural classi er each
+
+      catch di erent failures.
+
+
+  · Tokenizer fairness matters: Design for multilingual equity from the start.
+
+
+· Lab Pointer:
+
+
+  · Part A (heuristic lter) is required; Parts B (tokenizer audit) and C (MinHash+LSH) are
+
+      optional Part 1 extensions.
+                                                                                                                                                                                                     31
+
+i ff i i f f if ff
+                                                                                                                                                                          Chang et al. (2024), "A Survey on Evaluation of Large Language Models". ACM TIST 15(3). arXiv:2307.03109.
+
+Part 2 ­ From Building Corpora to Judging Models
+
+· Bridge: Part 1 = how to BUILD a clean training corpus. Part 2 = how to MEASURE if the
+
+   model trained on it is good.
+
+
+· The Core Evaluation Challenge: Unlike classi cation tasks, generative LLMs have
+
+   in nitely many valid outputs for any given input.
+
+
+· Three Eras of Evaluation:
+
+
+  · Era 1 (Pre-2020): Surface string matching -- BLEU, ROUGE, exact match.
+
+
+  · Era 2 (2020­2024): Semantic matching + human preference -- BERTScore, Chatbot
+
+      Arena, MT-Bench.
+
+
+  · Era 3 (2024­2026): Dynamic, capability-speci c, adversarial -- LiveBench, SWE-bench,
+
+      HarmBench, RAGAS.
+
+
+· Goal of Part 2: Understand why each era emerged, what aws it xed, and what new
+
+    aws it introduced.
+
+                                                                                                                                                                                                     32
+
+if if lf
+Why BLEU and ROUGE Fall Short
+
+· BLEU: Measures modi ed n-gram precision with a brevity penalty.
+
+                                     N
+
+  BLEU = BP  exp(  wn log pn) where pn = modi ed n-gram precision, BP = brevity penalty.
+
+
+                                   n=1
+
+· ROUGE-L: Uses longest-common-subsequence overlap, often recall-oriented.
+
+
+· Other Lexical Metrics: METEOR and chrF improve some matching behavior.
+
+
+· Limitation: Lexical overlap is not the same as semantic equivalence.
+
+
+· Example (demo): reference "The cat sat on the mat"; paraphrase "A feline
+
+   rested upon the rug" gets BLEU-1 = 0.17 (only "the" matches); word salad "mat
+   the on is cat the" gets BLEU-1 = 0.83 (lower-cased)
+
+
+· Reporting: State tokenization, references, smoothing, language, and aggregation level.
+
+                                                                                                                                                                                                     33
+
+if
+                                                                                             Zhang et al. (2020), "BERTScore: Evaluating Text Generation with BERT". ICLR 2020. arXiv:1904.09675.
+
+BERTScore ­ Token Embedding Similarity
+
+· Core Idea: Instead of counting matching tokens, embed EVERY token of both candidate and
+
+   reference into contextual vector space, then measure similarity in embedding space.
+
+
+· Step 1 -- Embed: Feed candidate c = (c1, ..., cn) and reference r = (r1, ..., rm) through a pre-
+
+   trained BERT model.
+
+
+  · Candidate embeddings: C  n×d, Reference embeddings: R  m×d
+
+
+· Step 2 -- Similarity Matrix: Compute pairwise cosine similarity:
+
+            ci  rj
+          cirj
+  Sij  =              [-1,1],  S  n×m
+
+
+· Key Insight: Sij measures how semantically similar token ci is to token rj -- captures paraphrase
+
+   automatically.
+
+
+· Result: A rich n × m similarity grid that a downstream aggregation step will collapse into three
+
+   scores (P, R, F).
+
+                                                                                                                                                                                                     34
+                                                                                                                        Zhang et al. (2020), "BERTScore: Evaluating Text Generation with BERT". ICLR 2020. arXiv:1904.09675.
+
+BERTScore Math ­ Greedy Matching & IDF Weighting
+
+· Grid  three numbers. Every token keeps only its single best partner:
+
+     1                         1                          2PR 
+
+    |c|                       |r|                         P+R
+P=            max   Sij,  R=            max   Sij,  F  =
+
+           i     j                   j     i
+
+· "Greedy" = not one-to-one. Each token picks independently, so one reference token can be the best match for several
+
+   candidate tokens.
+
+
+· Check the axes. The gure puts Reference on the rows, so its boxed maxima are the Recall terms. Our demo heatmap is the
+
+   transpose.
+
+
+· IDF (optional -- the right-hand column): weight the average by idf(w) = - log(dfw/N ) so rare tokens outweigh "the" and "is".
+
+· Not a percentage. Raw cosines (Sij) sit ~0.7­0.9 even for unrelated sentences; the optional rescaling (F-b)/(1-b) can go below
+
+   zero. Compare only under identical settings -- but it does track humans far better than BLEU (WMT18, Zhang et al. Table 1).
+
+                                                                                                                                                                                                                              35
+
+                                        if
+BERTScore Worked Example
+
+· Example Sentences:
+
+· Reference: "The cat sat on the mat."
+
+
+· Cand A (Paraphrase):: "A feline rested upon the rug."
+
+
+· Cand B (Word Salad): "mat the on is cat the"
+
+
+· The Ranking Paradox (Demo Section 15):
+   · BLEU-1: Cand B (0.83) > Cand A (0.17)  (Ranks word salad rst)
+
+
+· BERTScore F1: Cand A (0.79) > Cand B (0.67)  (Rewards semantic alignment)
+
+
+· Key Takeaways:
+
+
+· Compare Rankings, not raw numbers: Metrics operate on di erent scales; 0.79 cannot be
+
+   compared directly to 0.17.
+
+
+· Semantic similarity, not Fact-checking: BERTScore rewards on-topic text, but cannot detect
+
+factual contradictions.                                                                       36
+Chiang, W., Zheng, L., Sheng, Y., Angelopoulos, A.N., Li, T., Li, D., Zhu, B., Zhang, H., Jordan, M., Gonzalez, J.E. &amp; Stoica, I.. (2024). Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference., Proceedings of the
+41st International Conference on Machine Learning, in Proceedings of Machine Learning Research
+
+   Human Evaluation ­ LMSYS Chatbot Arena
+
+· Platform: LMSYS Chatbot Arena (lmarena.ai) -- launched 2023 by UC Berkeley + LMSYS.
+
+
+· Methodology: Blind pairwise A/B testing:
+         https://arena.ai/
+
+· User submits a prompt; receives two anonymous responses from two random models.
+
+
+· User votes which response is better (or "tie").
+
+
+· Models remain anonymous until after the vote.
+
+
+· Scale: Continually changing; if shown, record the leaderboard snapshot date and source rather
+
+   than hard-coding counts.
+
+
+· Output: Ranked leaderboard via Elo/Bradley-Terry rating system.
+
+
+· Strengths: Real users, real prompts, diverse topics, and no xed test set to leak.
+
+
+· Weaknesses: Slow (days to weeks for new models); not reproducible; selection bias in the user
+
+   base; and prompts are not contamination-free -- users paste benchmark questions and previously
+
+   published conversations.
+
+                                                                                                                                                                                                     37
+                               Zheng et al. (2023), "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena". NeurIPS 2023. arXiv:2306.05685.
+
+LLM-as-a-Judge ­ MT-Bench
+
+· MT-Bench: 80 multi-turn questions across 8 categories,
+
+   scored by an LLM judge instead of by crowd votes --
+
+   minutes instead of weeks, and the same question set
+
+   every time.
+
+
+· Pairwise mode: the judge reads two answers, picks one,
+
+   and writes its reasons.
+
+
+· Single-answer mode: the judge scores one answer
+
+   against a rubric -- used when there is no rival answer to
+
+   compare against.
+
+
+· The judge prompt is a template, not just the data. It
+
+   supplies the instruction to act as a judge, the criteria to
+   weigh, and a required output format so the verdict can be
+   parsed -- wrapped around the question(s), the answer(s),
+   and a reference answer where the task has one. Zheng et
+   al. ship ve templates (Figures 5-9), chosen by mode,
+   turn count, and whether a reference is used.
+
+
+· Caution: agreement with human preference is not a xed
+
+number. It moves with the judge model, the task and the
+
+protocol -- report all three.                                   38
+
+if if
+Zheng et al. (2023), "Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena". NeurIPS 2023. arXiv:2306.05685.
+
+Evaluation Flaw I ­ Length Bias
+
+· Observation (Zheng et al. 2023): LLM judges tend to prefer longer responses, independent of
+
+   quality ("verbosity bias").
+
+
+· Measured E ect -- "repetitive list" attack: an answer is padded by rephrasing and repeating
+
+   its own list items, adding no information. Judge failure rate (padded version preferred), Table 3:
+
+
+· Claude-v1 91.3% · GPT-3.5 91.3% · GPT-4 8.7% (on 23 answers).
+
+
+· Root Cause: Long responses look more thorough; the judge con ates verbosity with quality.
+
+   Stronger judges resist better but not perfectly.
+
+
+· Real-World Impact: Models can game evaluation by adding ller content ("Certainly! Great
+
+   question! Let me explain step-by-step...") to in ate scores.
+
+
+· Detection: a length-vs-score correlation across models is only a hint -- stronger models also
+
+   write longer. The clean test is the controlled one above: same content, more words.
+
+
+· Mitigation: compare content-matched pairs, or apply a speci ed statistical length control
+
+(AlpacaEval-LC regresses length out; dividing a score by token count is not the same thing).
+
+Rubric instructions help but do not remove the bias.                                                    39
+
+lf ff
+Evaluation Flaw II ­ Positional Bias
+
+· Judges favour whichever answer comes rst -- even when the identical pair is judged
+
+   twice with the order swapped. Primacy: weaker judges are worse at resisting it.
+
+
+· Measured (Zheng et al. 2023, Table 2, default prompt). "Error" is malformed judge output,
+
+   so rows do not sum to 100%:
+
+
+· Swap trick: judge both A­B and B­A, and call a winner only if it wins both. Few-shot
+
+   examples lift GPT-4 from 65.0% to 77.5% -- better, not xed.
+
+
+· When the two orders disagree, the honest label is "inconsistent." Scoring it a tie is an
+
+   aggregation policy, not a measurement -- state which you used.
+                                                                                                                                                                                                     40
+
+if
+Mitigating Evaluation Flaws
+
+· Position Swap: Evaluate both A­B and B­A orderings.
+
+· Repeated Runs: Average or aggregate across controlled random seeds.
+
+· Rubric Anchoring: De ne observable criteria and score-level examples.
+
+· Reference Guidance: Supply a trusted answer when the task permits it.
+
+· Judge Diversity: Compare multiple judges or calibrate against human labels.
+
+· Remaining Risk: Shared biases and correlated errors do not disappear
+
+   automatically.
+
+                                                                                                                                                                                                     41
+
+if
+                                                                                                                                                              Hendrycks et al. (2020), "Measuring Massive Multitask Language Understanding". ICLR 2021. arXiv:2009.03300.
+
+Classic Benchmark ­ MMLU
+
+· MMLU (Massive Multitask Language Understanding): 57 academic subjects,
+
+   15,908 multiple-choice questions (4 choices each); the test split is 14,079.
+
+
+· Subjects span: Elementary mathematics, US history, computer science, law,
+
+   medicine, ethics, and more.
+
+
+· Format: 5-shot prompting (5 examples per subject)  model selects A/B/C/D.
+
+
+· Score: Accuracy (fraction correct).
+
+
+· Designed to require: breadth of world knowledge plus problem solving (not just
+
+   lookup).
+
+
+· Reporting Template: model/checkpoint · MMLU version · 0-shot/5-shot prompt
+
+   · answer extraction · tool use · score · source/date. Results are comparable only
+   when protocol matches.
+
+                                                                                                                                                                                                     42
+Wei et al. (2022), "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models". NeurIPS 2022. arXiv:2201.11903.
+
+                           OpenAI (2023), "GPT-4 Technical Report". arXiv:2303.08774
+
+                           Anthropic (2024), "Introducing Claude 3.5 Sonnet"- https://www.anthropic.com/news/claude-3-5-sonnet
+
+Classic Benchmark ­ GSM8K
+
+· GSM8K (Grade School Math): 8,500 grade-school-level math word problems requiring multi-step
+
+   arithmetic reasoning.
+
+
+· Format: Open-ended text with a single numerical nal answer, conventionally extracted after
+
+   a #### marker. Scoring: exact match on that answer, so the extraction rule is part of the protocol.
+
+
+· But: GSM8K is public, so its items can appear in training data, and scoring only the nal answer
+
+   cannot show that a correct chain was used. Check exposure for the release you are evaluating.
+
+
+· Chain-of-Thought (CoT): Models produce step-by-step reasoning before the nal answer (Wei et
+
+   al. 2022).
+
+
+· Score Progress:
+
+
+· Limitation: Top models now near-ceiling (>95%). No longer discriminates between frontier
+
+   models; also note the rows above use di erent prompting protocols
+
+                                                                                                                                                                                                     43
+
+                           ff
+                                                                   Chen et al. (2021), "Evaluating Large Language Models Trained on Code (Codex)". arXiv:2107.03374
+
+Classic Benchmark ­ HumanEval & pass@k
+
+                                                                   Evaluating Large Language Models Trained on Code
+
+· HumanEval: 164 Python problems -- the model gets a
+
+   signature + docstring and writes the body.
+
+
+· Scoring: each problem has hidden unit tests (7.7 on average);
+
+   a sample solves the problem only if it passes all of them. The
+
+   score is the fraction of the 164 problems solved.
+
+
+· Why k tries: sampling gives di erent code each run, and the
+
+   tests can pick out one that passes. So ask: with k tries, how
+
+   likely is at least one to pass? That is pass@k.
+
+
+· pass@k: generate n samples once, count c that pass. The
+
+fraction is the chance that k picks are all failures:
+
+pass@k = 1 - (  n-c  )
+
+                k      
+
+
+                n
+(k)
+
+· Always state k: with n = 200, c = 2  pass@1 = 0.01,
+
+   pass@100  0.75 (demo Section 19).
+
+
+· pass@1 milestones: GPT-3  0% · Codex-12B 28.8% ·
+
+   GPT-4 67.0% · Claude 3.5 Sonnet 92.0%.
+
+                                                                                                                                                                                                     44
+
+                                                                                                                             Figure 2. Three example problems from the HumanEval dataset, where the probabilities that a single sample from Codex-12B pas
+                                                                                                                              tests are 0.9, 0.17, and 0.005. The prompt provided to the model is shown with a white background, and a successful model-ge
+                                                                                                                              completion is shown in a yellow background. Though not a guarantee for problem novelty, all problems were hand-written
+                                                                                                                              programmatically copied from existing sources. Random problems and samples can be found in Appendix B.
+
+                                                       passes the unit tests, and the total fraction of problems def pass_at_k(n, c, k):
+                                                       solved is reported. However, computing pass@k in this
+                                                                                                              """
+
+                                                           ff
+                                                                                                                                               Golchin, Shahriar, and Mihai Surdeanu. "Time travel in llms: Tracing data contamination in large language models." International Conference on Learning Representations. Vol. 2024. 2024.
+
+Benchmark Saturation & Data Contamination
+
+· Saturation: as strong systems approach the ceiling, a benchmark may lose
+
+   discriminating power -- but only an uncertainty estimate can show that two
+   scores are actually indistinguishable.
+
+
+· Contamination: Test items or close variants may appear in training data.
+
+
+· Overlap Check: Search for exact and near-duplicate benchmark text in known
+
+   training corpora.
+
+
+· Statistical Clues: Unusually low perplexity can motivate investigation, but is not
+
+   proof.
+
+
+· Protection: Use private hold-outs, fresh items, and controlled release
+
+   schedules.
+
+
+· Reporting: Document data cuto s, tool use, and suspected exposure.
+
+                                                                                                                                                                                                     45
+
+ff
+The 2026 Benchmark Suite ­ Design Principles
+
+· Three Failure Modes of Classic Benchmarks:
+   · Static: Questions never change  model can memorise them.
+
+   · General: Test broad knowledge, not deep capability  frontier models saturate.
+
+   · Lagging: Designed before current tool-using and long-context systems  may omit
+
+      important deployment capabilities.
+
+
+· Design Principles for Modern Benchmarks:
+   · Dynamic: Questions updated regularly (LiveBench: monthly) from new sources (news,
+
+      contests, recent papers).
+
+
+   · Capability-speci c: Test one skill in depth (reasoning chains, code execution, safety).
+
+   · Ground-truth veri able: Answers checked programmatically (math, unit tests), not by judge.
+
+   · Contamination-resistant: Questions generated AFTER the model's training cuto .
+
+                                                                                                                                                                                                     46
+
+if if
+                                                                                                                                                                                                    47
+
+The Complementary Suite ­ Who Covers What
+
+· -- = not applicable: RAGAS is a metric run on your own data, not a xed question set.
+
+· Only AIME passes all four, and only for the latest year -- at 15 problems per paper it is too
+
+   small and too narrow to stand alone. Pick the combination your use case needs, and add
+   human evaluation where it matters.
+                                                                                   https://livebench.ai/
+
+LiveBench ­ The Monthly Refresh
+
+· LiveBench Goal: Refresh questions to reduce saturation and known-data
+
+   exposure; "questions are added and updated on a monthly basis" (White et al.
+   2024).
+
+
+· Domains (6): math, coding, reasoning, language, instruction following, and data
+
+   analysis -- sourced from recent competitions, arXiv papers, news, and datasets.
+
+
+· Freshness: Newer source material can lower--but not eliminate--contamination
+
+   risk.
+
+
+· Scoring: Prefer objective or programmatically checkable answers where possible.
+
+
+· Versioning: Report the benchmark release, date, and evaluation settings.
+
+
+· Lesson: Dynamic evaluation is a process, not a permanent contamination
+
+   guarantee.
+
+                                                                                                                                                                                                     48
+AIME ­ Outcome-Based Mathematical Reasoning
+
+· AIME: a US high-school competition. Each year has two papers, AIME I and
+
+   AIME II, of 15 problems each, with integer answers from 000 to 999.
+
+
+· Strength: Exact answers enable programmatic checking.
+
+
+· Capability: Tests di cult multi-step mathematical problem solving.
+
+
+· Reporting: State year, sampling or pass@k, tools, and compute budget.
+
+
+· Interpretation: Measures nal-answer accuracy--not hidden reasoning
+
+   quality.
+
+
+· Limitation: 15 problems per paper is a very small sample -- one item is 6.7
+
+   percentage points, two are 13.3. Past papers are published and archived, so
+   older years carry real exposure risk.
+
+                                                                                                                                                                                                     49
+
+if i ff
+                                                                                                                                                                    Jimenez et al. (2024), "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?". ICLR 2024. arXiv:2310.06770.
+
+SWE-bench ­ The Autonomous Developer Test
+
+· Task: Given a repository and an issue description, generate a patch that resolves it.
+
+· Challenge: Find which les to change in a real multi- le codebase, without breaking anything else.
+
+· Evaluation: Apply the patch and run the repo's tests. Resolved only if the tests the x should ip (fail  pass) now
+
+   pass and tests that already passed still pass. Score = % of issues resolved.
+
+
+· Splits: Veri ed is a human-checked subset whose issues are clear and whose tests really decide the x; Lite is a
+
+   smaller subset that is cheaper to run.
+
+
+· Comparison Rule: Match split, repository snapshot, harness, tools, and sca old. Scores from Original, Lite, and
+
+   Veri ed are not interchangeable.
+
+
+· Contamination: The issues are past, public GitHub history -- a newer model may already have seen them.
+
+                                                                                                                                                                                                     50
+
+if if if if
+HarmBench ­ Automated Red-Teaming
+
+· HarmBench: a standardised red-teaming benchmark -- how well does a model resist
+
+   harmful requests?
+
+
+· Scale: 510 harmful behaviors (400 text + 110 multimodal) in 7 categories; 18 attack
+
+   methods run against 33 models and defenses.
+
+
+· Two separate axes: what is requested (the behavior category) vs how the safeguard is
+
+   attacked (GCG, AutoDAN, PAIR, TAP, ...).
+
+
+·  Key Metric -- ASR (Attack Success Rate):  ASR(y) =  test cases for behavior y that elicit it 
+                                                             test cases for behavior y
+   
+
+   averaged over behaviors, and judged by a ne-tuned Llama-2-13B classi er, not by humans.
+
+
+· Read it as: lower ASR = more robust to these attacks, not "safe". Refusing everything
+
+   gives ASR 0, so report normal-task performance too.
+
+                                                                                                  51
+
+                                                                                         if
+                                  Es, Shahul, et al. "Ragas: Automated evaluation of retrieval augmented generation." Proceedings of the 18th conference of the european chapter of the association for computational linguistics: system demonstrations. 2024.
+
+RAGAS & DeepEval ­ CI for LLM Pipelines
+
+· Problem: Once an LLM is deployed in a production pipeline (RAG system, chatbot), how do
+
+   we continuously monitor and test it -- just like we do for software with unit tests?
+
+
+· RAGAS (Retrieval Augmented Generation Assessment, 2023): A framework for
+
+   programmatically evaluating RAG pipelines without human annotation.
+
+
+· DeepEval: Open-source LLM testing framework; integrates with pytest; runs in CI/CD
+
+   pipelines.
+
+
+· The Paradigm Shift: LLM evaluation becomes a software engineering discipline -- write
+
+   assertions about model behavior, run them in CI/CD, get a green/red pipeline status.
+
+
+· Key Metrics Measured:
+
+
+  · The Es et al. paper de nes faithfulness, answer relevance, 
+
+      and context relevance (all reference-free).
+
+
+  · The later library adds context precision and context recall, which need a reference
+
+      (answer, contexts or IDs, depending on the variant; some precision variants need none).
+
+                                                                                                                                                                                                     52
+
+if
+RAGAS Metrics Math                                                                                                                                                                                                             53
+
+Es, Shahul, et al. "Ragas: Automated evaluation of retrieval augmented generation." Proceedings of the 18th conference of the european chapter of the association for computational linguistics: system demonstrations. 2024.
+In-Class Activity ­ Spot the Evaluation Flaw
+
+· Scenario: You are reviewing evaluation results from your company's MT-Bench-style judge
+
+   system.
+
+
+· Exhibit A: Model Alpha consistently wins pairwise comparisons. Its average response length is
+
+   850 tokens vs. Model Beta's 320 tokens.
+
+
+· Question: Is Alpha better? What evaluation aw might explain this?
+
+
+· Exhibit B: Model Gamma scores 94.2% on MMLU. However, you nd that 12% of MMLU
+
+   questions appear verbatim in Gamma's pre-training corpus.
+
+
+· Question: Why can the uncontaminated score not be inferred from these two percentages?
+
+   What clean re-evaluation should you run?
+
+
+· Exhibit C: Your RAGAS Faithfulness score is 0.95. But users complain the chatbot gives con dent
+
+   wrong answers.
+
+
+· Question: High faithfulness only says the answer matches the retrieved context. Name three
+
+di erent root causes that are still consistent with it, and say what evidence would separate
+
+them.                                                                                              54
+
+lf ff
+Key Takeaways ­ Five Things to Remember
+
+· 1. Data quality is the hidden variable in scaling laws. Chinchilla showed models were data-
+
+   starved (~20 tokens/parameter in its regime); FineWeb-Edu showed those tokens must be
+   clean. Garbage In, Garbage Out at any scale.
+
+
+· 2. Every lter is a precision­recall trade-o . Cheap heuristics rst (Gopher  C4  PPL)
+
+   then expensive neural classi ers. Perplexity ltering can inadvertently erase rare educational
+   content.
+
+
+· 3. BERTScore ranks paraphrases correctly where BLEU does not. The × token
+
+   similarity matrix compares meaning rather than surface form; IDF weighting focuses on
+   informative words. It is still not a factual-correctness check, and its scores are not comparable
+   to BLEU's.
+
+
+· 4. LLM judges are fast but biased. Length bias and positional bias can corrupt rankings.
+
+   Mitigation: position swapping, rubric anchoring, multi-judge ensembles.
+
+
+· 5. Static benchmarks need controls, not abandonment. Use contamination checks, held-
+
+   out or refreshed sets, capability-speci c tasks, uncertainty estimates, and human evaluation
+   where appropriate.
+
+                                                                                                                                                                                                     55
+
+f i f f if if if
+Good LUCK!!!
+
+                                                                                                                                                                                                     56
+

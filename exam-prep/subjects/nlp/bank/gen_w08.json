@@ -1,0 +1,497 @@
+[
+ {
+  "id": "n08-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "BART Document Rotation",
+  "stem": "ใน BART วิธี noising แบบ Document Rotation ทำอย่างไร?",
+  "opts": {
+   "A": "แบ่งเอกสารเป็นประโยคแล้วสลับลำดับประโยคแบบสุ่ม ให้โมเดลเรียงกลับ",
+   "B": "สุ่มเลือก token เป็น pivot แล้วหมุนเอกสารให้เริ่มที่ pivot โมเดลต้องหาจุดเริ่มต้นจริง",
+   "C": "ลบ token แบบสุ่มออกโดยไม่เหลือ placeholder ใด ๆ ไว้ในตำแหน่งเดิม แล้วให้โมเดลเดาว่าอะไรหาย",
+   "D": "แทน span ของ token ที่ติดกันด้วย [MASK] ตัวเดียว โดยความยาว span สุ่มจากการแจกแจง Poisson"
+  },
+  "ans": "B",
+  "expl": "Document Rotation เลือก token สุ่มเป็น pivot แล้วหมุนเอกสารให้เริ่มที่ pivot (ตัวอย่าง: 'sat on the mat. The cat' -> 'The cat sat on the mat.'). ตัวเลือกที่สลับประโยคคือ Sentence Permutation, ตัวเลือกที่ลบ token คือ Token Deletion, ตัวเลือกที่ใช้ [MASK] ตัวเดียวแทน span คือ Text Infilling.",
+  "src": "text/slides_w08.txt s.12 ; notes 2.5 (ตาราง 5 วิธี)",
+  "hinted": true
+ },
+ {
+  "id": "n08-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "Original Transformer decoder stack",
+  "stem": "ใน Decoder stack ของ Transformer ดั้งเดิม (Vaswani et al., 2017) ลำดับ sub-layer ภายในแต่ละ layer คือข้อใด?",
+  "opts": {
+   "A": "Multi-Head Self-Attention (ไม่มี mask) -> FFN -> Cross-Attention",
+   "B": "Cross-Attention -> Masked Multi-Head Self-Attention -> FFN",
+   "C": "Masked Multi-Head Self-Attention -> FFN เท่านั้น เพราะ Cross-Attention อยู่ที่ฝั่ง Encoder",
+   "D": "Masked Multi-Head Self-Attention -> Cross-Attention -> FFN"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.4: Decoder stack = Masked Multi-Head Self-Attention -> Cross-Attention -> FFN. Encoder stack เป็น Multi-Head Self-Attention -> FFN (ไม่มี Cross-Attention). Cross-Attention เป็นสะพานที่เอาข้อมูลจาก Encoder มาให้ Decoder จึงอยู่ที่ฝั่ง Decoder.",
+  "src": "text/slides_w08.txt s.4 ; notes 2.3"
+ },
+ {
+  "id": "n08-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "T5 task prefix (summarization)",
+  "stem": "ใน T5 ถ้าต้องการให้โมเดลสรุปบทความ ต้องนำข้อความใดไปขึ้นต้น input?",
+  "opts": {
+   "A": "summarize: ตามด้วยบทความ",
+   "B": "sst2 sentence: ตามด้วยบทความ",
+   "C": "translate English to German: ตามด้วยบทความ",
+   "D": "question: ตามด้วยบทความ context: ตามด้วยบทความ"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.16: Summarization ใช้ prefix 'summarize: [long article]'. 'sst2 sentence:' ใช้กับ sentiment, 'translate English to German:' ใช้กับการแปล, 'question: ... context: ...' ใช้กับ QA.",
+  "src": "text/slides_w08.txt s.16 ; notes 2.6"
+ },
+ {
+  "id": "n08-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "BART-large architecture",
+  "stem": "ตามสไลด์ BART-large มีโครงสร้างตามข้อใด?",
+  "opts": {
+   "A": "6 Encoder layers + 6 Decoder layers, d_model = 1024, 16 heads",
+   "B": "12 Encoder layers + 12 Decoder layers, d_model = 768, 12 heads",
+   "C": "12 Encoder layers + 12 Decoder layers, d_model = 1024, 16 heads",
+   "D": "24 Decoder layers เท่านั้น (ไม่มี Encoder), d_model = 1024, 16 heads"
+  },
+  "ans": "C",
+  "expl": "สไลด์ s.9: BART-large = 12 Enc + 12 Dec, ~406M, d_model = 1024, 16 heads. 6+6 คือ BART-base (~140M). d_model 768 / 12 heads เป็นค่าของ T5-base และ BERT-base. BART เป็น Enc-Dec จึงมีทั้ง Encoder และ Decoder.",
+  "src": "text/slides_w08.txt s.9 ; verify/verify_1_5.md #4"
+ },
+ {
+  "id": "n08-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "T5 position encoding",
+  "stem": "T5 ใช้การเข้ารหัสตำแหน่งแบบใด?",
+  "opts": {
+   "A": "Sinusoidal absolute positional encoding แบบเดียวกับ Transformer ดั้งเดิมของ Vaswani",
+   "B": "Relative Position Bias: learned bias ตามระยะสัมพัทธ์ บวกเข้า attention logits",
+   "C": "Learned absolute position embedding ที่บวกเข้ากับ token embedding ก่อนเข้า Encoder",
+   "D": "ไม่ใช้ข้อมูลตำแหน่งเลย เพราะ sentinel token บอกตำแหน่งอยู่แล้ว"
+  },
+  "ans": "B",
+  "expl": "สไลด์ s.15 และ s.20: T5 = Enc-Dec + Relative Position Bias (no absolute positional encoding). ใช้ตาราง trainable 32 buckets ต่อ head แล้วบวก bias เข้า attention logits. Sinusoidal และ learned absolute ไม่ใช่ของ T5; โมเดลยังต้องรู้ตำแหน่ง จึงไม่ใช่ 'ไม่ใช้เลย'.",
+  "src": "text/slides_w08.txt s.15, s.20 ; notes 2.6",
+  "hinted": true
+ },
+ {
+  "id": "n08-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "Denoising objective",
+  "stem": "Denoising Autoencoder (ที่ BART และ T5 ใช้ pre-train) มี objective ตามสไลด์คือข้อใด?",
+  "opts": {
+   "A": "max log P(x | x~) คือ reconstruct x จากข้อความที่ corrupt แล้ว x~",
+   "B": "max log P(x~ | x) คือทำนายข้อความที่ถูก corrupt จากต้นฉบับ",
+   "C": "max log P(next word | previous words) โดยไม่ใช้ข้อความที่ถูก corrupt",
+   "D": "จำแนกด้วย binary classifier ว่า input นี้ถูก corrupt มาหรือไม่"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.5: ให้ x~ = g(x) แล้วฝึกให้ reconstruct x จาก x~ ด้วย objective max log P(x | x~). ตัวเลือกที่สองเป็นของ GPT (CLM) ที่ไม่มี corrupted input, ตัวเลือกแรกกลับทิศ, ตัวเลือกที่สี่ไม่ใช่ objective ของ BART/T5.",
+  "src": "text/slides_w08.txt s.5 ; notes 2.4"
+ },
+ {
+  "id": "n08-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "Masking vs Deletion src_len",
+  "stem": "ประโยคต้นฉบับมี 10 tokens (ไม่นับ <s>, </s>) ถูกทำ noising กับ 2 token ได้แก่ กรณี (ก) Token Masking แทน 2 token ด้วย [MASK] ตัวละหนึ่ง กรณี (ข) Token Deletion ลบ 2 token ทิ้ง ข้อใดให้ (src_len ของ ก, src_len ของ ข) ตามลำดับ โดย tgt_len ของทั้งสองกรณีคือ 10?",
+  "opts": {
+   "A": "(8, 10)",
+   "B": "(10, 10)",
+   "C": "(10, 8)",
+   "D": "(8, 8)"
+  },
+  "ans": "C",
+  "expl": "Masking แทน token ด้วย [MASK] ตัวต่อตัว จึง src_len = tgt_len = 10. Deletion ลบทิ้งโดยไม่เหลือ placeholder จึง src_len = 10 - 2 = 8 < tgt_len. ตัวเลือก (8, 10) สลับกรณี.",
+  "src": "text/slides_w08.txt s.11 (Tensor Impact: masking src=tgt, deletion src<tgt) ; notes 2.5",
+  "hinted": true
+ },
+ {
+  "id": "n08-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "T5 target ending",
+  "stem": "T5 span corruption ได้ encoder input เป็น `A <extra_id_0> B C <extra_id_1> D <extra_id_2> E` (3 sentinel) ตามรูปแบบในสไลด์ token สุดท้าย 2 ตัวของ decoder target เรียงตามลำดับคือข้อใด?",
+  "opts": {
+   "A": "`<extra_id_2>` แล้วตามด้วย `</s>`",
+   "B": "`</s>` แล้วตามด้วย `<extra_id_3>`",
+   "C": "token ของ span สุดท้ายที่ถูกตัด แล้วตามด้วย `</s>` (ไม่มี sentinel ปิดท้าย)",
+   "D": "`<extra_id_3>` แล้วตามด้วย `</s>`"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.17: target = sentinel + span ของมัน ต่อกันไปทีละ span แล้วจบด้วย sentinel ตัวถัดไป ตามด้วย </s> (ตัวอย่างสไลด์: ... fuzzy mat <extra_id_2> </s> เมื่อ input มี e0 และ e1). input มี e0, e1, e2 จึงจบที่ <extra_id_3> </s>. sentinel ตัวสุดท้ายไม่ใช่ EOS แต่แปลว่าไม่มี span หายอีก.",
+  "src": "text/slides_w08.txt s.17 ; text/demo_w08.txt Demo 1 ; notes 2.6",
+  "hinted": true
+ },
+ {
+  "id": "n08-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "Decoder self-attn cost ratio",
+  "stem": "สมมติ decoder target ของ BART ยาว N ส่วน target ของ T5 ยาว 0.25N (ไม่ใช่ 0.20N ในสไลด์) และต้นทุน decoder self-attention แปรตามกำลังสองของความยาว target ต้นทุนของ T5 ถูกกว่า BART กี่เท่า?",
+  "opts": {
+   "A": "16 เท่า",
+   "B": "4 เท่า",
+   "C": "8 เท่า",
+   "D": "0.0625 เท่า"
+  },
+  "ans": "A",
+  "expl": "BART ~ N^2, T5 ~ (0.25N)^2 = 0.0625 N^2. ถูกกว่า = 1 / 0.0625 = 16 เท่า (ตรวจ: (1/0.25)^2 = 4^2 = 16). 4 คือลืมยกกำลังสอง, 0.0625 คืออัตราส่วนต้นทุน T5/BART ไม่ใช่ 'ถูกกว่ากี่เท่า'. (ค่าในสไลด์: 0.20N -> (1/0.2)^2 = 25 เท่า)",
+  "src": "text/slides_w08.txt s.19 ; notes 3.4",
+  "hinted": true
+ },
+ {
+  "id": "n08-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "Relative position bias logit",
+  "stem": "ตามสูตรในสไลด์ a_mn = (q_m . k_n) / sqrt(d_k) + b_(m-n) ถ้า q_m . k_n = 20, d_k = 64 และ learned bias b_(m-n) = -1.5 ค่า attention logit ก่อน softmax เท่ากับเท่าใด?",
+  "opts": {
+   "A": "18.5",
+   "B": "1.0",
+   "C": "2.5",
+   "D": "-1.19"
+  },
+  "ans": "B",
+  "expl": "sqrt(64) = 8 -> 20/8 = 2.5 แล้วบวก bias: 2.5 + (-1.5) = 1.0. 18.5 = 20 - 1.5 (ลืมหาร sqrt(d_k); เป็นรูปแบบใน codebase จริงของ T5 ที่ตัดการหารออก แต่โจทย์ให้ใช้สูตรสไลด์), 2.5 = ลืมบวก bias, -1.19 = หารด้วย d_k แทน sqrt(d_k) (20/64 - 1.5).",
+  "src": "text/slides_w08.txt s.20 ; notes 3.7",
+  "hinted": true
+ },
+ {
+  "id": "n08-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "BART fine-tuning for classification",
+  "stem": "ตามสไลด์ การ fine-tune BART สำหรับ sentiment classification ทำอย่างไร?",
+  "opts": {
+   "A": "ป้อน input เข้า Encoder อย่างเดียวแล้วใช้ hidden state ของ token [CLS] เข้า linear classifier เหมือน BERT",
+   "B": "ใส่ prefix 'sst2 sentence:' แล้วให้ Decoder generate คำว่า positive/negative โดยไม่มี classifier head ใด ๆ เหมือน T5",
+   "C": "ป้อน input เข้าทั้ง Encoder และ Decoder แล้วนำ hidden state ของ final Decoder token เข้า linear classifier",
+   "D": "ใช้ Decoder อย่างเดียวและตัด Encoder ทิ้ง เพราะ classification ไม่ต้องอ่านแบบสองทิศทาง"
+  },
+  "ans": "C",
+  "expl": "สไลด์ s.29: Classification ส่ง input เข้า Enc และ Dec แล้วใช้ hidden state ของ final Decoder token -> linear classifier (BART ยังมัก ใช้ task-specific head). ตัวเลือก [CLS] เป็นแบบ BERT, ตัวเลือก prefix ไม่มี head เป็นแบบ T5 (s.30).",
+  "src": "text/slides_w08.txt s.29, s.30 ; notes 2.5"
+ },
+ {
+  "id": "n08-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "Parameter duplication in Enc-Dec",
+  "stem": "โมเดล Encoder-Decoder และ Decoder-only มีพารามิเตอร์รวมเท่ากัน P = 400M ตามสไลด์ s.36 (Parameter Duplication Problem) พารามิเตอร์ที่ทุ่มให้กับการ generate ข้อความของแต่ละแบบเป็นข้อใด?",
+  "opts": {
+   "A": "Enc-Dec ทั้ง 400M ส่วน Dec-only ประมาณ 200M",
+   "B": "ทั้งสองแบบประมาณ 400M เท่ากัน เพราะ Encoder ก็ช่วย generate ด้วย",
+   "C": "ทั้งสองแบบประมาณ 200M เท่ากัน เพราะต้องกันครึ่งหนึ่งไว้ให้ attention",
+   "D": "Enc-Dec ประมาณ 200M (ฝั่ง Decoder) ส่วน Dec-only ทั้ง 400M"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.36: Enc-Dec ที่มี P params แบ่งเป็น ~P/2 ใน Encoder และ ~P/2 ใน Decoder ส่วน Dec-only ใช้ทั้ง P กับการ generate. 400M/2 = 200M เทียบกับ 400M.",
+  "src": "text/slides_w08.txt s.36 ; notes 2.11"
+ },
+ {
+  "id": "n08-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "T5 token counting",
+  "stem": "ประโยคต้นฉบับ 30 tokens ถูก T5 ตัด 3 span ที่ไม่ติดกัน ยาว 3, 2 และ 4 tokens แทนแต่ละ span ด้วย sentinel หนึ่งตัวใน encoder input ใช้การนับตามสไลด์ s.17 (src_len ไม่นับ </s>; tgt_len นับ sentinel ตัวสุดท้ายที่ปิดท้ายและนับ </s>) ข้อใดให้ (src_len, tgt_len) ถูกต้อง?",
+  "opts": {
+   "A": "(24, 14)",
+   "B": "(24, 12)",
+   "C": "(24, 13)",
+   "D": "(21, 14)"
+  },
+  "ans": "A",
+  "expl": "token ที่ถูกตัด = 3+2+4 = 9. src_len = 30 - 9 + 3 sentinel = 24. tgt_len = 9 token ของ span + 3 sentinel นำหน้า span + 1 sentinel ปิดท้าย (e3) + 1 </s> = 14. (24, 12) ลืม sentinel ปิดท้ายและ </s>, (24, 13) ลืม </s>, (21, 14) ลืมนับ sentinel ใน src.",
+  "src": "text/slides_w08.txt s.17, s.33 ; verify/verify_1_5.md #5 ; notes 3.0-3.1",
+  "hinted": true
+ },
+ {
+  "id": "n08-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "BART noising: what each teaches",
+  "stem": "ข้อใดจับคู่ 'วิธี noising ของ BART -> สิ่งที่โมเดลต้องเรียนรู้' ผิด?",
+  "opts": {
+   "A": "Token Masking -> เรียนรู้ vocabulary และ local context เหมือนการทำข้อสอบเติมคำ",
+   "B": "Sentence Permutation -> เรียนรู้ discourse และความต่อเนื่อง (coherence) ระดับเอกสาร",
+   "C": "Document Rotation -> ต้องตรวจว่า token ใดหายไปและหายไปตรงไหน เพราะไม่เหลือ placeholder",
+   "D": "Text Infilling -> เรียนรู้การ generate ข้อความหลาย token และการประมาณความยาวของส่วนที่หายไป"
+  },
+  "ans": "C",
+  "expl": "ตัวเลือกที่ผิดคือ Document Rotation: โมเดลต้องระบุจุดเริ่มต้นจริงของเอกสาร (start/pivot). การตรวจว่าอะไรหายและหายที่ไหนโดยไม่มี placeholder เป็นของ Token Deletion. อีกสามข้อตรงกับสไลด์ s.7 และ s.10-12.",
+  "src": "text/slides_w08.txt s.7, s.10-12 ; notes 2.5",
+  "hinted": true
+ },
+ {
+  "id": "n08-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "Scaling argument evidence",
+  "stem": "ข้อใดสรุปหลักฐานเรื่อง Decoder-only vs Encoder-Decoder ตามสไลด์ s.39 ผิด?",
+  "opts": {
+   "A": "ในงานของ Wang et al. (2022) หลัง pre-train อย่างเดียว Dec-only (4.8B) + full LM ชนะ zero-shot ต่อ Enc-Dec (11B) ที่ใช้ span corruption",
+   "B": "ลำดับ T5 (2020) -> PaLM (2022) -> Gemini (2023) เป็นผลเปรียบเทียบ head-to-head ที่พิสูจน์ว่า Dec-only ดีกว่า",
+   "C": "Enc-Dec + span corruption ชนะเฉพาะหลัง multitask finetuning เท่านั้น ข้อได้เปรียบจึงมีเงื่อนไข ไม่ใช่ของฟรี",
+   "D": "ไม่มีการเปรียบเทียบแบบควบคุมที่ขนาดเกิน 100B parameters เพราะไม่มีใครทุนฝั่ง Enc-Dec"
+  },
+  "ans": "B",
+  "expl": "สไลด์ย้ำว่าลำดับ T5 -> PaLM -> Gemini เป็น 'สิ่งที่ค่ายต่าง ๆ สร้าง' (evidence of shift) ไม่ใช่ผลเปรียบเทียบ head-to-head จึงสรุปว่าพิสูจน์ไม่ได้. อีกสามข้อตรงกับสไลด์ s.39.",
+  "src": "text/slides_w08.txt s.39 ; notes 2.11"
+ },
+ {
+  "id": "n08-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "T5 relative position bias details",
+  "stem": "ข้อใดอธิบาย Relative Position Bias ของ T5 ผิด?",
+  "opts": {
+   "A": "ใช้ตาราง trainable 32 buckets ต่อ head แบ่งเป็น 16 forward และ 16 backward",
+   "B": "offset 0-7 ได้ bias แยกแต่ละค่า ส่วน offset ไกลขึ้นไปจะใช้ bucket ร่วมกันเพื่อประหยัด parameter",
+   "C": "bias ที่ดึงมาเป็น learned scalar ที่ถูกบวกเข้า attention logits โดยตรง",
+   "D": "bias ที่ดึงจากตารางตาม offset (m-n) ถูกคูณเข้ากับ attention weights หลัง softmax"
+  },
+  "ans": "D",
+  "expl": "bias เป็น learned scalar ที่ถูก 'บวก' เข้า attention logits (ก่อน softmax) ไม่ใช่คูณหลัง softmax. อีกสามข้อตรงกับสไลด์ s.20 (32 buckets = 16+16, offset 0-7 exact, 8-128+ แชร์ bucket). สูตร log ของ bucket ไม่ออกสอบ.",
+  "src": "text/slides_w08.txt s.20 ; source/nlp_exam_hints.md (W8 01:06:19)",
+  "hinted": true
+ },
+ {
+  "id": "n08-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "Cross-attention weight count",
+  "stem": "T5-base มี 12 heads ป้อน batch = 8, source length = 64 และ target length = 16 cross-attention weights ของหนึ่ง layer ตามรูปร่างในสไลด์ s.32 มีจำนวนค่า (elements) ทั้งหมดเท่าใด?",
+  "opts": {
+   "A": "393,216",
+   "B": "24,576",
+   "C": "98,304",
+   "D": "12,288"
+  },
+  "ans": "C",
+  "expl": "รูปร่าง cross-attention weights = [batch, heads, tgt_len, src_len] = [8, 12, 16, 64] -> 8 x 12 x 16 x 64 = 98,304. 393,216 = 8x12x64x64 (ใช้ shape ของ Encoder self-attn), 24,576 = 8x12x16x16 (ใช้ shape ของ Decoder self-attn), 12,288 = 12x16x64 (ลืม batch).",
+  "src": "text/slides_w08.txt s.32 ; notes 3.8"
+ },
+ {
+  "id": "n08-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "Extractive vs generative QA scenario",
+  "stem": "ระบบ Q&A ด้านกฎหมายต้องการคำตอบที่ย้อนตรวจกลับไปยังข้อความต้นฉบับได้ทุกคำ และห้ามมีเนื้อหาที่ไม่อยู่ในเอกสาร ควรเลือกแนวทางใดและต้องยอมรับข้อจำกัดอะไร?",
+  "opts": {
+   "A": "Extractive QA (BERT start/end pointers) โดยยอมรับว่าสังเคราะห์คำตอบใหม่ไม่ได้ ต้องเป็น substring จริง",
+   "B": "Generative QA (T5) เพราะ Decoder ถูกบังคับให้ copy จาก context เท่านั้น จึงไม่มีทาง hallucinate และ paraphrase ได้อิสระ",
+   "C": "Generative QA (T5) เพราะเมื่อ fine-tune ดีแล้วจะออกนอก context ไม่ได้เชิงโครงสร้าง",
+   "D": "Extractive QA (BERT) โดยยอมรับว่า pointer ชี้ออกนอก context ได้ จึงมีความเสี่ยง hallucinate"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.23-24: Extractive ตอบด้วย tokens[argmax(start): argmax(end)+1] จึงอยู่ใน context เสมอ (verbatim) แต่ synthesize/paraphrase ไม่ได้. Generative มีประโยชน์ที่สังเคราะห์คำตอบใหม่ได้ แต่ Decoder generate อิสระจึงเสี่ยง hallucinate และไม่ถูกบังคับให้ copy.",
+  "src": "text/slides_w08.txt s.23, s.24 ; notes 2.8"
+ },
+ {
+  "id": "n08-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Text infilling zero-length spans",
+  "stem": "ประโยคต้นฉบับ 10 tokens ทำ BART text infilling 3 span (ไม่ซ้อนกัน) ความยาว span ที่สุ่มได้คือ 0, 0 และ 1 token (span ยาว 0 คือการแทรก [MASK] โดยไม่ลบ token) ไม่นับ <s>, </s> ข้อใดถูกต้อง?",
+  "opts": {
+   "A": "src_len = 9 ซึ่งน้อยกว่า tgt_len = 10",
+   "B": "src_len = 10 เท่ากับ tgt_len เพราะ [MASK] หนึ่งตัวแทนหนึ่ง token",
+   "C": "src_len = 7 ซึ่งน้อยกว่า tgt_len = 10",
+   "D": "src_len = 12 ซึ่งมากกว่า tgt_len = 10"
+  },
+  "ans": "D",
+  "expl": "src_len = 10 - (0+0+1) tokens ที่ถูกลบ + 3 ตัว [MASK] ที่ใส่เข้าไป = 12 ส่วน tgt_len = 10 (ข้อความเต็ม). ดังนั้น infilling ไม่ได้ทำให้ src สั้นลงเสมอ: เมื่อ span ยาว 0 เป็นการ insert [MASK] src อาจยาวกว่า tgt. 9 ลืมนับ [MASK], 10 สรุปผิดว่า 1 mask = 1 token, 7 คิดว่า mask ทุกตัวลบ token ไป 1 ตัว.",
+  "src": "text/slides_w08.txt s.11 (0-length spans create insertions) ; notes 2.5, 3.0",
+  "hinted": true
+ },
+ {
+  "id": "n08-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Diagnose a T5 pipeline",
+  "stem": "ทีมหนึ่งสร้าง pipeline 'T5 span corruption' โดย encoder input มี sentinel `<extra_id_k>` แทน span ถูกต้อง แต่ใช้ decoder target เป็นประโยคต้นฉบับเต็มทุก token ผลวัดว่าเวลาเทรนต่อ step แทบไม่ต่างจาก BART baseline ทีมสงสัยว่า sentinel ไม่ทำงาน ข้อใดวินิจฉัยถูกต้อง?",
+  "opts": {
+   "A": "T5 ประหยัดที่ฝั่ง Encoder จึงต้องเพิ่มจำนวน sentinel ใน input ให้มากขึ้นเพื่อให้ input สั้นลงมาก ๆ และลดต้นทุนรวมของทั้งโมเดล",
+   "B": "ปัญหาอยู่ที่ target: ต้องมีเฉพาะ span ที่หาย + sentinel (~0.20N) ถ้ายาว N decoder ยังเป็น O(N^2) ไม่ประหยัด 25x",
+   "C": "sentinel ต้องใช้ตัวเดียวกันทุก span (เหมือน [MASK] ของ BART) เพื่อให้ decoder สั้นลงและเร็วขึ้น",
+   "D": "ต้องเปลี่ยน loss จาก cross-entropy เป็น loss ชนิดอื่นที่ไม่บังคับให้ decoder ต้องผลิตทุก token ในประโยคต้นฉบับ"
+  },
+  "ans": "B",
+  "expl": "ข้อได้เปรียบของ T5 มาจาก target สั้น (~0.20N: 15% corrupted + 5% sentinels) ทำให้ decoder self-attn ~O((0.2N)^2) = 0.04N^2 ถูกกว่า 25 เท่า. เมื่อ target เป็นข้อความเต็ม ต้นทุน decoder กลับเป็น O(N^2) เท่า BART (ส่วน encoder เท่าเดิม) จึงแทบไม่ต่าง. sentinel ที่ unique ไม่ใช่ตัวการ และข้อได้เปรียบไม่ได้อยู่ที่ encoder.",
+  "src": "text/slides_w08.txt s.17, s.19 ; notes 2.6, 7 (trap 1, 7, 9)",
+  "hinted": true
+ },
+ {
+  "id": "n08-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Overall speedup (Amdahl)",
+  "stem": "สมมติในการเทรน BART ต้นทุนฝั่ง encoder = 0.5 หน่วย และต้นทุน decoder self-attention = 1 หน่วย (ไม่นับต้นทุนอื่น) เมื่อเปลี่ยนเป็น T5 span corruption ที่ target ยาว 0.20N encoder cost คงเดิม ส่วน decoder self-attention แปรตามกำลังสองของความยาว target ความเร็วเทรนโดยรวมของ T5 เพิ่มขึ้นประมาณกี่เท่า?",
+  "opts": {
+   "A": "2.78 เท่า",
+   "B": "25 เท่า",
+   "C": "2.14 เท่า",
+   "D": "3.00 เท่า"
+  },
+  "ans": "A",
+  "expl": "BART รวม = 0.5 + 1 = 1.5. T5 รวม = 0.5 + 1 x (0.2)^2 = 0.5 + 0.04 = 0.54. Speedup = 1.5 / 0.54 = 2.78 (อยู่ในช่วง 2-3x ของสไลด์). 25 เท่าคือเฉพาะ decoder self-attn ไม่รวม encoder, 2.14 = 1.5/(0.5+0.2) คิด decoder เป็นเชิงเส้นแทนกำลังสอง, 3.00 = 1.5/0.5 ลืมต้นทุน decoder ของ T5.",
+  "src": "text/slides_w08.txt s.19 ; notes 3.4, 7 (trap 7)",
+  "hinted": true
+ },
+ {
+  "id": "n08-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Equal-parameter assumption in FLOPs comparison",
+  "stem": "สไลด์ s.31 (Doc = 1000, Summary = 100) ได้ Enc-Dec = N x [1000^2 + 100^2 + 100x1000] = 1,110,000N และ Dec-only = 2N x [(1100)^2/2] = 1,210,000N โดยสมมติ parameter เท่ากัน (Enc-Dec N layers, Dec-only 2N layers) ถ้านักศึกษาเข้าใจผิดว่า Dec-only ใช้ N layers เท่า Enc-Dec ผลจะเป็นอย่างไร?",
+  "opts": {
+   "A": "Dec-only = 605,000N แต่ยังแพงกว่า Enc-Dec ประมาณ 1.83 เท่า เพราะ Enc-Dec มี cross-attention น้อยกว่าจึงเร็วกว่า",
+   "B": "Dec-only = 605,000N ถูกกว่า Enc-Dec ประมาณ 1.83 เท่า ข้อสรุปสไลด์จึงขึ้นกับสมมติฐาน param เท่ากัน",
+   "C": "Dec-only ยังเป็น 1,210,000N เท่าเดิม เพราะต้นทุนขึ้นกับความยาว sequence เท่านั้น ไม่ขึ้นกับจำนวน layer",
+   "D": "Dec-only = 2,420,000N เพราะ causal mask ไม่ช่วยลด FLOPs เมื่อใช้ N layers ตามที่นักศึกษาเข้าใจ"
+  },
+  "ans": "B",
+  "expl": "N layers: Dec-only = N x [(1000+100)^2 / 2] = N x 1,210,000 / 2 = 605,000N. อัตราส่วน Enc-Dec / Dec-only = 1,110,000 / 605,000 = 1.83 ดังนั้น Dec-only ถูกกว่า ไม่ใช่แพงกว่า. ข้อสรุปของสไลด์ (Enc-Dec ถูกกว่า 1.09 เท่า) เกิดเพราะต้องให้ Dec-only ใช้ 2N layers เพื่อให้ parameter เท่ากัน. ต้นทุนแปรตามจำนวน layer จึงไม่คงที่.",
+  "src": "text/slides_w08.txt s.31 ; notes 3.6, 7 (trap 27)"
+ },
+ {
+  "id": "n08-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Signal density: MLM vs T5 target",
+  "stem": "เอกสารยาว 400 tokens BERT MLM เลือก 15% ของ token เป็นเป้าหมายโดยใช้กฎ 80/10/10 (80% แทนด้วย [MASK], 10% แทนด้วย token สุ่ม, 10% คงเดิม) ส่วน T5 มี decoder target ยาวประมาณ 0.20N ข้อใดให้ (จำนวน token ที่ถูกแทนด้วย [MASK] จริงใน BERT, จำนวน token ที่ decoder ของ T5 ต้อง generate) ถูกต้อง?",
+  "opts": {
+   "A": "(60, 80)",
+   "B": "(48, 400)",
+   "C": "(48, 80)",
+   "D": "(48, 60)"
+  },
+  "ans": "C",
+  "expl": "BERT: เป้าหมาย 15% x 400 = 60 token แล้ว 80% ของ 60 = 48 token ถูกแทนด้วย [MASK] (อีก 6 ตัวเป็น token สุ่ม และ 6 ตัวคงเดิม แต่ทั้ง 60 ตัวถูกคิด loss). T5 target = 0.20 x 400 = 80 (15% corrupted = 60 + 5% sentinels = 20). (60, 80) นับเป้าหมายเป็น [MASK] ทั้งหมด, (48, 400) ใช้ target เต็มแบบ BART/CLM, (48, 60) ลืมนับ sentinel.",
+  "src": "text/slides_w08.txt s.19, s.34 ; source/nlp_exam_hints.md (W7 MLM 80/10/10, W8 MLM 15 / CLM 100) ; notes 3.5",
+  "hinted": true
+ },
+ {
+  "id": "n08-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "Cost of not caching cross-attention K,V",
+  "stem": "ตามสไลด์ s.25 K, V ของ cross-attention จาก Encoder ถูกคำนวณครั้งเดียวแล้ว cache ถ้า Decoder รัน 20 steps และ source ยาว 50 tokens การ project K และ V ของตำแหน่ง Encoder (ดูเฉพาะ 1 layer) ถ้า 'ไม่ cache' จะต้องทำมากกว่าแบบ cache กี่เท่า?",
+  "opts": {
+   "A": "50 เท่า",
+   "B": "40 เท่า",
+   "C": "1,000 เท่า",
+   "D": "20 เท่า"
+  },
+  "ans": "D",
+  "expl": "แบบ cache: project K,V ของ 50 ตำแหน่งครั้งเดียว. แบบไม่ cache: ต้อง project ใหม่ทุก step รวม 20 รอบ -> 50 x 20 = 1,000 ตำแหน่ง เทียบกับ 50 ตำแหน่ง = 20 เท่า (เท่ากับจำนวน steps). ตัวคูณ 2 ของ K และ V มีทั้งสองแบบจึงตัดกัน (ไม่ใช่ 40), 50 คือ src_len, 1,000 คือจำนวนครั้งรวมไม่ใช่อัตราส่วน.",
+  "src": "text/slides_w08.txt s.25-26 ; notes 2.8"
+ },
+ {
+  "id": "n08-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 8,
+  "level": 1,
+  "topic": "Flan-T5 and mT5",
+  "stem": "Flan-T5 ถูก fine-tune ด้วย instructions บน ___ tasks ส่วน mT5 (Multilingual T5) รองรับ ___ ภาษา",
+  "key": "1,836;101",
+  "note": "ยอมรับ 1836 (ไม่มีคอมมา). Flan-T5 = 1,836 tasks เป็นสะพานสู่ Instruction Tuning, mT5 = 101 languages.",
+  "src": "text/slides_w08.txt s.30, s.45 ; notes 2.12"
+ },
+ {
+  "id": "n08-L2-F2",
+  "kind": "fill",
+  "set": "bank",
+  "week": 8,
+  "level": 2,
+  "topic": "BART text infilling",
+  "stem": "ใน BART วิธี Text Infilling ความยาวของแต่ละ span สุ่มจากการแจกแจง ___ (lambda = ___) แล้วแทนทั้ง span ด้วย [MASK] ตัวเดียว และ span ที่ยาว 0 หมายถึงการ ___ [MASK] โดยไม่ลบ token ใด",
+  "key": "Poisson;3;แทรก",
+  "note": "ยอมรับ 'insert' / 'insertion' / 'แทรก' สำหรับช่องที่สาม. span ยาว 0 ไม่ได้แปลว่าข้าม แต่คือการแทรก [MASK] ที่แทน 'ไม่มีอะไร' ให้โมเดลเรียนรู้ที่จะลบทิ้ง.",
+  "src": "text/slides_w08.txt s.11 ; text/demo_w08.txt Demo 1 ; notes 2.5",
+  "hinted": true
+ },
+ {
+  "id": "n08-L3-F3",
+  "kind": "fill",
+  "set": "bank",
+  "week": 8,
+  "level": 3,
+  "topic": "Enc-Dec vs Dec-only FLOPs",
+  "stem": "สรุปความด้วย Doc = 500 tokens, Summary = 50 tokens สมมติ parameter เท่ากันตามสไลด์ s.31 Enc-Dec = N x [500^2 + 50^2 + (50 x 500)] = ___ N และ Dec-only (2N layers) = 2N x [(550)^2 / 2] = ___ N",
+  "key": "277,500;302,500",
+  "note": "ยอมรับตัวเลขที่ไม่มีคอมมา. Enc-Dec: 250,000 + 2,500 + 25,000 = 277,500. Dec-only: 550^2 = 302,500, หาร 2 = 151,250, คูณ 2 = 302,500. ผลต่าง = 25,000N = N x 50 x 500.",
+  "src": "text/slides_w08.txt s.31 ; notes 3.6"
+ },
+ {
+  "id": "n08-L4-F4",
+  "kind": "fill",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "BART vs T5 target length ratio",
+  "stem": "ประโยคต้นฉบับ 50 tokens BART มี decoder target = ข้อความเต็ม + <s> + </s> ส่วน T5 ตัด 3 span รวม 10 tokens และ target นับ sentinel ที่ปิดท้ายกับ </s> ด้วย (ตามสไลด์ s.17) tgt_len_BART / tgt_len_T5 = ___ (ปัดเป็นทศนิยม 2 ตำแหน่ง)",
+  "key": "3.47",
+  "note": "BART = 50 + 2 = 52. T5 = 10 token ของ span + 3 sentinel นำหน้า + 1 sentinel ปิดท้าย + 1 </s> = 15. 52 / 15 = 3.4667 -> 3.47. ยอมรับ 3.4667 หรือ 52/15.",
+  "src": "text/slides_w08.txt s.14, s.17, s.33 ; verify/verify_1_5.md #5",
+  "hinted": true
+ }
+]

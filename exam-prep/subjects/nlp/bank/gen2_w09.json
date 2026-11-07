@@ -1,0 +1,104 @@
+[
+ {
+  "id": "n09-X4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "MNRL batch size effect (in-batch negatives)",
+  "stem": "ฝึก bi-encoder ด้วย MNRL บนข้อมูล 1,024,000 คู่ (q_i, p_i) จำนวน 1 epoch โดยทุกคู่ถูกใช้เป็น query ครั้งเดียว เปรียบเทียบ setting 1 ที่ batch N = 32 กับ setting 2 ที่ batch N = 256 จำนวนคู่ (query, in-batch negative) ที่ loss ได้เห็นตลอด 1 epoch ของ setting 2 เป็นกี่เท่าของ setting 1",
+  "opts": {
+   "A": "ประมาณ 1.03 เท่า",
+   "B": "ประมาณ 8.23 เท่า",
+   "C": "8.00 เท่าพอดี",
+   "D": "64 เท่าพอดี"
+  },
+  "ans": "B",
+  "expl": "แต่ละ query มี in-batch negatives N - 1 ตัว (สไลด์ 30: N = 256 ได้ 255) และมี 1,024,000 query ต่อ epoch ไม่ว่า batch จะเท่าใด setting 1 = 1,024,000 x 31 = 31,744,000 คู่ setting 2 = 1,024,000 x 255 = 261,120,000 คู่ อัตราส่วน = 255/31 = 8.2258 (ประมาณ 8.23) ข้อ 8.00 มาจากการใช้ N แทน N - 1 (256/32) ข้อ 64 คือ (256/32)^2 ซึ่งเป็นอัตราส่วนขนาด similarity matrix N x N ต่อ 1 step ไม่ใช่ต่อ epoch (step ลดจาก 32,000 เหลือ 4,000 จึงเป็น 8x ไม่ใช่ 64x: 4,000 x 65,536 = 262,144,000 เทียบ 32,000 x 1,024 = 32,768,000 ได้ 8.0 ซึ่งนับรวมคู่ positive ด้วย) ข้อ 1.03 มาจากนับ steps x (N - 1) = 4,000 x 255 เทียบ 32,000 x 31 โดยลืมคูณจำนวน query ต่อ batch (N) จำนวน forward pass ต่อ epoch เท่ากันทั้งสอง setting",
+  "src": "text/slides_w09.txt s.30 (MNRL, N=256 -> 255 negatives, scales with batch size), s.31 ; notes week_09 2.13, 7 ข้อ 9"
+ },
+ {
+  "id": "n09-X4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "STS regression training: label normalization and cosine bound",
+  "stem": "ทีมฝึก SBERT เฟส STS แบบ regression (loss = MSE ระหว่าง cos(u, v) กับ label) บน STS Benchmark ที่ label อยู่ช่วง 0 ถึง 5 แต่ลืมแปลง label ให้อยู่ใน [0, 1] ตามสไลด์ batch หนึ่งมี 4 คู่ที่ label = 5.0, 4.0, 1.0, 0.0 สมมติโมเดลปรับ cos ของแต่ละคู่ได้อย่างอิสระภายในช่วงที่ cos เป็นไปได้ ข้อใดสรุป MSE ต่ำสุดของ batch นี้และผลต่อโมเดลได้ถูกต้อง",
+  "opts": {
+   "A": "ต่ำสุด 0 เพราะโมเดลขยายขนาด (norm) ของ u และ v จน cos(u, v) เท่ากับ label ได้ทุกคู่ จึงเรียนรู้ลำดับความคล้ายได้ครบถ้วน",
+   "B": "ต่ำสุด 12.5 เพราะมีเพียงสองคู่ที่ label เกิน 1 ที่สร้าง error แต่โมเดลยังรักษาลำดับ cos ของคู่ label 5.0, 4.0, 1.0 ได้",
+   "C": "ต่ำสุด 6.25 และที่จุดนั้น cos ของคู่ label 5.0, 4.0, 1.0 ยังต่างกันตามลำดับ label เพราะ MSE ให้รางวัลแก่ลำดับที่ถูกต้อง",
+   "D": "ต่ำสุด 6.25 และที่จุดนั้น cos ของสามคู่แรกถูกดันไปที่ 1 เท่ากัน จึงแยกระดับความคล้ายของสามคู่นั้นไม่ได้"
+  },
+  "ans": "D",
+  "expl": "cos(u, v) อยู่ใน [-1, 1] และไม่ขึ้นกับขนาดของ u, v จึงเกิน 1 ไม่ได้ (ตัดข้อ A) ค่า cos ที่ใกล้ label ที่สุดคือ min(label, 1): label 5.0 -> cos 1 error 4 -> 16, label 4.0 -> cos 1 error 3 -> 9, label 1.0 -> cos 1 error 0, label 0.0 -> cos 0 error 0 MSE = (16 + 9 + 0 + 0) / 4 = 6.25 (หารด้วยจำนวนคู่ทั้ง batch = 4 ไม่ใช่ 2 จึงตัดข้อ B ที่ได้ 12.5) ที่จุดต่ำสุด cos ของ label 5.0, 4.0, 1.0 เป็น 1 เท่ากันหมด จึงไม่รักษาลำดับ (ตัดข้อ C และ B) สไลด์จึงให้ normalize label เป็น [0, 1] ก่อน (label 5.0, 4.0, 1.0, 0.0 -> 1.0, 0.8, 0.2, 0.0 ซึ่งทำ MSE ให้เป็น 0 ได้โดยแยกระดับได้)",
+  "src": "text/slides_w09.txt s.24 (STSb 0-5, s = cos(u,v) in [-1,1], label normalized to [0,1], MSE), s.10 (cos range) ; notes week_09 2.11"
+ },
+ {
+  "id": "n09-X4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Recall@k and MRR with several traps",
+  "stem": "ประเมินระบบค้นหาด้วย 2 queries Query A มีเอกสารที่เกี่ยวข้อง 4 ฉบับ ถูกจัดอันดับที่ 3, 4, 8 และ 12 Query B มีเอกสารที่เกี่ยวข้อง 2 ฉบับ ถูกจัดอันดับที่ 1 และ 2 ตามสไลด์ ค่า Recall@10 ของ Query A และค่า MRR ของทั้งสอง queries (MRR ใช้เฉพาะเอกสารที่ถูกต้องอันแรกของแต่ละ query) คือข้อใด",
+  "opts": {
+   "A": "Recall@10 = 0.75 และ MRR = 0.667",
+   "B": "Recall@10 = 0.30 และ MRR = 0.667",
+   "C": "Recall@10 = 0.75 และ MRR = 0.474 โดยเฉลี่ย reciprocal rank ของเอกสารที่เกี่ยวข้องทุกฉบับในแต่ละ query ก่อน",
+   "D": "Recall@10 = 0.75 และ MRR = 0.500 โดยนำค่าเฉลี่ยของอันดับแรกของสอง queries มาหาร 1"
+  },
+  "ans": "A",
+  "expl": "Recall@10 ของ Query A = |Retrieved_10 intersect Relevant| / |Relevant| = 3/4 = 0.75 (อันดับ 3, 4, 8 อยู่ใน top-10 ส่วนอันดับ 12 อยู่นอก) MRR = (1/|Q|) sum 1/rank_i โดย rank_i คืออันดับของเอกสารถูกต้องอันแรก: Query A = 3 -> 1/3, Query B = 1 -> 1 MRR = (0.3333 + 1) / 2 = 0.6667 ข้อ B คำนวณ 3/10 = 0.30 ซึ่งเป็น precision@10 (หารด้วยจำนวนที่ดึงมา) ไม่ใช่ recall ข้อ C ใช้ reciprocal rank ของเอกสารถูกต้องทุกฉบับ ได้ Query A = (1/3 + 1/4 + 1/8 + 1/12)/4 = 0.198, Query B = (1 + 1/2)/2 = 0.75 เฉลี่ย 0.474 ซึ่งผิดนิยาม ข้อ D คือ 1 / ((3 + 1)/2) = 0.5 เป็น reciprocal ของ rank เฉลี่ย ไม่ใช่ค่าเฉลี่ยของ reciprocal rank",
+  "src": "text/slides_w09.txt s.37 (Recall@k, MRR formulas) ; notes week_09 2.16, 7 ข้อ 15"
+ },
+ {
+  "id": "n09-X4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Triplet loss with cosine distance and a large margin",
+  "stem": "ทีมใช้ Triplet loss = max(0, d(a,p) - d(a,n) + alpha) โดยนิยามระยะเป็น cosine distance d = 1 - cos และตั้ง margin alpha = 1.5 สำหรับ anchor กับ positive ที่ cos(a,p) = 0.4 พิจารณา negative ทุกตัวที่เป็นไปได้ ข้อใดถูกต้อง",
+  "opts": {
+   "A": "loss เป็น 0 ได้เมื่อ negative มี cos(a,n) = 0 เพราะ d(a,n) = 1 ซึ่งมากกว่า d(a,p) = 0.6 อยู่แล้ว positive จึงใกล้กว่า negative",
+   "B": "loss เป็น 0 ได้เมื่อ negative อยู่ตรงข้าม anchor (cos(a,n) = -1) เพราะ d(a,n) = 2 ซึ่งเป็นระยะไกลที่สุดที่เป็นไปได้",
+   "C": "loss เป็นบวกสำหรับ negative ทุกตัว ค่าต่ำสุดคือ 0.1 เมื่อ cos(a,n) = -1",
+   "D": "loss ต่ำสุดคือ 1.1 เมื่อ cos(a,n) = 0 เพราะ negative ที่ตั้งฉากกับ anchor คือจุดที่ห่างที่สุดที่ยังถือเป็น dissimilar"
+  },
+  "ans": "C",
+  "expl": "d(a,p) = 1 - 0.4 = 0.6 และ cosine distance อยู่ใน [0, 2] (สไลด์ 10) loss = 0.6 - d(a,n) + 1.5 = 2.1 - d(a,n) ต้องมี d(a,n) >= d(a,p) + alpha = 2.1 จึงเป็น 0 แต่ d(a,n) มากสุด 2 จึงเป็นไปไม่ได้ ค่า loss ต่ำสุดคือ 2.1 - 2 = 0.1 ที่ cos(a,n) = -1 ข้อ A ลืม margin (ที่ d(a,n) = 1: 0.6 - 1 + 1.5 = 1.1 > 0) ข้อ B ที่ d(a,n) = 2 ยังได้ 0.1 ไม่ใช่ 0 เพราะ 0.6 + 1.5 = 2.1 > 2 ข้อ D คำนวณ 1.1 ถูกสำหรับ cos = 0 แต่ตัวที่ต่ำสุดคือ negative ที่ตรงข้าม (0.1) นี่คือผลของ margin ที่ใหญ่กว่าช่วงระยะที่ metric เป็นไปได้ ทำให้ไม่เคยเข้าเงื่อนไข zero-loss และ gradient ยังดัน negative ต่อไปตลอด",
+  "src": "text/slides_w09.txt s.27 (triplet loss, zero-loss condition, margin role, cosine distance allowed), s.10 (d_cos in [0,2]) ; notes week_09 2.13, 3.5"
+ },
+ {
+  "id": "n09-X4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Pooling vs contrastive fine-tuning for anisotropy (STS numbers)",
+  "stem": "ตามสไลด์ บน STS Benchmark (Spearman x100) GloVe average ได้ 58.02, BERT [CLS] (ไม่ fine-tune) ได้ 16.50, BERT mean pooling (ไม่ fine-tune) ได้ 46.35 และ SBERT-NLI-base ได้ 77.03 ทีมหนึ่งกำลังเลือกวิธีแก้ sentence embedding ของ raw BERT ข้อสรุปใดสอดคล้องกับสไลด์และตัวเลขเหล่านี้",
+  "opts": {
+   "A": "การเปลี่ยนไปใช้ mean pooling พร้อม attention mask แก้ anisotropy ได้แล้ว เพราะ sentence vector ไม่ถูก token ความถี่สูงอย่าง the, a, is ดันไปทิศเดียวกันอีก จึงไม่จำเป็นต้องฝึกโมเดลเพิ่ม",
+   "B": "การตัด dominant dimensions (all-but-the-top, whitening) ตรงกับต้นเหตุมากที่สุด เพราะมิติที่สัมพันธ์กับความถี่ของ token เป็นสาเหตุของปัญหา จึงให้คุณภาพใกล้เคียงกับ contrastive fine-tuning ของ SBERT",
+   "C": "[CLS] ได้เพียง 16.50 เพราะถูกฝึกด้วย NSP ดังนั้นการฝึก [CLS] ต่อด้วย MLM เพิ่มจะยกคุณภาพไปถึงระดับ SBERT ได้ เพราะ MLM สอน geometry ระดับประโยคอยู่แล้ว",
+   "D": "mean pooling เพิ่มจาก [CLS] 29.85 จุด แต่ยังต่ำกว่า GloVe 11.67 จุด ต้องใช้ contrastive fine-tuning ซึ่งเพิ่มอีก 30.68 จุด"
+  },
+  "ans": "D",
+  "expl": "29.85 = 46.35 - 16.50, 11.67 = 58.02 - 46.35, 30.68 = 77.03 - 46.35 สไลด์ 7 บอกว่า mean pooling สืบทอดปัญหา anisotropy (sentence vector ยุบเป็น cone) และผล 46.35 ยังแพ้ GloVe จึงตัดข้อ A สไลด์ 9 จัด post-processing (ตัด dominant dimensions) เป็นระดับ Moderate, band-aid ไม่ใช่วิธีที่ให้คุณภาพระดับเดียวกับ contrastive fine-tuning (industry standard) จึงตัดข้อ B ข้อ C กลับทิศ: สไลด์ 9 และ 47 ระบุว่าสาเหตุแท้คือ training objective แบบ MLM ไม่เคยกระตุ้น geometry ระดับประโยค ไม่ใช่ architecture จึงต้องฝึกด้วย contrastive loss ที่ attract positive และ repel negative และต้อง backprop ทั้ง BERT",
+  "src": "text/slides_w09.txt s.4 (STS table), s.6-7 (anisotropy, mean pooling inherits, CLS trained for NSP), s.9 (three fixes, key insight MLM), s.47 ; notes week_09 2.1, 2.2, verify/verify_1_5.md #3"
+ },
+ {
+  "id": "n09-X4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 9,
+  "level": 4,
+  "topic": "Brute-force search cost and vector memory at scale",
+  "stem": "Brute-force (Flat) search ต้องทำประมาณ n x d operations ต่อ query ตามสไลด์ที่ 10M เอกสาร 768 มิติใช้ประมาณ 7.7 วินาทีที่ 1 GHz (10^9 operations ต่อวินาที) ถ้าคลังมี 200,000,000 เอกสารและใช้โมเดล all-MiniLM-L6-v2 (384 มิติ) brute-force ใช้เวลาต่อ query ประมาณ ___ วินาที ถ้า ANN เร็วขึ้น 100 เท่า (และ recall ยังสูง) จะเหลือประมาณ ___ วินาที และเวกเตอร์ float32 ทั้งหมดใช้ RAM ประมาณ ___ GB (1 GB = 10^9 bytes)",
+  "key": "76.8; 0.768; 307.2",
+  "note": "ยอมรับ 0.768 = 768 ms และ 307.2 GB (ถ้าเขียน 307.2 x 10^9 bytes ก็รับ) คำนวณ: 200,000,000 x 384 = 7.68 x 10^10 operations / 10^9 = 76.8 s; 76.8 / 100 = 0.768 s; 7.68 x 10^10 x 4 bytes = 3.072 x 10^11 bytes = 307.2 GB กับดัก: ต้องใช้ d = 384 ไม่ใช่ 768 และ bytes 4 ต่อค่า (float32) ไม่ใช่นับแค่จำนวนค่า",
+  "src": "text/slides_w09.txt s.36 (7.7 s for 10M at 1 GHz, 768 x 4 bytes, ANN 100x speedup), s.39 (Flat O(n.d)) ; notes week_09 3.3"
+ }
+]

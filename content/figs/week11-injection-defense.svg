@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400">
+<defs><marker id="aa-week11-injection-defense" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker><marker id="aw-week11-injection-defense" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker></defs>
+<text x="20" y="28" class="h">การโจมตี: คำสั่งกับข้อมูลอยู่ใน context เดียวกัน</text>
+<rect x="20" y="48" width="230" height="50" rx="6" class="warn"/>
+<text x="135" y="69" text-anchor="middle">Direct injection</text>
+<text x="135" y="86" text-anchor="middle">'IGNORE ALL PREVIOUS ...'</text>
+<rect x="20" y="148" width="230" height="50" rx="6" class="warn"/>
+<text x="135" y="169" text-anchor="middle">Indirect injection</text>
+<text x="135" y="186" text-anchor="middle">คำสั่งแฝงในเว็บ / อีเมล</text>
+<rect x="300" y="78" width="190" height="130" rx="6" class="acc"/>
+<text x="395" y="122" text-anchor="middle">LLM context window</text>
+<text x="395" y="139" text-anchor="middle">system prompt</text>
+<text x="395" y="156" text-anchor="middle">+ ข้อมูล + คำสั่ง</text>
+<text x="395" y="173" text-anchor="middle">แยกกันไม่ออก</text>
+<polyline points="250,73 300,108" class="lnw" marker-end="url(#aw-week11-injection-defense)"/>
+<text x="256" y="66" class="s">พิมพ์ตรง</text>
+<polyline points="250,173 300,178" class="lnw" marker-end="url(#aw-week11-injection-defense)"/>
+<text x="256" y="166" class="s">fetch</text>
+<polyline points="490,143 530,143" class="lnw" marker-end="url(#aw-week11-injection-defense)"/>
+<rect x="530" y="108" width="170" height="70" rx="6" class="warn"/>
+<text x="615" y="139" text-anchor="middle">โมเดล</text>
+<text x="615" y="156" text-anchor="middle">ทรยศเป้าหมายเดิม</text>
+<polyline points="20,228 700,228" class="ln dash"/>
+<text x="20" y="254" class="h">Defense-in-depth: ป้องกันหลายชั้น</text>
+<rect x="20" y="272" width="124" height="60" rx="6" class="box"/>
+<text x="82" y="298" text-anchor="middle">Input filter</text>
+<text x="82" y="315" text-anchor="middle">กรอง prompt</text>
+<polyline points="144,302 159,302" class="lna" marker-end="url(#aa-week11-injection-defense)"/>
+<rect x="159" y="272" width="124" height="60" rx="6" class="box"/>
+<text x="221" y="298" text-anchor="middle">Sandwich</text>
+<text x="221" y="315" text-anchor="middle">header + footer</text>
+<polyline points="283,302 298,302" class="lna" marker-end="url(#aa-week11-injection-defense)"/>
+<rect x="298" y="272" width="124" height="60" rx="6" class="acc"/>
+<text x="360" y="298" text-anchor="middle">LLM หลัก</text>
+<text x="360" y="315" text-anchor="middle">ตัวแรก</text>
+<polyline points="422,302 437,302" class="lna" marker-end="url(#aa-week11-injection-defense)"/>
+<rect x="437" y="272" width="124" height="60" rx="6" class="box"/>
+<text x="499" y="298" text-anchor="middle">Output eval</text>
+<text x="499" y="315" text-anchor="middle">LLM ตัวที่สอง</text>
+<polyline points="561,302 576,302" class="lna" marker-end="url(#aa-week11-injection-defense)"/>
+<rect x="576" y="272" width="124" height="60" rx="6" class="box"/>
+<text x="638" y="298" text-anchor="middle">Least privilege</text>
+<text x="638" y="315" text-anchor="middle">จำกัดสิทธิ์ tool</text>
+<text x="360" y="362" text-anchor="middle" class="ac">ไม่มี silver bullet: ชั้นไหนพลาด ชั้นถัดไปต้องรับ</text>
+<text x="360" y="384" text-anchor="middle" class="s">prompting ทรงพลัง แต่ต้องมีสถาปัตยกรรมที่แข็งแรง</text>
+</svg>

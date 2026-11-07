@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360">
+  <defs>
+    <marker id="a-week13-logit-masking" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+  </defs>
+  <text x="360" y="22" text-anchor="middle">parser state = {  → ไวยากรณ์อนุญาตเฉพาะ: " (เปิด key), } (ปิด object), whitespace</text>
+  <!-- panel titles -->
+  <text x="115" y="58" text-anchor="middle" class="h">1 logits ก่อน mask</text>
+  <text x="353" y="58" text-anchor="middle" class="h">2 invalid → −∞</text>
+  <text x="591" y="58" text-anchor="middle" class="h">3 softmax → P</text>
+  <!-- baselines at y=240 -->
+  <path d="M20 240 H210 M258 240 H448 M496 240 H686" class="ln"/>
+
+  <!-- panel 1: bars w20, pitch 32, start x=25 : tall invalid bars show model may prefer them (illustrative) -->
+  <rect x="25" y="160" width="20" height="80" class="acc"/>
+  <rect x="57" y="200" width="20" height="40" class="acc"/>
+  <rect x="89" y="220" width="20" height="20" class="acc"/>
+  <rect x="121" y="130" width="20" height="110" class="warn"/>
+  <rect x="153" y="170" width="20" height="70" class="warn"/>
+  <rect x="185" y="180" width="20" height="60" class="warn"/>
+
+  <!-- panel 2: same valid bars, invalid replaced by -inf -->
+  <rect x="263" y="160" width="20" height="80" class="acc"/>
+  <rect x="295" y="200" width="20" height="40" class="acc"/>
+  <rect x="327" y="220" width="20" height="20" class="acc"/>
+  <rect x="359" y="236" width="20" height="4" class="warn dash"/>
+  <rect x="391" y="236" width="20" height="4" class="warn dash"/>
+  <rect x="423" y="236" width="20" height="4" class="warn dash"/>
+  <text x="369" y="228" text-anchor="middle" class="wn">−∞</text>
+  <text x="401" y="228" text-anchor="middle" class="wn">−∞</text>
+  <text x="433" y="228" text-anchor="middle" class="wn">−∞</text>
+
+  <!-- panel 3: valid tokens share 100%, invalid have P = 0 -->
+  <rect x="501" y="120" width="20" height="120" class="acc"/>
+  <rect x="533" y="170" width="20" height="70" class="acc"/>
+  <rect x="565" y="205" width="20" height="35" class="acc"/>
+  <text x="607" y="232" text-anchor="middle" class="wn">P = 0</text>
+  <text x="639" y="232" text-anchor="middle" class="wn">P = 0</text>
+  <text x="671" y="232" text-anchor="middle" class="wn">P = 0</text>
+  <text x="543" y="104" text-anchor="middle" class="ac">valid รวม = 100%</text>
+
+  <!-- arrows between panels -->
+  <path d="M214 150 H254" class="ln" marker-end="url(#a-week13-logit-masking)"/>
+  <text x="234" y="142" text-anchor="middle" class="s">mask</text>
+  <path d="M452 150 H492" class="ln" marker-end="url(#a-week13-logit-masking)"/>
+  <text x="472" y="142" text-anchor="middle" class="s">softmax</text>
+
+  <!-- token labels shared (below each baseline) -->
+  <text x="35" y="258" text-anchor="middle" class="s">"</text>
+  <text x="67" y="258" text-anchor="middle" class="s">}</text>
+  <text x="99" y="258" text-anchor="middle" class="s">\n</text>
+  <text x="131" y="258" text-anchor="middle" class="s">abc</text>
+  <text x="163" y="258" text-anchor="middle" class="s">1</text>
+  <text x="195" y="258" text-anchor="middle" class="s">true</text>
+  <text x="273" y="258" text-anchor="middle" class="s">"</text>
+  <text x="305" y="258" text-anchor="middle" class="s">}</text>
+  <text x="337" y="258" text-anchor="middle" class="s">\n</text>
+  <text x="369" y="258" text-anchor="middle" class="s">abc</text>
+  <text x="401" y="258" text-anchor="middle" class="s">1</text>
+  <text x="433" y="258" text-anchor="middle" class="s">true</text>
+  <text x="511" y="258" text-anchor="middle" class="s">"</text>
+  <text x="543" y="258" text-anchor="middle" class="s">}</text>
+  <text x="575" y="258" text-anchor="middle" class="s">\n</text>
+  <text x="607" y="258" text-anchor="middle" class="s">abc</text>
+  <text x="639" y="258" text-anchor="middle" class="s">1</text>
+  <text x="671" y="258" text-anchor="middle" class="s">true</text>
+
+  <!-- legend -->
+  <rect x="20" y="278" width="14" height="14" class="acc"/>
+  <text x="40" y="290" class="s">token ที่ไวยากรณ์อนุญาต</text>
+  <rect x="190" y="278" width="14" height="14" class="warn"/>
+  <text x="210" y="290" class="s">token ที่ไม่อนุญาต</text>
+  <text x="400" y="290" class="s">ความสูงแท่งเป็นภาพสมมติ ไม่ใช่ค่าจริง</text>
+  <!-- numbers from the lesson -->
+  <text x="360" y="320" text-anchor="middle" class="ac">GPT-2 (50,257 token): valid 69 · ถูก mask 50,188 = 99.86%</text>
+  <text x="360" y="340" text-anchor="middle" class="s">ถ้าอยู่ภายใน string: valid 50,146 · ถูก mask 111 (≈ 0.22%)</text>
+</svg>

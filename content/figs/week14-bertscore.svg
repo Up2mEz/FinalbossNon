@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 364">
+  <text x="20" y="24" class="h">BERTScore: token-by-token similarity grid, then greedy max</text>
+  <text x="20" y="44" class="s">Illustrative: highlighted cells mark expected best matches, not real cosine values</text>
+  <text x="286" y="64" class="s" text-anchor="middle">Reference r (m = 6 tokens)</text>
+  <text x="156" y="84" class="t" text-anchor="middle">The</text>
+  <text x="208" y="84" class="t" text-anchor="middle">cat</text>
+  <text x="260" y="84" class="t" text-anchor="middle">sat</text>
+  <text x="312" y="84" class="t" text-anchor="middle">on</text>
+  <text x="364" y="84" class="t" text-anchor="middle">the</text>
+  <text x="416" y="84" class="t" text-anchor="middle">mat</text>
+  <text x="122" y="114" class="t" text-anchor="end">A</text>
+  <rect x="130" y="92" width="52" height="34" class="acc"/>
+  <rect x="182" y="92" width="52" height="34" class="mut"/>
+  <rect x="234" y="92" width="52" height="34" class="mut"/>
+  <rect x="286" y="92" width="52" height="34" class="mut"/>
+  <rect x="338" y="92" width="52" height="34" class="mut"/>
+  <rect x="390" y="92" width="52" height="34" class="mut"/>
+  <text x="122" y="148" class="t" text-anchor="end">feline</text>
+  <rect x="130" y="126" width="52" height="34" class="mut"/>
+  <rect x="182" y="126" width="52" height="34" class="acc"/>
+  <rect x="234" y="126" width="52" height="34" class="mut"/>
+  <rect x="286" y="126" width="52" height="34" class="mut"/>
+  <rect x="338" y="126" width="52" height="34" class="mut"/>
+  <rect x="390" y="126" width="52" height="34" class="mut"/>
+  <text x="122" y="182" class="t" text-anchor="end">rested</text>
+  <rect x="130" y="160" width="52" height="34" class="mut"/>
+  <rect x="182" y="160" width="52" height="34" class="mut"/>
+  <rect x="234" y="160" width="52" height="34" class="acc"/>
+  <rect x="286" y="160" width="52" height="34" class="mut"/>
+  <rect x="338" y="160" width="52" height="34" class="mut"/>
+  <rect x="390" y="160" width="52" height="34" class="mut"/>
+  <text x="122" y="216" class="t" text-anchor="end">upon</text>
+  <rect x="130" y="194" width="52" height="34" class="mut"/>
+  <rect x="182" y="194" width="52" height="34" class="mut"/>
+  <rect x="234" y="194" width="52" height="34" class="mut"/>
+  <rect x="286" y="194" width="52" height="34" class="acc"/>
+  <rect x="338" y="194" width="52" height="34" class="mut"/>
+  <rect x="390" y="194" width="52" height="34" class="mut"/>
+  <text x="122" y="250" class="t" text-anchor="end">the</text>
+  <rect x="130" y="228" width="52" height="34" class="mut"/>
+  <rect x="182" y="228" width="52" height="34" class="mut"/>
+  <rect x="234" y="228" width="52" height="34" class="mut"/>
+  <rect x="286" y="228" width="52" height="34" class="mut"/>
+  <rect x="338" y="228" width="52" height="34" class="acc"/>
+  <rect x="390" y="228" width="52" height="34" class="mut"/>
+  <text x="122" y="284" class="t" text-anchor="end">rug</text>
+  <rect x="130" y="262" width="52" height="34" class="mut"/>
+  <rect x="182" y="262" width="52" height="34" class="mut"/>
+  <rect x="234" y="262" width="52" height="34" class="mut"/>
+  <rect x="286" y="262" width="52" height="34" class="mut"/>
+  <rect x="338" y="262" width="52" height="34" class="mut"/>
+  <rect x="390" y="262" width="52" height="34" class="acc"/>
+  <text transform="translate(20 194) rotate(-90)" class="s" text-anchor="middle">Candidate c (n = 6 tokens)</text>
+  <text x="20" y="320" class="s">highlighted = max of its row (feeds P)</text>
+  <text x="20" y="336" class="s">and max of its column (feeds R)</text>
+  <text x="20" y="352" class="s">S_ij = cos(c_i, r_j); averages use idf weights</text>
+  <rect x="476" y="92" width="232" height="86" rx="6" class="acc"/>
+  <text x="490" y="116" class="t">P = mean_i max_j S_ij</text>
+  <text x="490" y="138" class="t">R = mean_j max_i S_ij</text>
+  <text x="490" y="160" class="ac">F = 2PR / (P + R)</text>
+  <rect x="476" y="196" width="232" height="100" rx="6" class="box"/>
+  <text x="490" y="216" class="s">Reference: The cat sat on the mat</text>
+  <text x="640" y="238" class="s" text-anchor="end">BLEU-1</text>
+  <text x="700" y="238" class="s" text-anchor="end">BERT F1</text>
+  <text x="490" y="260" class="t">A: paraphrase</text>
+  <text x="640" y="260" class="t" text-anchor="end">0.17</text>
+  <text x="700" y="260" class="ac" text-anchor="end">0.79</text>
+  <text x="490" y="282" class="t">B: scrambled</text>
+  <text x="640" y="282" class="wn" text-anchor="end">0.83</text>
+  <text x="700" y="282" class="t" text-anchor="end">0.67</text>
+  <text x="476" y="322" class="wn">BLEU ranks B first (wrong)</text>
+  <text x="476" y="340" class="ac">BERTScore ranks A first (right)</text>
+</svg>

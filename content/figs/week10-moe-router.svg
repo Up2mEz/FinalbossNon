@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360">
+<defs><marker id="a-week10-moe-router" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker><marker id="aa-week10-moe-router" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker></defs>
+<rect x="20" y="140" width="70" height="40" rx="6" class="box"/>
+<text x="55" y="156" text-anchor="middle">token</text>
+<text x="55" y="173" text-anchor="middle">x</text>
+<rect x="112" y="128" width="128" height="64" rx="6" class="acc"/>
+<text x="176" y="156" text-anchor="middle">Router</text>
+<text x="176" y="173" text-anchor="middle">softmax(W_r x)</text>
+<polyline points="90,160 112,160" class="ln" marker-end="url(#a-week10-moe-router)"/>
+<text x="176" y="116" text-anchor="middle" class="ac">top-2  (k = 2)</text>
+<text x="390" y="36" text-anchor="middle" class="h">8 experts (FFN เล็ก)</text>
+<rect x="340" y="50" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="67.5" text-anchor="middle">E1</text>
+<rect x="340" y="82" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="99.5" text-anchor="middle">E2</text>
+<rect x="340" y="114" width="100" height="26" rx="6" class="acc"/>
+<text x="390" y="131.5" text-anchor="middle">E3</text>
+<rect x="340" y="146" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="163.5" text-anchor="middle">E4</text>
+<rect x="340" y="178" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="195.5" text-anchor="middle">E5</text>
+<rect x="340" y="210" width="100" height="26" rx="6" class="acc"/>
+<text x="390" y="227.5" text-anchor="middle">E6</text>
+<rect x="340" y="242" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="259.5" text-anchor="middle">E7</text>
+<rect x="340" y="274" width="100" height="26" rx="6" class="mut"/>
+<text x="390" y="291.5" text-anchor="middle">E8</text>
+<polyline points="240,150 340,127" class="lna" marker-end="url(#aa-week10-moe-router)"/>
+<text x="292" y="122" text-anchor="middle" class="s">P1</text>
+<polyline points="240,172 340,223" class="lna" marker-end="url(#aa-week10-moe-router)"/>
+<text x="292" y="222" text-anchor="middle" class="s">P2</text>
+<rect x="510" y="134" width="130" height="52" rx="6" class="box"/>
+<text x="575" y="156" text-anchor="middle">Σ Pi · Ei(x)</text>
+<text x="575" y="173" text-anchor="middle">i ∈ {3, 6}</text>
+<polyline points="440,127 510,152" class="lna" marker-end="url(#aa-week10-moe-router)"/>
+<polyline points="440,223 510,170" class="lna" marker-end="url(#aa-week10-moe-router)"/>
+<polyline points="640,160 690,160" class="ln" marker-end="url(#a-week10-moe-router)"/>
+<text x="700" y="164" class="h">y</text>
+<text x="360" y="326" text-anchor="middle" class="ac">Mixtral 8x7B: ≈ 47B พารามิเตอร์รวม · active ≈ 13B ต่อโทเคน</text>
+<text x="360" y="348" text-anchor="middle" class="wn">ประหยัด compute ไม่ประหยัด VRAM: ต้องโหลดทั้ง 8 experts</text>
+</svg>

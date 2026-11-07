@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+  <defs>
+    <marker id="a-week12-rag-architecture" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week12-rag-architecture" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- retriever frame -->
+  <rect x="116" y="72" width="322" height="150" rx="8" class="mut ln dash"/>
+  <text x="277" y="92" text-anchor="middle" class="h">Retriever p_η(z | x)</text>
+  <text x="277" y="210" text-anchor="middle" class="s">non-parametric memory</text>
+  <!-- query -->
+  <rect x="12" y="128" width="80" height="44" rx="6" class="box"/>
+  <text x="52" y="146" text-anchor="middle">Query</text>
+  <text x="52" y="163" text-anchor="middle" class="s">x</text>
+  <path d="M92 150 H130" class="ln" marker-end="url(#a-week12-rag-architecture)"/>
+  <!-- query encoder -->
+  <rect x="130" y="122" width="106" height="56" rx="6" class="acc"/>
+  <text x="183" y="146" text-anchor="middle">Query Encoder</text>
+  <text x="183" y="164" text-anchor="middle" class="s">q(x)</text>
+  <path d="M236 150 H306" class="lna" marker-end="url(#aa-week12-rag-architecture)"/>
+  <text x="271" y="142" text-anchor="middle" class="s">MIPS</text>
+  <!-- document index -->
+  <rect x="306" y="112" width="124" height="76" rx="6" class="box"/>
+  <text x="368" y="136" text-anchor="middle">Document Index</text>
+  <text x="368" y="154" text-anchor="middle" class="s">เวกเตอร์ d(z)</text>
+  <text x="368" y="170" text-anchor="middle" class="s">(Wikipedia)</text>
+  <!-- retrieved docs to generator -->
+  <path d="M438 150 H516" class="ln" marker-end="url(#a-week12-rag-architecture)"/>
+  <text x="477" y="142" text-anchor="middle" class="s">top-K z</text>
+  <!-- generator -->
+  <rect x="516" y="122" width="140" height="56" rx="6" class="acc"/>
+  <text x="586" y="146" text-anchor="middle">Generator (BART)</text>
+  <text x="586" y="164" text-anchor="middle" class="s">p_θ(y | x, z, y₁:ᵢ₋₁)</text>
+  <text x="586" y="198" text-anchor="middle" class="s">parametric memory</text>
+  <path d="M656 150 H706" class="ln" marker-end="url(#a-week12-rag-architecture)"/>
+  <text x="683" y="142" text-anchor="middle">y</text>
+  <!-- x also goes to generator -->
+  <path d="M52 128 V50 H586 V122" class="ln" marker-end="url(#a-week12-rag-architecture)"/>
+  <text x="320" y="44" text-anchor="middle" class="s">x (คำถามเดิมส่งตรงไปยัง Generator ด้วย)</text>
+  <!-- marginalize and training note -->
+  <text x="586" y="222" text-anchor="middle" class="ac">marginalize เหนือ top-K z</text>
+  <text x="360" y="262" text-anchor="middle" class="s">เทรนร่วม: query encoder + generator (document encoder และดัชนีถูกตรึง)</text>
+</svg>

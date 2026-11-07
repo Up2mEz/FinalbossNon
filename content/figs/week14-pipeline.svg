@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 350">
+  <defs>
+    <marker id="a-week14-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aw-week14-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+  </defs>
+  <text x="20" y="24" class="h">FineWeb pipeline: cheap rules first, dedup before the neural scorer</text>
+
+  <!-- row 1 -->
+  <rect x="20" y="42" width="140" height="48" rx="6" class="box"/>
+  <text x="90" y="71" class="t" text-anchor="middle">URL filter</text>
+  <rect x="200" y="42" width="140" height="48" rx="6" class="mut"/>
+  <text x="270" y="71" class="t" text-anchor="middle">Text extraction</text>
+  <rect x="380" y="42" width="140" height="48" rx="6" class="box"/>
+  <text x="450" y="63" class="t" text-anchor="middle">Language ID</text>
+  <text x="450" y="80" class="s" text-anchor="middle">fastText ≥ 0.65</text>
+  <rect x="560" y="42" width="140" height="48" rx="6" class="box"/>
+  <text x="630" y="71" class="t" text-anchor="middle">Gopher filters</text>
+  <line x1="160" y1="66" x2="198" y2="66" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="340" y1="66" x2="378" y2="66" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="520" y1="66" x2="558" y2="66" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <text x="180" y="58" class="s" text-anchor="middle">docs</text>
+
+  <!-- row 2 -->
+  <rect x="20" y="132" width="140" height="48" rx="6" class="acc"/>
+  <text x="90" y="153" class="t" text-anchor="middle">MinHash dedup</text>
+  <text x="90" y="170" class="s" text-anchor="middle">per crawl</text>
+  <rect x="200" y="132" width="140" height="48" rx="6" class="box"/>
+  <text x="270" y="161" class="t" text-anchor="middle">C4 filters</text>
+  <rect x="380" y="132" width="140" height="48" rx="6" class="box"/>
+  <text x="450" y="161" class="t" text-anchor="middle">Custom filters</text>
+  <rect x="560" y="132" width="140" height="48" rx="6" class="mut"/>
+  <text x="630" y="161" class="t" text-anchor="middle">PII removal</text>
+  <path d="M630 90 V111 H90 V130" class="ln" fill="none" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="160" y1="156" x2="198" y2="156" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="340" y1="156" x2="378" y2="156" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="520" y1="156" x2="558" y2="156" class="ln" marker-end="url(#a-week14-pipeline)"/>
+
+  <!-- row 3 -->
+  <rect x="20" y="222" width="140" height="48" rx="6" class="box"/>
+  <text x="90" y="243" class="ac" text-anchor="middle">FineWeb</text>
+  <text x="90" y="260" class="s" text-anchor="middle">15T tokens</text>
+  <rect x="200" y="222" width="140" height="48" rx="6" class="warn"/>
+  <text x="270" y="243" class="t" text-anchor="middle">Edu classifier</text>
+  <text x="270" y="260" class="s" text-anchor="middle">keep score ≥ 3</text>
+  <rect x="380" y="222" width="140" height="48" rx="6" class="box"/>
+  <text x="450" y="243" class="ac" text-anchor="middle">FineWeb-Edu</text>
+  <text x="450" y="260" class="s" text-anchor="middle">1.3T tokens</text>
+  <path d="M630 180 V201 H90 V220" class="ln" fill="none" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="160" y1="246" x2="198" y2="246" class="ln" marker-end="url(#a-week14-pipeline)"/>
+  <line x1="340" y1="246" x2="378" y2="246" class="lnw" marker-end="url(#aw-week14-pipeline)"/>
+  <text x="360" y="238" class="s" text-anchor="middle">≈9%</text>
+  <text x="548" y="240" class="wn">≈ 9% kept</text>
+  <text x="548" y="258" class="s">1.3T of 15T tokens</text>
+
+  <!-- legend -->
+  <rect x="20" y="294" width="16" height="14" class="box"/>
+  <text x="44" y="306" class="s">rule-based filter (Tier 1, ~0.1 ms/doc)</text>
+  <rect x="380" y="294" width="16" height="14" class="acc"/>
+  <text x="404" y="306" class="s">dedup: after cheap filters, before neural</text>
+  <rect x="20" y="318" width="16" height="14" class="warn"/>
+  <text x="44" y="330" class="s">neural scorer (Tier 2, ~10 ms/doc)</text>
+  <rect x="380" y="318" width="16" height="14" class="mut"/>
+  <text x="404" y="330" class="s">utility step (extraction, PII)</text>
+  <text x="20" y="346" class="s">arrow = documents that passed the previous step</text>
+</svg>

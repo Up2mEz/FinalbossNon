@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340">
+  <defs>
+    <marker id="a-week13-decode-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week13-decode-loop" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- LLM forward feeds the mask step -->
+  <rect x="308" y="10" width="104" height="34" rx="6" class="box"/>
+  <text x="360" y="32" text-anchor="middle">LLM forward</text>
+  <path d="M360 44 V74" class="lna" marker-end="url(#aa-week13-decode-loop)"/>
+  <text x="368" y="62" class="s">logits [|V|]</text>
+  <!-- five-step loop: w104, gap 34, y 74..126 -->
+  <rect x="32" y="74" width="104" height="52" rx="6" class="acc"/>
+  <text x="84" y="96" text-anchor="middle">1 State</text>
+  <text x="84" y="114" text-anchor="middle" class="s">กฎ + stack</text>
+  <path d="M136 100 H170" class="ln" marker-end="url(#a-week13-decode-loop)"/>
+  <rect x="170" y="74" width="104" height="52" rx="6" class="box"/>
+  <text x="222" y="96" text-anchor="middle">2 Valid set</text>
+  <text x="222" y="114" text-anchor="middle" class="s">จาก grammar</text>
+  <path d="M274 100 H308" class="ln" marker-end="url(#a-week13-decode-loop)"/>
+  <rect x="308" y="74" width="104" height="52" rx="6" class="acc"/>
+  <text x="360" y="96" text-anchor="middle">3 Logit mask</text>
+  <text x="360" y="114" text-anchor="middle" class="s">invalid → −∞</text>
+  <path d="M412 100 H446" class="ln" marker-end="url(#a-week13-decode-loop)"/>
+  <rect x="446" y="74" width="104" height="52" rx="6" class="box"/>
+  <text x="498" y="96" text-anchor="middle">4 Sample</text>
+  <text x="498" y="114" text-anchor="middle" class="s">จาก P ที่ mask</text>
+  <path d="M550 100 H584" class="ln" marker-end="url(#a-week13-decode-loop)"/>
+  <rect x="584" y="74" width="104" height="52" rx="6" class="box"/>
+  <text x="636" y="96" text-anchor="middle">5 Update</text>
+  <text x="636" y="114" text-anchor="middle" class="s">ตาม token ใหม่</text>
+  <!-- loop back -->
+  <path d="M636 126 V156 H84 V126" class="lna" marker-end="url(#aa-week13-decode-loop)"/>
+  <text x="360" y="150" text-anchor="middle" class="ac">วนซ้ำทุก decoding step</text>
+  <!-- stack example (left) -->
+  <text x="20" y="196" class="h">ตัวอย่าง: {"a": {"b": 1</text>
+  <rect x="40" y="212" width="180" height="32" rx="4" class="acc"/>
+  <text x="130" y="232" text-anchor="middle">{  object ชั้นใน</text>
+  <rect x="40" y="248" width="180" height="32" rx="4" class="box"/>
+  <text x="130" y="268" text-anchor="middle">{  object ชั้นนอก</text>
+  <text x="130" y="300" text-anchor="middle" class="s">stack ลึก 2 → ปิดด้วย } ได้อีก 2 ครั้ง</text>
+  <text x="232" y="232" class="s">← top</text>
+  <!-- regex vs CFG (right) -->
+  <rect x="330" y="196" width="170" height="104" rx="6" class="box"/>
+  <text x="415" y="218" text-anchor="middle" class="h">Regex / DFA</text>
+  <text x="415" y="240" text-anchor="middle" class="s">ไม่มี stack</text>
+  <text x="415" y="258" text-anchor="middle" class="s">โครงสร้างแบน (เช่น วันที่)</text>
+  <text x="415" y="276" text-anchor="middle" class="wn">ซ้อนลึกไม่จำกัดไม่ได้</text>
+  <rect x="520" y="196" width="170" height="104" rx="6" class="acc"/>
+  <text x="605" y="218" text-anchor="middle" class="h">CFG (pushdown)</text>
+  <text x="605" y="240" text-anchor="middle" class="s">มี stack</text>
+  <text x="605" y="258" text-anchor="middle" class="s">JSON/โค้ดที่ซ้อนได้</text>
+  <text x="605" y="276" text-anchor="middle" class="ac">ซ้อนลึกไม่จำกัดได้</text>
+  <text x="360" y="328" text-anchor="middle" class="s">ทุกวิธีใช้การ mask −∞ แบบเดียวกัน ต่างกันที่วิธีรักษา parser state</text>
+</svg>

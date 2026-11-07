@@ -1,0 +1,493 @@
+[
+ {
+  "id": "n13-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "ReAct max_steps",
+  "hinted": true,
+  "stem": "ในโค้ด ReAct loop ตัวแปร `max_steps` ถูกใส่ไว้เพื่อวัตถุประสงค์ใด?",
+  "opts": {
+   "A": "เพิ่มความแม่นยำของ Thought ในแต่ละรอบ",
+   "B": "จำกัดความยาวของ Observation ที่ tool ส่งกลับมา",
+   "C": "เป็น safety guard กัน agent วน loop ไม่รู้จบ",
+   "D": "กำหนดจำนวน tool ทั้งหมดที่ agent เรียกใช้ได้ในระบบ"
+  },
+  "ans": "C",
+  "expl": "สไลด์ระบุว่า `max_steps` เป็น safety guard และใน failure modes ของ tool call ปัญหา infinite loop แก้ด้วย `max_steps` guard ตัวเลือก A, B, D ไม่มีบทบาทนี้: max_steps นับรอบ ไม่ได้ควบคุมคุณภาพ Thought, ความยาว Observation หรือจำนวน tool",
+  "src": "text/slides_w13.txt s.11, s.17, s.47 ; notes week_13 sec 2.2, 2.3"
+ },
+ {
+  "id": "n13-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "JSON Schema analogy",
+  "hinted": true,
+  "stem": "สไลด์เปรียบ JSON Schema ของ tool กับอะไร?",
+  "opts": {
+   "A": "ฟอร์มเปล่าที่บอกว่ามีช่องอะไร ชนิดใด และช่องไหน required",
+   "B": "ฟอร์มที่กรอกแล้ว ซึ่งเก็บค่า argument จริงที่ LLM ส่งให้ tool ไปเรียกใช้",
+   "C": "พจนานุกรมของ token ทั้งหมดใน vocabulary ที่ LLM เลือกได้ในแต่ละ step",
+   "D": "บันทึกประวัติ Observation ของทุกรอบที่ผ่านมา"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.16 บอกว่า JSON Schema คือฟอร์มเปล่า ส่วนข้อมูลจริง (arguments ที่ LLM กรอก) คือฟอร์มที่กรอกแล้ว ตัวเลือก B สลับบทบาทของ schema กับ data",
+  "src": "text/slides_w13.txt s.16 ; notes week_13 sec 2.3"
+ },
+ {
+  "id": "n13-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "Regex constraint DFA",
+  "stem": "ใน regex-constrained decoding เช่น `\\d{4}-\\d{2}-\\d{2}` ขั้นแรกคือ compile regex ให้เป็นอะไรเพื่อหา valid next tokens?",
+  "opts": {
+   "A": "Context-Free Grammar ที่มี stack ของวงเล็บ",
+   "B": "โมเดล Transformer ขนาดเล็กอีกตัวหนึ่ง",
+   "C": "Hash table ของทุก string ที่ regex รับได้",
+   "D": "Deterministic Finite Automaton (DFA)"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.25: compile regex เป็น DFA แล้วใช้ DFA state หา valid next tokens จากนั้น mask ด้วย -infinity เหมือนเดิม CFG ที่มี stack ใช้กับ JSON ซ้อนลึก ไม่ใช่ regex",
+  "src": "text/slides_w13.txt s.25 ; notes week_13 sec 2.4"
+ },
+ {
+  "id": "n13-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "Sequential pipeline weakness",
+  "stem": "จุดอ่อนหลักของ Sequential Pipeline (Research -> Writer -> Editor) ที่สไลด์ยกมาคือข้อใด?",
+  "opts": {
+   "A": "Router ตัวเดียวเป็น single point of failure",
+   "B": "Error cascade: ถ้า agent ต้นทางพลาด agent ถัดไปพลาดตาม",
+   "C": "ต้องให้หลาย agent เถียงกันก่อนสรุป จึงมี token cost สูงมาก",
+   "D": "ทุก agent ทำงานพร้อมกันจึงเกิดการแก้ state ชนกัน"
+  },
+  "ans": "B",
+  "expl": "สไลด์ s.34-35: Cons ของ Sequential คือ slow, rigid และ error cascade (Research พลาด Writer เขียนต่อ Editor ขัดเกลา ผลสุดท้ายมั่นใจแต่ผิด) A เป็นของ Routing, C เป็นของ Debate/Supervisor, D ไม่ใช่ เพราะ Sequential ไม่ขนาน",
+  "src": "text/slides_w13.txt s.34-35 ; notes week_13 sec 2.6"
+ },
+ {
+  "id": "n13-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "Memory taxonomy",
+  "stem": "Memory ประเภทใดเก็บความรู้หรือข้อเท็จจริงที่ compile แล้ว เช่น \"Thailand's capital is Bangkok\"?",
+  "opts": {
+   "A": "Semantic memory",
+   "B": "Episodic memory",
+   "C": "Procedural memory",
+   "D": "Working memory"
+  },
+  "ans": "A",
+  "expl": "S28: Semantic = compiled knowledge/facts (อุปมาตำรา), Episodic = บันทึกเหตุการณ์ในอดีต (diary), Procedural = ทักษะ (ขี่จักรยาน), Working = เนื้อหา context window ตอนนี้",
+  "src": "text/slides_w13.txt s.28 ; notes week_13 sec 2.5"
+ },
+ {
+  "id": "n13-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "Reliability stack",
+  "stem": "ชั้นใดของ Reliability Stack (Defense in Depth) ที่ให้มนุษย์อนุมัติก่อนทำ action ที่เสี่ยงหรือทำลายข้อมูล?",
+  "opts": {
+   "A": "Layer 1: Constrain",
+   "B": "Layer 2: Validate",
+   "C": "Layer 3: Recover",
+   "D": "Layer 4: Escalate"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.46: L1 Constrain, L2 Validate (types, ranges, permissions, business rules), L3 Recover (retry เฉพาะ failure ที่ bounded), L4 Escalate (ขออนุมัติมนุษย์สำหรับ action เสี่ยงหรือทำลาย)",
+  "src": "text/slides_w13.txt s.46 ; notes week_13 sec 2.7"
+ },
+ {
+  "id": "n13-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "ReAct Table 1 deltas",
+  "hinted": true,
+  "stem": "จาก Table 1 (PaLM-540B) เมื่อเปลี่ยนจาก CoT (HotpotQA EM 29.4, FEVER Acc 56.3) มาเป็น ReAct (27.4, 60.9) คะแนนเปลี่ยนไปเท่าใด (HotpotQA / FEVER)?",
+  "opts": {
+   "A": "+2.0 / -4.6",
+   "B": "-2.0 / +4.6",
+   "C": "-2.0 / +3.6",
+   "D": "+1.7 / +2.0"
+  },
+  "ans": "B",
+  "expl": "HotpotQA: 27.4 - 29.4 = -2.0 (ReAct แพ้). FEVER: 60.9 - 56.3 = +4.6 (ReAct ชนะ). A สลับเครื่องหมาย, C คำนวณทศนิยมพลาด (3.6), D คือผลต่างของ ReAct กับ Act-only (27.4-25.7 = 1.7 และ 60.9-58.9 = 2.0)",
+  "src": "text/slides_w13.txt s.14 ; source/nlp_exam_hints.md (Week 13 01:58:45) ; notes week_13 sec 3.6"
+ },
+ {
+  "id": "n13-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "Tool call failure modes",
+  "hinted": true,
+  "stem": "LLM สร้าง tool call ชื่อ `web_lookup` ซึ่งไม่มีอยู่ใน tool registry ตามตาราง Failure Modes ของสไลด์ผลที่ถูกต้องคืออะไร?",
+  "opts": {
+   "A": "Parser error แล้ว retry หรือ fail เหมือนกรณี malformed JSON",
+   "B": "Tool not found แล้วส่ง error message กลับมา",
+   "C": "ใช้ `max_steps` guard ตัด loop ทันที",
+   "D": "Dispatcher เลือก tool ที่ชื่อใกล้เคียงที่สุดมารันแทน"
+  },
+  "ans": "B",
+  "expl": "สไลด์ s.17 จับคู่ 3 แบบ: malformed JSON -> parser error -> retry/fail; hallucinated tool name -> tool not found -> error message; infinite loop -> `max_steps` guard. D เป็นความเชื่อผิด: dispatcher ไม่เดาชื่อให้",
+  "src": "text/slides_w13.txt s.17 ; notes week_13 sec 2.3"
+ },
+ {
+  "id": "n13-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "Topology comparison table S41",
+  "hinted": true,
+  "stem": "ตาราง Topology Comparison (S41) มีคอลัมน์ Latency / Complexity / Fault Tolerance / Best use topology ใดมี Latency = Low, Complexity = Low, Fault Tolerance = Medium และเหมาะกับ customer support / triage?",
+  "opts": {
+   "A": "Sequential",
+   "B": "Supervisor",
+   "C": "Routing",
+   "D": "Debate"
+  },
+  "ans": "C",
+  "expl": "แถว Routing: Low / Low / Medium, best use = Customer support, Triage. Sequential = High/Low/Low, Supervisor = Very High/High/High, Debate = Medium/Medium/High",
+  "src": "text/slides_w13.txt s.41 ; verify/verify_14_19.md #14 ; source/nlp_exam_hints.md (Week 14 00:56:14)"
+ },
+ {
+  "id": "n13-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "Mask strength depends on parser state",
+  "stem": "vocabulary 50,257 token: หลัง `{` ใน JSON มี token ที่ valid 69 ตัว (mask 99.86%) แต่ในสตริง `{\"name\": \"A` มี valid 50,146 ตัว ข้อสรุปใดถูกต้อง?",
+  "opts": {
+   "A": "mask ตัด token จำนวนเท่ากันทุก state เพราะ vocabulary มีขนาดคงที่",
+   "B": "ในสตริงไม่มี token ถูก mask เลยเพราะ grammar อนุญาตเกือบทุกอย่าง",
+   "C": "จำนวน token ที่ถูก mask ขึ้นกับ parser state ณ ขณะนั้น",
+   "D": "จำนวน token ที่ valid ขึ้นกับขนาดของโมเดล ไม่ใช่ grammar"
+  },
+  "ans": "C",
+  "expl": "S22: ความแรงของ mask ขึ้นกับ parser state. หลัง `{` mask 50,257 - 69 = 50,188 ตัว, ในสตริง mask 50,257 - 50,146 = 111 ตัว (ยังไม่ใช่ศูนย์ จึงตัด B)",
+  "src": "text/slides_w13.txt s.22 ; notes week_13 sec 2.4, 3.2"
+ },
+ {
+  "id": "n13-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "Tool definition to call mapping",
+  "hinted": true,
+  "stem": "tool definition มี `parameters` = {type: object, properties: {query: string}, required: [query]} ใน tool call ที่ LLM สร้าง ส่วนของ definition นี้ตรงกับฟิลด์ใดและต้องมีลักษณะอย่างไร?",
+  "opts": {
+   "A": "`arguments` ที่ต้องเป็น object โดยมี `query` เป็น string",
+   "B": "`name` ที่ต้องมีค่าเป็นสตริง \"query\" ตรงกับชื่อ property ใน schema",
+   "C": "`arguments` ที่ต้องคัดลอก type/properties/required ทั้งก้อนมาใส่",
+   "D": "`description` ที่ต้องใส่ค่าของ query ลงไป"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.16: parameters (รูปร่าง) -> arguments (ค่า); type object -> arguments ต้องเป็น {...}; properties.query: string -> \"query\": \"...\"; required -> query ห้ามขาด. C ผิดเพราะ call ใส่ค่า ไม่ใช่คัดลอก schema",
+  "src": "text/slides_w13.txt s.16 ; notes week_13 sec 2.3"
+ },
+ {
+  "id": "n13-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "Retrieval memory weakness",
+  "stem": "ข้อใดเป็นจุดอ่อนที่สไลด์ระบุไว้สำหรับ Retrieval memory (embed + vector search top-k)?",
+  "opts": {
+   "A": "Lossy เพราะ LLM บีบข้อความเก่าทั้งหมดเป็น summary เดียว",
+   "B": "ล้น context window ในที่สุดเพราะ append ทุกอย่างลง prompt",
+   "C": "prompt โตเป็น O(n) ตามจำนวน turn",
+   "D": "อาจพลาดข้อความที่สำคัญเชิงเวลา (temporally important)"
+  },
+  "ans": "D",
+  "expl": "S31: Retrieval แลกกับ prompt แบบ bounded O(k x |msg|) และ relevant แต่ may miss temporally important items. A เป็นจุดอ่อนของ Summary, B และ C เป็นของ Buffer",
+  "src": "text/slides_w13.txt s.31 ; notes week_13 sec 2.5"
+ },
+ {
+  "id": "n13-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "ReAct vs CoT error analysis Table 2",
+  "stem": "ข้อใดเกี่ยวกับ Table 2 (HotpotQA, วิเคราะห์ ReAct 100 + CoT 100 trajectory) ไม่ถูกต้อง?",
+  "opts": {
+   "A": "ใน failure ReAct มี hallucination 0% ส่วน CoT มี 56%",
+   "B": "reasoning error ของ ReAct (47%) สูงกว่าของ CoT (16%)",
+   "C": "search result error 23% เป็น failure ที่ ReAct และ CoT พบในสัดส่วนใกล้เคียงกัน",
+   "D": "success แบบ false positive (hallucinated trace) ของ ReAct 6% ต่ำกว่า CoT 14%"
+  },
+  "ans": "C",
+  "expl": "Search result error (search ว่างหรือไม่มีประโยชน์) เป็น failure ที่เกิดกับ ReAct เท่านั้น (23%) ส่วน CoT ไม่มีขั้นตอน search จึงเป็น - ข้อ A, B, D ตรงกับตารางทุกตัวเลข",
+  "src": "text/slides_w13.txt s.15 ; notes week_13 sec 2.2 (Table 2)"
+ },
+ {
+  "id": "n13-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Why agents: missing capability",
+  "stem": "ระบบ RAG ที่ index เอกสารไว้ล่วงหน้าตอบคำถาม \"order #8812 ของฉันตอนนี้อยู่สถานะอะไร\" ไม่ได้ ตามสไลด์ Why Agents ช่องว่างข้อใดตรงกับปัญหานี้มากที่สุดซึ่ง agent เติมได้?",
+  "opts": {
+   "A": "Side effects: ต้องเขียนลง database",
+   "B": "Model-chosen control flow: เลือกเองว่าจะ retrieve กี่ครั้ง",
+   "C": "Grounded verification: ให้ critic ตรวจร่างคำตอบของตัวเอง",
+   "D": "Live per-request state: ข้อมูลปัจจุบันที่ pre-index ไม่ได้"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.6 แยก 4 ช่องว่าง: grounded verification (ตรวจกับโลกจริง ไม่ใช่ตรวจกับตัวเอง), live per-request state (เช่นราคาหุ้นตอนนี้ สถานะ order ที่ index ล่วงหน้าไม่ได้), model-chosen control flow, side effects. คำถามนี้เป็นการถามสถานะปัจจุบัน ไม่ได้ขอให้แก้ข้อมูล (A) ไม่ได้ถามเรื่อง loop (B) และ C อธิบายผิด เพราะ grounded verification ตรวจกับโลกจริง",
+  "src": "text/slides_w13.txt s.6 ; notes week_13 sec 2.1"
+ },
+ {
+  "id": "n13-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Mask counts ratio",
+  "stem": "vocabulary 50,257 token: ที่ state หลัง `{` มี token ที่ valid 69 ตัว ส่วนใน string มี valid 50,146 ตัว จำนวน token ที่ถูก mask ที่ state หลัง `{` เป็นกี่เท่าของที่ถูก mask ในสตริง (โดยประมาณ)?",
+  "opts": {
+   "A": "ประมาณ 45 เท่า",
+   "B": "ประมาณ 452 เท่า",
+   "C": "ประมาณ 4,520 เท่า",
+   "D": "ประมาณ 0.0022 เท่า"
+  },
+  "ans": "B",
+  "expl": "masked หลัง `{` = 50,257 - 69 = 50,188; masked ในสตริง = 50,257 - 50,146 = 111; อัตราส่วน 50,188 / 111 = 452.1 เท่า. A และ C คือหลักผิด 10 เท่า, D คือการหารกลับด้าน (111 / 50,188)",
+  "src": "text/slides_w13.txt s.22 ; notes week_13 sec 3.2"
+ },
+ {
+  "id": "n13-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Choose topology from S41 table",
+  "hinted": true,
+  "stem": "ทีมสร้างระบบ fact-checking ข่าว ต้องการ Fault Tolerance สูง แต่ไม่ยอมรับ Latency ระดับ Very High และรับ Complexity ระดับ Medium ได้ ตามตาราง S41 ควรเลือก topology ใด?",
+  "opts": {
+   "A": "Debate / Consensus",
+   "B": "Supervisor-Led (Hierarchical)",
+   "C": "Routing Network",
+   "D": "Sequential Pipeline"
+  },
+  "ans": "A",
+  "expl": "Debate = Medium / Medium / High, best use fact-checking, evaluation ตรงเงื่อนไข. Supervisor Fault Tolerance สูงเหมือนกันแต่ Latency Very High และ Complexity High. Routing Fault Tolerance แค่ Medium, Sequential Low",
+  "src": "text/slides_w13.txt s.40-41 ; verify/verify_14_19.md #14 ; source/nlp_exam_hints.md (Week 14 00:56:14)"
+ },
+ {
+  "id": "n13-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Hybrid memory scenario",
+  "stem": "แชตบอตคุยกับผู้ใช้หลายหมื่น turn ต้องการ (1) prompt ไม่โตตามจำนวน turn (2) ดึงรายละเอียดของ turn เก่าที่เกี่ยวกับคำถามปัจจุบันได้ (3) ยังรักษาภาพรวมของบทสนทนาโดยไม่พึ่ง similarity ของคำถามเพียงอย่างเดียว ตามสไลด์ควรเลือกแบบใด?",
+  "opts": {
+   "A": "Buffer memory อย่างเดียว (append ทุก turn ลงใน prompt)",
+   "B": "Summary memory อย่างเดียว (บีบทุกอย่างยกเว้น last k turns)",
+   "C": "Retrieval memory อย่างเดียว (top-k จาก vector store)",
+   "D": "Hybrid: summarize turn เก่า + retrieve episode ที่เกี่ยวข้อง"
+  },
+  "ans": "D",
+  "expl": "Buffer โต O(n) จนล้น (ผิดข้อ 1). Summary bounded แต่ lossy จึงดึงรายละเอียดเก่าไม่ได้ (ผิดข้อ 2). Retrieval อาจพลาดสิ่งสำคัญเชิงเวลาและไม่เก็บภาพรวม (ผิดข้อ 3). สไลด์ s.31 ระบุว่า Hybrid คือ practical default",
+  "src": "text/slides_w13.txt s.31 ; notes week_13 sec 2.5"
+ },
+ {
+  "id": "n13-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Semantic validity vs masking, reliability layers",
+  "stem": "regex `\\d{4}-\\d{2}-\\d{2}` กับ logit masking สร้าง `3194-81-59` (เดือน 81) ออกมา ชั้นใดของ Reliability Stack ควรจับปัญหานี้และเพราะเหตุใด?",
+  "opts": {
+   "A": "Layer 2 Validate เพราะ masking การันตีแค่ syntax ไม่ใช่ semantics",
+   "B": "Layer 3 Recover เพราะ retry จะทำให้ regex แก้ค่าเดือนเอง",
+   "C": "Layer 4 Escalate เพราะต้องให้มนุษย์อนุมัติทุกวันที่",
+   "D": "Layer 1 Constrain เพราะ logit masking ตรวจค่าเดือนได้อยู่แล้ว"
+  },
+  "ans": "A",
+  "expl": "สไลด์ s.26: constrained decoding ได้ syntactic validity ส่วน semantic และ schema validation ยังจำเป็น; s.46 Validate คือการตรวจ types, ranges, business rules. สตริงนี้ผ่าน regex แต่เดือน 81 ผิด range",
+  "src": "text/slides_w13.txt s.26, s.46 ; text/demo_w13.txt (regex date section) ; notes week_13 sec 2.4, 2.7"
+ },
+ {
+  "id": "n13-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "Context growth with headroom",
+  "stem": "ตาราง context growth ของสไลด์: cumulative ที่ step 10 = 15,220 tokens และสมมติแต่ละ step หลังจากนั้นเพิ่มเฉลี่ย 2,110 tokens ถ้า window = 128,000 และต้องเหลือที่ว่างอย่างน้อย 4,000 tokens ไว้เขียนคำตอบ (cumulative ต้องไม่เกิน 124,000) step สุดท้ายที่ทำให้เสร็จได้คือ step ใด?",
+  "opts": {
+   "A": "Step 62",
+   "B": "Step 61",
+   "C": "Step 63",
+   "D": "Step 64"
+  },
+  "ans": "B",
+  "expl": "cumulative ที่ step t = 15,220 + 2,110 x (t - 10). ต้อง <= 124,000 จึง t - 10 <= (124,000 - 15,220) / 2,110 = 51.55 ได้ t = 61 (122,830) ส่วน step 62 = 124,940 เกิน. step 63 (127,050) คือ step สุดท้ายที่ยังไม่เกิน 128,000 ถ้าไม่กันที่ว่าง และ step 64 (129,160) คือจุดที่ข้าม 128,000 ตามสไลด์",
+  "src": "text/slides_w13.txt s.12 ; verify/verify_14_19.md #15"
+ },
+ {
+  "id": "n13-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "ReAct Table 1 vs Table 2 reasoning",
+  "hinted": true,
+  "stem": "ข้อใดอธิบายได้ถูกต้องที่สุดว่าทำไม ReAct จึงแพ้ CoT บน HotpotQA EM (27.4 vs 29.4) ทั้งที่ hallucination ใน failure ต่ำกว่ามาก (0% vs 56%)?",
+  "opts": {
+   "A": "เพราะ Table 2 วัดเฉพาะ success ของ trajectory จึงไม่เกี่ยวข้องกับคะแนน EM ใน Table 1",
+   "B": "เพราะ ReAct ไม่ได้เรียก search ตอนตอบ HotpotQA จึงไม่ได้ประโยชน์จาก external knowledge",
+   "C": "เพราะ ReAct มี failure ประเภทอื่นมาก: reasoning error 47% (สูงกว่า CoT ที่ 16%) และ search ว่าง 23% (CoT ไม่มีเพราะไม่ค้น) แม้ hallucination จะต่ำกว่า",
+   "D": "เพราะ baseline ของ CoT ในตารางคือ CoT-SC ซึ่งผสม ReAct อยู่แล้ว จึงได้เปรียบ"
+  },
+  "ans": "C",
+  "expl": "ReAct grounded ด้วย search จึง hallucinate 0% แต่ย้ายความผิดพลาดไปเป็น reasoning error (มักวนซ้ำแก้ไม่ได้) 47% และ search result error 23% ตาม Table 2. A ผิดเพราะ Table 2 มีทั้ง success และ failure, B ผิดเพราะ ReAct ใช้ search, D ผิดเพราะ CoT ในตารางคือ CoT ธรรมดา (29.4) ไม่ใช่ CoT-SC (33.4)",
+  "src": "text/slides_w13.txt s.14-15 ; source/nlp_exam_hints.md (Week 13 01:58:45) ; notes week_13 sec 2.2"
+ },
+ {
+  "id": "n13-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "CFG parser stack",
+  "stem": "CFG-guided decoding สร้างมาถึง `{\"a\": {\"b\": [1` (stack ของ parser คือ object, object, array) ลำดับ token ปิดวงเล็บใดที่ valid ตลอดทางเมื่อต้องปิดโครงสร้างให้ครบ?",
+  "opts": {
+   "A": "]  }  }",
+   "B": "}  ]  }",
+   "C": "}  }  ]",
+   "D": "]  ]  }"
+  },
+  "ans": "A",
+  "expl": "stack ปิดจากบนลงล่าง: บนสุดคือ array จึงต้องปิดด้วย ] ก่อน แล้ว } ปิด object ใน แล้ว } ปิด object นอก (สไลด์ s.24: stack ของวงเล็บที่ยังไม่ปิดกำหนดว่า token ปิดตัวไหน legal). B, C ปิด object ก่อน array ซึ่งผิดลำดับ, D มี ] ซ้ำทั้งที่ array มีชั้นเดียว",
+  "src": "text/slides_w13.txt s.23-24 ; notes week_13 sec 2.4"
+ },
+ {
+  "id": "n13-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "Regular vs CFG nuance",
+  "stem": "ข้อใดเกี่ยวกับ regex/DFA กับ CFG ในการบังคับโครงสร้าง JSON ถูกต้องที่สุดตามสไลด์?",
+  "opts": {
+   "A": "JSON ทุกแบบ แม้จำกัดความลึกสูงสุด ก็ compile เป็น DFA ไม่ได้เพราะต้องนับวงเล็บ",
+   "B": "เมื่อใช้ CFG ทั้ง decoding step เป็น O(1) เพราะมี precomputed index ของ state-to-token",
+   "C": "DFA รองรับการซ้อนลึกไม่จำกัดได้ ถ้ามีจำนวน state เพียงพอ",
+   "D": "JSON ที่จำกัดความลึกสูงสุดเป็น regular ทำ DFA ได้แต่ state บาน ส่วนลึกไม่จำกัดต้องใช้ CFG"
+  },
+  "ans": "D",
+  "expl": "สไลด์ s.25: balanced nesting ลึกไม่จำกัดไม่ใช่ regular language จึงต้องใช้ CFG/pushdown (ต้องมี stack); แต่ JSON ที่จำกัดความลึกเป็น regular ได้ state เพิ่มมาก. B ผิดเพราะ s.24 บอกว่าทั้ง decoding step ไม่ใช่ O(1) (mask กับ softmax ยังสเกลตาม vocabulary)",
+  "src": "text/slides_w13.txt s.24-25 ; notes week_13 sec 2.4, 7 trap 10-11"
+ },
+ {
+  "id": "n13-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "Markov state vs summary memory",
+  "stem": "ReAct นิยาม state s_t = (q, h_{1:t-1}) และเป็น Markov บน augmented state นี้ หากเปลี่ยนจากเก็บ history เต็มเป็นบีบ/สรุป history ด้วย Summary memory ข้อใดถูกต้องที่สุด?",
+  "opts": {
+   "A": "ยังเป็น Markov เหมือนเดิม เพราะ summary มีข้อมูลเท่ากับ history เต็ม",
+   "B": "ไม่การันตี Markov (อาจ partially observable) เพราะ summary อาจทิ้งข้อมูลที่เกี่ยวข้อง",
+   "C": "ReAct ใช้ Summary memory ไม่ได้เลย เพราะ loop ต้องการ full history ทุกครั้งโดยสมบูรณ์",
+   "D": "ยิ่ง summary สั้น state ยิ่งเป็น Markov มากขึ้น เพราะตัวแปรน้อยลง"
+  },
+  "ans": "B",
+  "expl": "สไลด์ s.3 และ s.10: ถ้า state มี history เต็มจึงเป็น Markov บน augmented state แต่ถ้า truncate/summarize history observation อาจขาดข้อมูลที่เกี่ยวข้อง (partially observable) จึงต้องจัดการ memory อย่างรอบคอบ; s.31 บอกว่า summary เป็น lossy. C ผิด: ทำได้ เพียงแต่ต้องระวัง",
+  "src": "text/slides_w13.txt s.3, s.10, s.31 ; notes week_13 sec 2.2, 7 trap 5"
+ },
+ {
+  "id": "n13-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "Latency: Debate (parallel) vs Sequential",
+  "hinted": true,
+  "stem": "Debate: agent 3 ตัวเสนอคำตอบอิสระแบบขนาน ใช้เวลา 6, 9 และ 7 วินาที แล้ว Judge สรุปอีก 4 วินาที (ไม่นับรอบแลก argument) ส่วน Sequential pipeline ที่ใช้ agent 4 ตัวเดิมต่อกัน (6, 9, 7, 4 วินาที) latency ของ Sequential มากกว่า Debate กี่วินาที?",
+  "opts": {
+   "A": "9 วินาที",
+   "B": "17 วินาที",
+   "C": "13 วินาที",
+   "D": "26 วินาที"
+  },
+  "ans": "C",
+  "expl": "Sequential = sum T_i = 6 + 9 + 7 + 4 = 26 s. Debate = parallel stage ใช้เวลาตัวที่ช้าสุด max(6, 9, 7) = 9 แล้วต่อด้วย Judge 4 = 13 s. ผลต่าง = 26 - 13 = 13 s. B คือลืมรวม Judge (26 - 9), D คือ latency ของ Sequential เอง",
+  "src": "text/slides_w13.txt s.34, s.40-41 ; notes week_13 sec 3.4"
+ },
+ {
+  "id": "n13-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 13,
+  "level": 1,
+  "topic": "Tool definition parts",
+  "hinted": true,
+  "stem": "Tool definition ที่แสดงให้ LLM เห็นประกอบด้วย name, ___ (บอกว่าเมื่อไรควรใช้ tool) และ ___ (schema ของ input)",
+  "key": "description;parameters",
+  "note": "รับ: description / parameters (JSON Schema ของ input). ตาม S16",
+  "src": "text/slides_w13.txt s.16 ; notes week_13 sec 2.3"
+ },
+ {
+  "id": "n13-L2-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 13,
+  "level": 2,
+  "topic": "ReAct vs CoT ranking flip",
+  "hinted": true,
+  "stem": "บน task ___ ReAct ได้ EM 27.4 ต่ำกว่า CoT (29.4) แต่บน task ___ ReAct ได้ Accuracy 60.9 สูงกว่า CoT (56.3)",
+  "key": "HotpotQA;FEVER",
+  "note": "รับ: HotpotQA (ช่องแรก), FEVER (ช่องที่สอง) ตาม Table 1 ของ ReAct paper ในสไลด์ S14",
+  "src": "text/slides_w13.txt s.14 ; source/nlp_exam_hints.md (Week 13 01:58:45)"
+ },
+ {
+  "id": "n13-L3-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 13,
+  "level": 3,
+  "topic": "Valid token count after {",
+  "stem": "หลัง `{` ใน JSON ของ GPT-2 (vocab 50,257) token ที่ valid 69 ตัว = 62 (เปิด key) + ___ (whitespace) + ___ (รูป `}`) ดังนั้นถูก mask ___ ตัว",
+  "key": "5;2;50,188",
+  "note": "รับ 50188 หรือ 50,188 ด้วย; 62 + 5 + 2 = 69 และ 50,257 - 69 = 50,188",
+  "src": "text/slides_w13.txt s.22 ; notes week_13 sec 3.2"
+ },
+ {
+  "id": "n13-L4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 13,
+  "level": 4,
+  "topic": "Memory prompt size formulas",
+  "stem": "บทสนทนา n = 60 turn (1 turn = 1 message) แต่ละ message ยาว 50 token ไม่นับ system prompt; Summary memory เก็บ last k = 4 turn + summary 300 token; Retrieval memory ดึง top-k = 5 message ขนาด prompt ของ Buffer = ___ token, Summary = ___ token, Retrieval = ___ token",
+  "key": "3,000;500;250",
+  "note": "รับ 3000 / 500 / 250. Buffer = n x msg = 60 x 50; Summary = k x msg + summary = 4 x 50 + 300; Retrieval = k x msg = 5 x 50 (store ยังเก็บ 60 turn)",
+  "src": "text/slides_w13.txt s.31 ; notes week_13 sec 2.5"
+ }
+]

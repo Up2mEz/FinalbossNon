@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 290">
+  <defs>
+    <marker id="a-week12-llava-adapter" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week12-llava-adapter" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- top row: image path -->
+  <rect x="8" y="48" width="60" height="44" rx="6" class="box"/>
+  <text x="38" y="67" text-anchor="middle">Image</text>
+  <text x="38" y="83" text-anchor="middle" class="s">224×224</text>
+  <path d="M68 70 H104" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <text x="86" y="62" text-anchor="middle" class="s">patch</text>
+  <rect x="104" y="48" width="110" height="44" rx="6" class="box"/>
+  <text x="159" y="67" text-anchor="middle">CLIP ViT-B/32</text>
+  <text x="159" y="83" text-anchor="middle" class="s">7×7 = 49 patch</text>
+  <text x="159" y="108" text-anchor="middle" class="s">ตรึง (frozen)</text>
+  <path d="M214 70 H274" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <text x="244" y="62" text-anchor="middle" class="s">[49, 768]</text>
+  <rect x="274" y="48" width="110" height="44" rx="6" class="acc"/>
+  <text x="329" y="67" text-anchor="middle">Adapter W</text>
+  <text x="329" y="83" text-anchor="middle" class="s">[768, 4096]</text>
+  <text x="329" y="108" text-anchor="middle" class="s">เทรนทั้ง Stage 1 และ 2</text>
+  <path d="M384 70 H434" class="lna" marker-end="url(#aa-week12-llava-adapter)"/>
+  <text x="409" y="62" text-anchor="middle" class="s">H_v·W</text>
+  <rect x="434" y="48" width="110" height="44" rx="6" class="acc"/>
+  <text x="489" y="67" text-anchor="middle">Visual tokens</text>
+  <text x="489" y="83" text-anchor="middle" class="s">Z_v [49, 4096]</text>
+  <!-- bottom row: text path -->
+  <rect x="8" y="170" width="60" height="44" rx="6" class="box"/>
+  <text x="38" y="197" text-anchor="middle">Prompt</text>
+  <path d="M68 192 H128" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <text x="98" y="184" text-anchor="middle" class="s">tokenize</text>
+  <rect x="128" y="170" width="110" height="44" rx="6" class="box"/>
+  <text x="183" y="189" text-anchor="middle">Text embed</text>
+  <text x="183" y="205" text-anchor="middle" class="s">K tokens</text>
+  <path d="M238 192 H434" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <text x="336" y="184" text-anchor="middle" class="s">[K, 4096]</text>
+  <rect x="434" y="170" width="110" height="44" rx="6" class="box"/>
+  <text x="489" y="189" text-anchor="middle">Text tokens</text>
+  <text x="489" y="205" text-anchor="middle" class="s">[K, 4096]</text>
+  <!-- merge into LLM -->
+  <path d="M544 70 L590 112" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <path d="M544 192 L590 130" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <rect x="590" y="94" width="82" height="52" rx="6" class="acc"/>
+  <text x="631" y="116" text-anchor="middle">LLM</text>
+  <text x="631" y="134" text-anchor="middle" class="s">LLaMA-7B</text>
+  <text x="631" y="162" text-anchor="middle" class="s">fine-tune ใน Stage 2</text>
+  <path d="M672 120 H706" class="ln" marker-end="url(#a-week12-llava-adapter)"/>
+  <text x="689" y="112" text-anchor="middle" class="s">ตอบ</text>
+  <text x="360" y="256" text-anchor="middle" class="ac">ลำดับรวม [(49 + K), 4096] เข้า self-attention เต็มของ LLM</text>
+  <text x="360" y="274" text-anchor="middle" class="s">visual tokens ถูกต่อหน้า text tokens แล้ว generate แบบ autoregressive</text>
+</svg>

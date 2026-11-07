@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 450">
+  <defs>
+    <marker id="a-week13-topologies" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week13-topologies" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- panel frames -->
+  <rect x="10" y="10" width="345" height="205" rx="8" class="mut"/>
+  <rect x="365" y="10" width="345" height="205" rx="8" class="mut"/>
+  <rect x="10" y="230" width="345" height="210" rx="8" class="mut"/>
+  <rect x="365" y="230" width="345" height="210" rx="8" class="mut"/>
+
+  <!-- A: Sequential -->
+  <text x="182" y="34" text-anchor="middle" class="h">Sequential</text>
+  <rect x="22" y="70" width="84" height="44" rx="6" class="box"/>
+  <text x="64" y="89" text-anchor="middle">Research</text>
+  <text x="64" y="105" text-anchor="middle" class="s">→ facts_list</text>
+  <path d="M106 92 H140" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <rect x="140" y="70" width="84" height="44" rx="6" class="box"/>
+  <text x="182" y="89" text-anchor="middle">Writer</text>
+  <text x="182" y="105" text-anchor="middle" class="s">→ draft_text</text>
+  <path d="M224 92 H258" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <rect x="258" y="70" width="84" height="44" rx="6" class="box"/>
+  <text x="300" y="89" text-anchor="middle">Editor</text>
+  <text x="300" y="105" text-anchor="middle" class="s">→ final_post</text>
+  <text x="182" y="168" text-anchor="middle" class="ac">Latency = ΣTᵢ</text>
+  <text x="182" y="188" text-anchor="middle" class="wn">error cascade: A พัง B และ C พังตาม</text>
+
+  <!-- B: Routing -->
+  <text x="537" y="34" text-anchor="middle" class="h">Routing</text>
+  <rect x="380" y="85" width="96" height="46" rx="6" class="acc"/>
+  <text x="428" y="105" text-anchor="middle">Router</text>
+  <text x="428" y="122" text-anchor="middle" class="s">r(q) → agent_k</text>
+  <path d="M476 100 L574 62" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <path d="M476 108 L574 108" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <path d="M476 116 L574 154" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <rect x="574" y="46" width="124" height="32" rx="5" class="box"/>
+  <text x="636" y="67" text-anchor="middle">Billing</text>
+  <rect x="574" y="92" width="124" height="32" rx="5" class="box"/>
+  <text x="636" y="113" text-anchor="middle">Technical</text>
+  <rect x="574" y="138" width="124" height="32" rx="5" class="box"/>
+  <text x="636" y="159" text-anchor="middle">Sales</text>
+  <text x="537" y="192" text-anchor="middle" class="wn">Router = single point of failure</text>
+  <text x="537" y="207" text-anchor="middle" class="s">LLM · embedding · rule-based</text>
+
+  <!-- C: Supervisor -->
+  <text x="182" y="254" text-anchor="middle" class="h">Supervisor-Led</text>
+  <rect x="112" y="268" width="140" height="38" rx="6" class="acc"/>
+  <text x="182" y="292" text-anchor="middle">Supervisor</text>
+  <path d="M150 306 L67 350" class="ln" marker-start="url(#a-week13-topologies)" marker-end="url(#a-week13-topologies)"/>
+  <path d="M182 306 L182 350" class="ln" marker-start="url(#a-week13-topologies)" marker-end="url(#a-week13-topologies)"/>
+  <path d="M214 306 L297 350" class="ln" marker-start="url(#a-week13-topologies)" marker-end="url(#a-week13-topologies)"/>
+  <rect x="22" y="350" width="90" height="34" rx="5" class="box"/>
+  <text x="67" y="372" text-anchor="middle">Worker 1</text>
+  <rect x="137" y="350" width="90" height="34" rx="5" class="box"/>
+  <text x="182" y="372" text-anchor="middle">Worker 2</text>
+  <rect x="252" y="350" width="90" height="34" rx="5" class="box"/>
+  <text x="297" y="372" text-anchor="middle">Worker 3</text>
+  <text x="182" y="410" text-anchor="middle" class="s">plan → assign ⇄ result → evaluate → revise</text>
+  <text x="182" y="428" text-anchor="middle" class="s">มี max_rounds กันลูป · latency และ token สูง</text>
+
+  <!-- D: Debate -->
+  <text x="537" y="254" text-anchor="middle" class="h">Debate / Consensus</text>
+  <rect x="380" y="278" width="96" height="36" rx="6" class="box"/>
+  <text x="428" y="301" text-anchor="middle">Agent A</text>
+  <rect x="380" y="350" width="96" height="36" rx="6" class="box"/>
+  <text x="428" y="373" text-anchor="middle">Agent B</text>
+  <path d="M428 314 V350" class="lna" marker-start="url(#aa-week13-topologies)" marker-end="url(#aa-week13-topologies)"/>
+  <text x="436" y="336" class="s">debate</text>
+  <path d="M476 296 L574 316" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <path d="M476 368 L574 348" class="ln" marker-end="url(#a-week13-topologies)"/>
+  <text x="525" y="296" text-anchor="middle" class="s">คำตอบ X</text>
+  <text x="525" y="384" text-anchor="middle" class="s">คำตอบ Y</text>
+  <rect x="574" y="300" width="124" height="64" rx="6" class="acc"/>
+  <text x="636" y="326" text-anchor="middle">Judge</text>
+  <text x="636" y="346" text-anchor="middle" class="s">สังเคราะห์ → Z</text>
+  <text x="537" y="410" text-anchor="middle" class="s">เสนอคำตอบอิสระแบบขนาน → โต้แย้ง/โหวต</text>
+  <text x="537" y="428" text-anchor="middle" class="s">เหมาะกับตรวจข้อเท็จจริง ทบทวนโค้ด</text>
+</svg>

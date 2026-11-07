@@ -1,0 +1,1567 @@
+Vector Representation &
+Semantic Search
+
+(The Math Behind RAG)
+
+                                                                                      Asst. Prof. Nont Kanungsukkasem, Ph.D.
+Recap -- The Three Paradigms & Where We Are
+
+· Quick Paradigm Recap (from Week 8):
+
+   · Paradigm 1 (Encoder): BERT -- bidirectional, classi cation, NER, QA.
+
+   · Paradigm 2 (Decoder): GPT -- causal, text generation, ICL.
+
+   · Paradigm 3 (Encoder-Decoder): T5/BART -- seq2seq, translation, summarization.
+
+
+· This Week's Focus: Extending Paradigm 1 (Encoder) for a new mission -- representation &
+
+   retrieval.
+
+
+· The Missing Capability:
+
+   · Week 6 taught BERT for classi cation (via `[CLS]` + linear head).
+
+   · But what if we need to compare two sentences? Or *search* for similar documents?
+
+   · We need high-quality xed-size sentence vectors -- and BERT doesn't produce them well
+
+      out of the box.
+
+                                                                                               2
+
+if if
+The Promise -- Why Sentence Embeddings Matter
+
+· Applications Requiring High-Quality Sentence Vectors:
+
+· 1. Semantic Search: Given a query, nd documents with similar meaning (not just keyword
+
+   match).
+
+
+· 2. Duplicate Detection: Identify paraphrased questions (e.g., Quora duplicate pairs).
+
+· 3. Clustering: Group news articles or customer complaints by topic.
+
+· 4. Recommendation Systems: Match user queries to products/content by meaning.
+
+· 5. Retrieval-Augmented Generation (RAG): Retrieve relevant context chunks before feeding to
+
+   an LLM (Week 12 preview).
+
+
+· The Common Requirement: All these tasks need a function f : sentence  d that maps
+
+   variable-length text to a xed-size dense vector such that semantically similar sentences have
+   nearby vectors.
+
+
+· Desired Property: sim( f(s1), f(s2))  semantic_similarity(s1, s2)
+
+                                                                                               3
+
+if if
+                                                                                                                                     Reimers, Nils, and Iryna Gurevych. "Sentence-bert: Sentence embeddings using siamese bert-networks." EMNLP-IJCNLP 2019.
+
+        Naive Approach -- Averaging BERT Token Embeddings
+
+        · The Simplest Idea: Mean Pooling Over Raw BERT Outputs
+             Shocking Result 
+                                                                          (Reimers & Gurevych,
+        · BERT produces a contextual embedding for every token:
+          H = BERT(tokens)  [B,T,d] where d = 768 for BERT-base.
+                   2019):
+
+                                           T                              Method            STS
+                                                                                       Benchmark
+                                       1             d
+
+        ·  Naive sentence vector: s =  T       Ht                         GloVe        58.02
+                                          t=1                             average
+
+        · Alternative: Use the `[CLS]` token vector directly: s = H0  d
+  BERT         16.50
+                                                                          [CLS] (no
+
+                                                                           ne-tuning)
+
+        · The Hope: Since BERT's contextual embeddings are "deep" and     BERT         46.35
+                                                                          mean
+           "rich," averaging them should produce a meaningful sentence    pooling (no
+
+           representation.
+                                               ne-tuning)
+
+        · The Reality: Both methods perform worse than static GloVe       SBERT-       77.03
+
+           averages on Semantic Textual Similarity (STS) benchmarks.      NLI-base
+
+                                                     4
+
+i if f
+         Ethayarajh, Kawin. "How contextual are contextualized word representations? Comparing the geometry of BERT, ELMo, and GPT-2 embeddings." EMNLP-IJCNLP 2019.                                                                                                                                                                                                                                                                                                                                                                                    5
+
+Visualizing the Anisotropy -- Empirical Evidence
+
+· Empirical Visualization (from Ethayarajh, 2019):
+
+                          Figure 1: In almost all layers of BERT, ELMo, and GPT-2, the word representations are anisotropic (i.e., not
+                          directionally uniform): the average cosine similarity between uniformly randomly sampled words is non-zero.
+                          The one exception is ELMo's input layer; this is not surprising given that it generates character-level embeddings
+                          without using context. Representations in higher layers are generally more anisotropic than those in lower ones.
+
+                          ELMo as well, though there are exceptions: for ex- in each layer of BERT, ELMo, and GPT-2. For
+
+                                                                      ample, the anisotropy in BERT's penultimate layer example, the self-similarity is 1.0 in ELMo's in-
+
+· Observation:Anisotropy geisnmuechrahiglhlyer thinancinrites fiansalelayser.through tphut elayelrabyeceausresrep--resenttahtioens din ethaet lpayeer rarewe
+
+  Fdpgiirgoeeucn,rteiutoh1nlt:aeilmlIymnauaotnlmeirfeoolsracmt yao)el:lmrtlhapieysreaermvsseoorsafregeBedEcaRtoaenhlfiTslIotissi,ewnosfstEeoroosrfLpostsyprMitrmahsotaaitocsriopcl,bnwaogeairotechirnrtdtydbh"teesmoheebGrlbefeca-PettnidcwToondaril-menma2gieans,tldn.isezteahmutIsineopnnitrin("hwifwceoaadoolruriblrymrt,dienlnhliga-tyreyerpeaslxrotnaewrIctdnsi)ece.reoacntlmhhlptaeatrlhtasytrceiietoloeefs-rn-sanmlisemmovsdiealpel:arlrelseimeB,tydbtaheiEsnedwdioRhsinoinoggrTahtsdver.e'rsorsatphgieisec.lnaI(yonie.rnoe, t-.htz,heeernroot.
+
+  The one exception is ELMo's input laytreairn;intgh(iAsroirsa netoatl.,s2u0r1p7)r,iasnidngin gpriavcteicne,tshuba-t it wgoerdnse, rtahetehsigchheratrhaecltaeyre-r,letvheelmeorme bcoendtedxit-ngs
+
+without  using  context.  Representationstraicntinhgigthhe emrealan yveecrtsorafrroemgsetantiecreamllbyeddminogsre  asfinpneidcsiinofigctrmtohaepkeicscoinntttheuxiattuinvaeltiszheeondsseree. pIrniensimelnaotgawetiocenlarss.soiTfincheais-s.
+
+                                                    leads to improvements on several downstream
+
+                          NLP tasks (Mu et al., 2018). Thus the extreme tion models, lower layers recognize more generic
+
+                          degree of anisotropy seen in contextualized word features such as edges while upper layers recog-
+                                                                                                                                                                                                         6
+
+Visualizing the Anisotropy -- Causes & Implications
+
+· The Frequency Dimension Problem:
+
+  · A handful of token-frequency-correlated dimensions dominate the space.
+
+  · Words like "the," "a," "is" push all embeddings toward the same direction.
+
+  · Removing these dominant dimensions signi cantly improves cosine similarity
+
+      quality (Mu & Viswanath, 2018).
+
+
+· Implication for Sentence Embeddings:
+
+  · Mean pooling inherits the anisotropy problem -- sentence vectors also
+
+      collapse into a cone.
+
+
+  · The `[CLS]` token was trained for NSP (Next Sentence Prediction), not for
+
+      semantic similarity -- even less useful.
+                                                                                                                                                                                                       7
+
+The Computational Bottleneck -- Why Cross-Encoding is Too Slow (Part 1)
+
+· The Cross-Encoder Approach (Brute-Force):
+
+
+· To compare sentence A and sentence B, concatenate them: `[CLS] A [SEP] B [SEP]`
+
+
+· Feed through BERT  use `[CLS]` output  classi cation head  similarity score.
+
+
+· Quality: Excellent -- full bidirectional cross-attention between A and B.
+
+
+  · Complexity: O(L2) per pair (self-attention over concatenated sequence).
+
+                                                           where L = combined sequence length
+
+· The Scaling Problem:
+
+
+·  Comparing  n  sentences  pairwise  requires    n  =  n(n - 1)  forward passes.
+
+                                                (2)         2
+
+·  For n =  10,000 sentences:  10,000 × 9,999    50 million forward passes.
+
+                                       2
+
+· At 5ms per inference: ~69 hours on a single GPU. Impractical.
+The Computational Bottleneck -- Why Cross-Encoding is Too Slow (Part 2)
+
+· The Bi-Encoder Alternative (What we'll build):
+
+  · Encode each sentence independently: sA = f(A), sB = f(B)
+
+  · Compare with a cheap similarity function: sim(sA, sB) = cos(sA, sB)
+
+  · Complexity: n forward passes + O(n2) dot products (which are trivially
+
+      fast).
+
+
+  · For n = 10,000: ~50 seconds for encoding + <1 second for all
+
+      comparisons.
+
+                                                                                               8
+The Three Possible Fixes
+
+· Three Approaches to Fix BERT's Sentence Embeddings:
+
+
+Approach        Method                         Quality       Speed        Status
+1. Post-                                                     Fast         Band-aid, not
+processing      Remove dominant dimensions Moderate                       principled
+                (all-but-the-top; whitening) improvement     Fast at
+2. Contrastive                                               inference    Industry standard
+Fine-tuning     Train with Siamese/Dual-       High quality               (SBERT)
+                Encoder + contrastive loss
+
+3. Unsupervised SimCSE -- use dropout as       Good quality, Fast at      Strong baseline
+
+Contrastive     data augmentation              no labeled data inference
+
+· This Week's Focus: Approach 2 -- Siamese/Dual-Encoder ne-tuning (SBERT
+
+   framework).
+
+
+· The Key Insight: The problem is not BERT's architecture -- it's BERT's training
+
+   objective. MLM doesn't incentivize good sentence-level geometry. We need to
+
+   re-train the pooling with a loss that explicitly optimizes for semantic similarity.
+
+                                            9
+                                                                                                                                                                                                     10
+
+Cosine Similarity -- Mathematical Foundation
+
+   Cosine Similarity (Refresher from prerequisites):  cos(u, v) =    uv  =          id=1 uivi              
+
+                                                                   uv
+·                                                                                   di=1 ui2  di=1 vi2
+
+   · Range: [-1,1]. Where 1 = identical direction, 0 = orthogonal, -1 = opposite.
+
+
+· Cosine Distance: dcos(u, v) = 1 - cos(u, v)  [0,2]
+
+
+· L2 (Euclidean) Distance: dL2(u, v) = u - v2 =        d
+
+                                                       (ui - vi)2 
+
+
+                                                      i=1
+
+                                        d
+
+· Dot Product: u  v =  uivi = uv cos(u, v)
+
+
+                                       i=1
+
+   · Note: Dot product = cosine similarity × magnitudes. If vectors are L2-normalized (unit vectors), dot
+
+       product = cosine similarity.
+
+
+· Key Insight for this Week: When we L2-normalize our sentence embeddings, all three metrics become
+
+   equivalent for ranking. This is why normalization matters.
+                                                                                                                                                                                                       11
+
+In-Class Activity -- Experiencing Anisotropy Firsthand
+
+· Activity: Students compute cosine similarity between sentence pairs using
+
+raw BERT embeddings (conceptual exercise with provided numbers).
+
+
+· Toy Vector Representation (3D Simulation):
+           cos(u, v) =    uv  =       di=1 uivi
+                                                                     uv       id=1 ui2  id=1 vi2
+
+· 1. s1 = [0.91,0.38,0.15] : "The cat sat on the mat."
+
+
+· 2. s2 = [0.89,0.41,0.19] : "I love machine learning."
+
+
+· 3. s3 = [0.90,0.39,0.17] : "Dogs chase cats in the park."
+
+
+· Task: Compute cos(s1, s2), cos(s1, s3), cos(s2, s3)
+
+
+· Takeaway: When vectors are clustered in a narrow angular cone, cosine
+
+   similarity loses the ability to distinguish unrelated concepts.
+Demo - The Anisotropy Problem
+
+· Objective: Prove the Anisotropy problem by manually extracting raw BERT
+
+   sentence vectors and computing their Cosine Similarity.
+
+
+· What to Expect: We will see that unrelated sentences score as high as
+
+   related ones -- often higher. Raw BERT [CLS] gives 0.86 for an unrelated pair
+   vs 0.79 for a related one: the ranking is inverted.This provides clear evidence
+   that raw BERT's vector space is severely narrow and impractical for search.
+
+                                                                                              12
+13                          Reimers, Nils, and Iryna Gurevych. "Sentence-bert: Sentence embeddings using siamese bert-networks." EMNLP-IJCNLP 2019.
+
+    Siamese Networks -- The Core Idea
+
+    · Siamese Networks (Bromley et al., 1993; Chopra et al., 2005):
+
+
+       · Architecture: Two identical neural networks (same architecture, same weights) processing two
+
+          di erent inputs simultaneously.
+
+
+       · Weight Sharing: Both branches share the exact same parameters . When we update weights
+
+          during training, both branches update identically.
+
+
+       · Purpose: Project two inputs into a shared embedding space where distance/similarity is
+
+          semantically meaningful.
+
+
+    · Formal De nition:
+
+
+    · Input pair: (xA, xB)  Encoding: eA = f(xA), eB = f(xB)
+
+
+    · Similarity: sim(eA, eB) = cos(eA, eB) or eA - eB
+
+
+    · Key: Same function f applied to both inputs.
+
+
+    · Historical Origin: Signature veri cation (comparing two handwritten signatures). Later: face
+
+       recognition (FaceNet), one-shot learning.
+
+    if if ff
+                                                                                                                                                                                                     14
+
+From Siamese to Sentence-BERT -- The SBERT Architecture
+
+· Sentence-BERT (SBERT) -- Reimers & Gurevych (2019):
+
+
+· Core Idea: Take a pre-trained BERT model and ne-tune it with a Siamese structure                                                                           Softmax classifier
+                                                                                                                                                                (u, v, |u-v|)
+   using sentence-pair data.
+
+
+· Architecture:
+                                                                                                                                          u                                       v
+
+· 1. Shared BERT Encoder: Same pre-trained BERT processes both sentences                                                                                  pooling                                 pooling
+                                                                                                                                                           BERT                                    BERT
+   independently.
+
+
+· 2. Pooling Layer: Converts variable-length token embeddings  xed-size sentence Sentence A                                                                                                       Sentence B
+
+vector.
+                                                                                                                                          Figure 1: SBERT architecture with classification o
+
+· jective function, e.g., for fine-tuning on SNLI datas
+
+   3. Similarity/Loss Function: Compares the two sentence vecSotfotmrasx claasnsifdier computes loThsestw.
+o BERT network-s1 h...a1ve tied weights (siame
+                                                                                                                                                  network structure).
+
+· Three Con gurations for Di erent Tasks:                                                                     (u, v, |u-v|)                                            cosine-sim(u, v)
+
+                                                                                                                                                  computed candidate embeddings using attentio
+
+Con g             Input                                                        Loss u                                        Uvse Case            This idea workus for finding the vhighest scorin
+                                                                                                                                                  sentence in a larger collection. However, pol
+
+Classi cation (sA, scBo)nptaraird+icltaiobne/ln(eeunttraaillm) ent/  Softmax   vc;ro| uss--evnt|rpo]ooplinyg  on  
+  NpoLolIingtraining           encoders havpeotohleindgrawback thatptohoelinscgore functio
+                                                                                                                                                  is not symmetric and the computational overhea
+                                                                          [u;                                          BERT
+                                                                     MSE on cos(uB,EvR.T)                                                         is too  rlaerqgueirefBoOErR(uTns2e)-csacsoerse  like cBlEuRsTtering,  whic
+                                                                                                                     STS training                 would                                           computations.
+Regression (sA, sB) pair + similarity score
+                                                                     Triplet marginSleontsensce A                    RSeetnrteiencveaBl training     PreviousSenneteunracel Asentence SeemnbteendcdeinBg metho
+Triplet   (anchor, positive, negative)                                                                                                            started the training from a random initializatio
+
+                                                                               Figure 1: SBERT architecture with classification ob- IFnigtuhries 2p:uSbBliEcaRtTionar,cwhiteecutsuerethateinpfreer-etnracien, efdorBeExaRm
+
+                                                                               jective function, e.g., for fine-tuning on SNLI dataset. apnled, tRo ocBomEpRuTtea snimetiwlaorirtky sacnodreso.nTlyhisfinarec-htuitneectuirte
+
+                                                                               The two BERT networks have tied weights (siamese yaliseoldusuesdewfuilthstehneterengcreesesimonbeodbdjeicntgivse. fuTnhcitsiorne.duc
+
+                                                                               network structure).                                                significantly the needed training time: SBERT ca
+
+                                                                                                                                                  btreaitnuinnegddiantal.esWs tehaenxp2e0rimmeinnut twesi,thwthhielefoylileolwdiin
+                                                                                                                                                  better results than comparable sentence embe
+
+if ff if if if
+                                                                                                                             Reimers, Nils, and Iryna Gurevych. "Sentence-bert: Sentence embeddings using siamese bert-networks." EMNLP-IJCNLP 2019.
+
+Pooling Strategies -- Mean vs. CLS vs. Max
+
+· Pooling: Converting `[batch, seq_len, d_model]`  `[batch, d_model]`
+
+
+· Strategy 1: CLS Pooling -- use the `[CLS]` token output: s = H0. Rationale: NSP pre-
+
+   training taught `[CLS]` to aggregate sentence meaning -- but NSP is a poor training
+   signal (RoBERTa ablation proved this).
+
+
+· Strategy 2: Mean Pooling (SBERT default) -- average real tokens only, excluding
+
+   `[PAD]` via attention mask:    tT=1 Ht  mt                                                   · SBERT Ablation 
+                                    Tt=1 mt
+                                                                                                    (Table 6, Spearman ):
+
+                              s=               ,   mt  {0,1}
+
+
+   · mt zeros out padding tokens before summing. (Best performing)
+
+
+·  Strategy  3: Max Pooling   p--eredleimmeennsti-ownisbeumt laoxsiemsudmis:trsiib=utimontaaxl  Ht,i. 
+   Captures  peak activation
+                                                                                                context.
+
+                                               15
+Demo - Manual Mean Pooling
+
+· Demo 2: Manual Mean Pooling
+· Objective: Build a Manual Mean Pooling mechanism (Anti-Black-Box) to
+
+   understand how sentence embeddings are formed under the hood.
+
+
+· What to Expect: We will extract contextual embeddings for every token,
+
+   apply an Attention Mask to lter out padding tokens, and average the
+   remaining vectors to obtain a true sentence representation.
+
+                                                                                              16
+
+if
+                                                                                                                                                                                                     17
+
+The SBERT Forward Pass -- Complete Tensor Walkthrough
+
+· End-to-End Tensor Flow (Classi cation Con g with NLI):
+
+
+· Sentences: A = "A man is eating food" | B = "A man is eating passta"
+
+
+· 1. Tokenize (each independently): A  `[CLS]...[SEP]`  `input_ids_A: [1, 7]`; 
+
+   B  `[1, 8]`; also produces `attention_mask` per sentence.
+
+
+· 2. BERT Forward Pass (shared , run twice): HA  [1,7,768], HB  [1,8,768]
+
+
+·  3.  =Mamsekaend_pMoeoal(nHPBo) oling[:1u,76=8]
+mean_pool(HA)    [1,768],
+
+   v
+
+· 4. Concatenate: c = [u; v; | u - v | ]  [B,2304] 
+  (note: 768 + 768 + 768 = 2304)
+
+
+· 5. Classify + Loss: W  2304×3  logits  [1,3]  
+   = CrossEntropy(logits, label)
+
+                                                                             if
+Dual-Encoder vs. Cross-Encoder -- The Fundamental Tradeo
+
+Two Paradigms for Sentence Comparison:
+
+Property      Bi-Encoder (SBERT)                         Cross-Encoder
+
+Input         Sentences encoded independently            Sentences concatenated, encoded together
+
+Architecture  Two BERT towers  pool  compare vectors One BERT  [CLS]  score Class                                                               Class
+Interaction                                                                              Label
+Output                                                                                                                                          Label
+Quality
+              No cross-sentence attention during encoding Full cross-sentence attention  C       T1 ...         TN   T[SEP]  T1' ...       TM'  C
+
+              Sentence vectors u,v  similarity           Single scalar score                                    BERT
+              Good (but no cross-attention)              Excellent (full interaction)
+                                                                                         E[CLS]  E1 ...         EN   E[SEP]  E1' ...       EM'  E[CLS]
+                                                                                                                                                [CLS]
+                                                                                         [CLS]   Tok  ...       Tok  [SEP]   Tok  ...      Tok
+                                                                                                  1              N            1             M
+
+Speed         O(n) forward passes + O(n²·d) dot products O(n²) forward passes                    Sentence 1                  Sentence 2
+
+Use Case      First-stage retrieval (recall)             Second-stage re-ranking (precision)                                 Start/End Span
+
+Pre-computation  Vectors can be cached                    Must re-run for every pair     C       T1 ...         TN   T[SEP]  T1' ...       TM'  C
+
+                                                                                                                BERT
+
+· The Retrieve-then-Rerank Pipeline (Week 12 preview):
+                                  E[CLS]  E1 ...         EN   E[SEP]  E1' ...       EM'  E[CLS]
+                                                                                                                                                [CLS]
+                                                                                         [CLS]   Tok  ...       Tok  [SEP]   Tok      ...  Tok
+                                                                                                  1              N            1             M
+
+                                                                                                      Question               Paragraph
+
+· 1. Stage 1 (Retrieval): Bi-Encoder retrieves top-k candidates from millions of documents (fast,
+
+approximate).
+                                                                                             Figure 4: Illustrations of Fine-tuning BERT
+
+· with human annotations of their sentiment (Socher RTE R
+2. Stage 2 (Reranking): Cross-Encoder re-scores the top-k candidates for precisioet anl., 20(13s). low,                                         nary en
+                                                                                                                                                much le
+
+accurate).                                                                             CoLA The Corpus of Linguistic Acceptability is
+                                                                                       a binary single-sentence classification task, where
+
+                                                18                                     the goal is to predict whether an English sentence       WNLI
+                                                                                       is linguistically "acceptable" or not (Warstadt          guage in
+                                                                                       et al., 2018).                                           The GL
+                                                                                                                                                with the
+
+                                                                                       STS-B The Semantic Textual Similarity Bench-             trained s
+                                                                                       mark is a collection of sentence pairs drawn from        perform
+                                                                                       news headlines and other sources (Cer et al.,            of predi
+                                                                                       2017). They were annotated with a score from 1           clude th
+                                                                                       to 5 denoting how similar the two sentences are in       GLUE s
+                                                                                       terms of semantic meaning.                               jority cl
+
+                                                                                       MRPC Microsoft Research Paraphrase Corpus                14Note
+Wang, Tongzhou, and Phillip Isola. "Understanding contrastive representation learning through alignment and uniformity on the hypersphere." International conference on machine learning. PMLR, 2020.                                                                                                                                        19
+
+How SBERT Training Fixes Anisotropy
+
+· Before SBERT Training (Raw BERT): Narrow cone -- avg. pairwise cosine ~0.58; every sentence
+                                                                                                                                                                                                      Understanding Contrastive Representation Learning through
+    pair looks "equally similar." No useful ranking structure possible.
+
+                                                                                                                                  Alignment and Uniformity on the Hypersphere
+
+· After SBERT Training: Embeddings spread across the hypersphere -- similar sentences pulled Tongzhou Wang1 Phillip Isola1
+
+    together, dissimilar ones pushed apart; cosine range becomes [0.1, 0.99] witAhbstrmact eaningful
+                                                                          arXiv:2005.10242v10 [cs.LG] 15 Aug 2022  Contrastive representation learning has been out-
+    di erentiation.
+                                                                                               standingly successful in practice. In this work,
+                                                                                                                   we identify two key properties related to the con-
+
+                                                                                                                   trastive loss: (1) alignment (closeness) of features
+
+                                                                                                                   from positive pairs, and (2) uniformity of the in-
+
+· The Mechanism -- "Attract + Repel":
+                                                                             duced distribution of the (normalized) features on
+                                                                                                                   the hypersphere. We prove that, asymptotically,
+                                                                                                                   the contrastive loss optimizes these properties,
+
+                                                                                                                   and analyze their positive effects on downstream
+
+                                                                                                                   tasks. Empirically, we introduce an optimizable
+
+    · Contrastive loss explicitly attracts positive pairs and repels negative pairs.
+ metric to quantify each property. Extensive exper-                                                                                                                                                                                    Alignment: Similar samples have similar features.
+                                                                                                                                                                                                                                                                           iments on standard vision and language datasets         (Figure inspired by Tian et al. (2019).)
+                                                                                                                                                                                                                                                                           confirm the strong agreement between both met-
+
+                                                                                                                   rics and downstream task performance. Directly
+
+                                                                                                                   optimizing for these two metrics leads to repre-
+
+    · Forces the model to use the full angular space of the hypersphere.
+ sentations with comparable or better performance
+                                                                                                                                                                                                                                                                           at downstream tasks than contrastive learning.
+                                                                                                                   Project Page:  ssnl.github.io/hypersphere.
+
+                                                                                                                   Code:          github.com/SsnL/align uniform.
+
+    · Wang & Isola (2020): maximize alignment (positives close) +                                                                     github.com/SsnL/moco align uniform.                                                                                                                                                   Feature Density
+
+       uniformity (embeddings evenly spread).
+                                                                     1. Introduction
+
+                                                                                                                   A vast number of recent empirical works learn representa-
+
+                                                                                                                   tions with a unit `2 norm constraint, effectively restricting                                                                                                                                            UUnniiffoorrmmiittyy:: Preservee mmaximal information.
+
+                                     cos(si, sj)  [0.46,0.85], mean 0.58 -- no pair ever scores low => the output space to the unit hypersphere (Parkhi et al., 2015;
+                                                                                                                                                                                Schroff et al., 2015; Liu et al., 2017; Hasnat et al., 2017;
+                                                                                                                                                                                Wang et al., 2017; Bojanowski & Joulin, 2017; Mettes et al.,
+                                                                                                                                                                                2019; Hou et al., 2019; Davidson et al., 2018; Xu & Durrett,
+                                                                                                                                                                                2018), including many unsupervised contrastive represen-
+                                                                                                                                                                                tation learning methods (Wu et al., 2018; Bachman et al.,
+· Geometric Intuition:  Before:                                                                                                                                                                                                                                                                                             Figure 1: Illustration of alignment and uniformity of fe
+                                                                                                                                                                                                                                                                                                                            ture distributions on the output unit hypersphere. STL-1
+                                                                                                                                                                                                                                                                                                                            (Coates et al., 2011) images are used for demonstration.
+
+                                                                                                                                                                                                                                                                                                                            2018; Wang et al., 2017). Moreover, if features of a class a
+
+    After: cos(si, sj)  [0.1,0.99]
+                                                                                2019; Tian et al., 2019; He et al., 2019; Chen et al., 2020a).                                                                                                                                           sufficiently well clustered, they are linearly separable wi
+                                                                                                                                                                                                                                                                                                                            the rest of feature space (see Figure 2), a common criterio
+                                                                                                                   Intuitively, having the features live on the unit hypersphere                                                                                                                                            used to evaluate representation quality.
+                                                                                                                   leads to several desirable traits. Fixed-norm vectors are
+                                                                                                                   known to improve training stability in modern machine While the unit hypersphere is a popular choice of featu
+                                                                                                                   learning where dot products are ubiquitous (Xu & Durrett, space, not all encoders that map onto it are created equ
+· In Numbers (STS Benchmark, Spearman ): GloVe 58.2  BERT mean-pool 46.4  SBERT 77.03 Recent works argue that representations should additio
+                                                                                                                                                                                                                                                                                1MIT Computer Science & Artificial Intelligence Lab (CSAIL). ally be invariant to unnecessary details, and preserve a
+                                                                                                                   Correspondence to: Tongzhou Wang <tongzhou@mit.edu>.                                                                                                                                                     much information as possible (Oord et al., 2018; Tian et a
+
+                                                                                                                   Proceedings of the 37 th International Conference on Machine                                                                                                                                             2019; Hjelm et al., 2018; Bachman et al., 2019). Let u
+                                                                                                                   Learning, Online, PMLR 119, 2020. Copyright 2020 by the au-                                                                                                                                              call these two properties alignment and uniformity (se
+                                                                                                                   thor(s).                                                                                                                                                                                                 Figure 1). Alignment favors encoders that assign simil
+
+ff
+                                                                                                                                                                                                        20
+
+    The Sentence-Transformers Library -- Industry Standard
+
+    · The `sentence-transformers` library (Nils Reimers, UKP Lab): wraps
+
+       HuggingFace `transformers` with a pooling layer and L2-normalization --
+       `SentenceTransformer('model-name').encode(sentences)` returns
+
+        xed-size dense vectors in 2 lines. (Live code in Demo notebook.)
+
+
+    · What `.encode()` does internally (in order): (1) Tokenize  (2) BERT/
+
+       transformer forward pass  (3) Masked mean pooling  (4) (o by default)
+       L2-normalize  return `[batch, d_model]` numpy array.
+
+
+    · Popular Pre-trained Models (2026): https://huggingface.co/models?library=sentence-transformers
+
+    Model              Dim Speed        Quality (STS)  Best For
+    all-MiniLM-L6-v2        384  Fast   Good           Prototyping, on-device
+                                        High           General production
+    all-mpnet-base-v2  768 Medium       Very High      High-precision retrieval
+
+    BAAI/bge-large-en-v1.5 1024 Slower
+
+if
+Under the Hood -- Manual SBERT Implementation in PyTorch
+
+· Building SBERT from Scratch (Pure PyTorch) -- 5 Steps:
+
+· 1. Load BERT
+
+· 2. Tokenize
+
+· 3. Forward Pass
+
+· 4. Masked Mean Pooling
+
+· 5. L2 Normalize: `F.normalize(embedding, p=2, dim=1)`  
+
+   unit-length vectors. After this step, dot product = cosine similarity.
+
+                                                                                              21
+                                                                                                                                                                                                    22
+
+The NLI Training Pipeline -- Teaching SBERT with Entailment Data
+
+· NLI Dataset: SNLI (570K) + MultiNLI (430K) = ~1M labeled sentence pairs with 3 labels: Entailment /
+
+   Neutral / Contradiction.
+
+
+   · "A man is eating pasta." + "A man is eating food."  Entailment (pull vectors close)
+
+   · "A man is eating pasta." + "A man is sleeping."  Contradiction (push vectors apart)
+
+   · "A man is eating pasta." + "The man is in Italy."  Neutral
+
+· SBERT Classi cation Objective:
+
+   · Encode: u = f(sA), v = f(sB), Concatenate: c = [u; v; | u - v | ]  3d
+
+   · Classify + Loss: y = softmax(W  c)  3  CrossEntropy
+
+· Why NLI Works: Entailment/contradiction labels implicitly teach "similar  close, 
+
+   di erent  far" geometry without requiring explicit cosine similarity targets.
+
+
+· Connection to Week 6: Same classi cation head concept -- but input is now 
+  a pair vector [u; v; | u - v | ] instead of a single `[CLS]`.
+
+if if ff
+                                                                                                                                                                                                     23
+
+The Regression Training Pipeline -- STS Benchmark
+
+· STS (Semantic Textual Similarity) as Training Data: STS Benchmark (STSb) -- ~8,500 sentence pairs
+
+   with similarity scores from 0 to 5.
+
+
+   · "A plane is taking off." / "An air plane is taking off."  Score: 5.0 (identical
+
+       meaning)
+
+
+   · "A man is playing a flute." / "A man is surfing."  Score: 0.0 (unrelated)
+
+· SBERT Regression Objective:
+
+
+   · Encode: u = f(sA), v = f(sB), Predicted similarity: s = cos(u, v)  [-1,1]
+
+   · Ground truth: s  [0,5] (normalized to [0,1]), Loss:  = MSE(s, s)
+
+· Training Strategy (Reimers & Gurevych):
+
+   · 1. Phase 1: Train on NLI data with classi cation objective (learn coarse structure).
+
+   · 2. Phase 2: Fine-tune on STS data with regression objective (re ne similarity granularity).
+
+   · This two-phase approach yields the best results.
+
+if
+24             Gao, Tianyu, Xingcheng Yao, and Danqi Chen. "Simcse: Simple contrastive learning of sentence embeddings." Proceedings of the 2021 conference on empirical methods in natural language processing. 2021.
+
+    SimCSE -- Simple Contrastive Learning of Sentence Embeddings
+
+· SimCSE (Gao et al., 2021): A contrastive learning framework with two approaches.
+                                                        (a) Unsupervised SimCSE       Different hidden dropout masks
+                                                                                                                                                                         in two forward passes
+· 1. Unsupervised SimCSE (The "No Labeled Data" Breakthrough):
+                                                                                Two dogs are running.
+                                                                                                                                             A man surfing on the sea.                                   a
+   · Trick: Pass the same sentence through BERT twice with di erent dropout                                                                  A kid is on a skateboard.  E
+
+       masks.
+                                                                                                                                                                                          A
+
+    · Forms a positive pair (same sentence, slightly di erent numbers). Other batch E Encoder
+       sentences are negatives.
+
+                                                                                                                                           Positive instance                                                            A
+
+    · Achieved ~76.3 on STS without a single human label -- already above SBERT-                                                           Negative instance
+
+       base's 74.89
+                         (a) Unsupervised SimCSE                                                                       (bF)igSuurpeer1v:is(ead) SUimnsCuSpEervised SimCSE predicts the in
+
+· 2. Supervised SimCSE (The "Hard Negative" Trick):
+                    Different hidden dropout masks                                     dropout masks applied. (b) Supervised SimCSE
+                                                                        in two forward passes
+
+                                             Two dogs are running.                                                          Two dogs hypothesis) pairs as poTshietrieveasre, aannidmaclos noutrtadodoicrst.ion p
+                                                                                                                                                                                                        label=entailment
+    ·  Uses the same NLI dataset as SBERT, but with Contrastive Loss.
+                                                       are running.
+                                                                                               A man surfing on the sea. E                                                     The pets are sitting on a couch.
+                                                                                                                            A man surfing
+    · Positive: Entailment pair (xi, xi+).
+  A kid is on a skateboard.                                                        on the sea.  datasets and find that NLIlabdela=tcaonstreadtisctioanre espec
+                                                                                                                                           Eeffective for learEningTlhasbeeerle=neitnsetaanilmmceeannte. mbeddings.
+
+    · Hard Negative: Contradiction pair (xi, xEi-EP)on--sciotidveearincsttainvceely pushed                                  A kid is on a     To better understaTnhde mthanewsetraorsnagbupseinrefsos rsumit.anc
+       away.
+                                                                                                               skateboard.                                                                 label=contradiction
+                                             Negative instance
+                                                                                                                                           SimCSE, we borrowA tkhideisasnkaatleybsoiasrdtinogo. l from W
+                                                                                                                                           and Isola (2020), whichlabteal=keentsailmaelnitgnment betw
+
+    · Achieved ~81.6, beating SBERT-base's 74.89.                                                                                          semantically-relatedApkoitlsaisbietilin=vscioednetpratdahiceitriohsnouasned. unifor
+                                                                                                                                           of the whole representation space to measure
+
+                                             Figure 1: (a) Unsupervised SimCSE predicts the input sentence itqsuelaflfirtoymoifnl-ebaatrcnhendegeamtibveesd,dwinitghsd.iffTehrernotuhgidhdeenm
+                                             dhyroppoothuet smisa)spkasiraspapslipeods.iti(vbe)s,SaunpdercvoisnetrdadSiicmtiConSEpaliersvearsawgeeslltahsecCoNatShlLEeaIrnediansasl-tybaeassnetitcstish,alaiwlnnysedtiamfitnanckpederssotavthsheaensteuegonnautitarifvioluemrsnm.esniuttyp(epwrrvehmiislieesdea-v
+
+                                                                                                                                           ing degenerated alignment via dropout noise,
+
+                                                                                                                                                                        ff
+In-Class Activity -- Design a Bi-Encoder Pipeline
+
+· Activity: Given a semantic search scenario, students design the end-to-end pipeline.
+
+· Scenario: You have 100,000 Thai customer support tickets. A new ticket arrives: 
+
+   "     ." Find the 5 most similar past tickets.
+
+
+· Tasks:
+
+  · 1. Encoding Phase: What model would you use? What pooling strategy? What output
+
+      dimension?
+
+
+  · 2. Indexing Phase: How would you store 100,000 vectors for fast retrieval?
+
+  · 3. Query Phase: How would you compute similarity between the new ticket and all
+
+      stored vectors?
+
+
+  · 4. Ranking Phase: How would you select the top-5 results?
+
+· Discussion: "Where does the Cross-Encoder t in this pipeline? (Hint: Week 12 preview)"
+
+                                                                                              25
+
+   
+                Schroff, Florian, Dmitry Kalenichenko, and James Philbin. "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE conference on computer vision and pattern recognition. 2015.
+
+Contrastive Learning -- The General Framework
+
+· Contrastive Learning -- Core Philosophy: Learn an embedding space where positive pairs
+
+   (semantically similar) are close and negative pairs (dissimilar) are far apart. This is a paradigm,
+   not a single loss function -- many loss variants implement it.
+
+
+· The Three Ingredients: (1) Anchor xa -- reference point; (2) Positive xp -- similar to anchor (e.g.,
+  paraphrase, entailment); (3) Negative xn -- dissimilar (e.g., random sentence, contradiction).
+  Encoder f maps all three to embeddings.
+
+
+· Loss Objective: Penalize when positive is not closer than negative:
+  d( f(xa), f(xp))  d( f(xa), f(xn))
+
+
+· Three Loss Variants (covered next):
+
+   · 1. Triplet Loss -- explicit anchor/positive/negative triplets.
+
+   · 2. Margin Ranking Loss -- similarity-domain equivalent of Triplet Loss.
+
+   · 3. MNRL / InfoNCE -- in-batch negatives; no explicit negative mining needed.
+
+                                                                                              26
+                Schroff, Florian, Dmitry Kalenichenko, and James Philbin. "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE conference on computer vision and pattern recognition. 2015.
+
+Triplet Loss -- Mathematical Breakdown
+
+· Triplet Loss (Schro et al., 2015):
+
+   
+
+    triplet = max (0, d(a, p) - d(a, n) + )
+
+   
+
+  where a, p, n = anchor/positive/negative embeddings; d(  ) = Euclidean or cosine distance;
+   = margin (typically 0.5­1.0).
+
+· Zero-loss condition: When d(a, p) +   d(a, n) -- positive is closer than negative by at
+  least  -- loss = 0, no update. If violated:  > 0  gradient pushes p closer and n further.
+
+· Role of margin : Without it, the model satis es the constraint by a tiny gap (lazy learning).
+   enforces a minimum separation; larger   stricter  better geometry but harder
+
+   training.
+
+
+· Distance function choice: SBERT's triplet experiments use Euclidean distance with  = 1;
+
+   cosine distance also works and is the common choice in modern libraries.
+
+                                                                                              27
+
+if ff
+                                                             Hermans, Alexander, Lucas Beyer, and Bastian Leibe. "In defense of the triplet loss for person re-identification." arXiv preprint arXiv:1703.07737 (2017).
+
+Triplet Loss -- Hard Negative Mining
+
+· The Problem with Random Negatives:
+
+   · Random negatives are usually "easy" (already far from the anchor).
+
+   · This results in  = 0, meaning the model learns nothing (wastes time).
+
+
+· Hard Negative Mining:
+
+   · Actively select negatives that are close to the anchor to force the model to learn.
+
+
+· Three Mining Strategies:
+
+   · 1. Easy: d(a, n)  d(a, p) +  (Loss = 0, useless)
+
+   · 2. Hard: d(a, n) < d(a, p) (Large gradient, but can destabilize training)
+
+   · 3. Semi-Hard: d(a, p) < d(a, n) < d(a, p) +  (Best balance of signal and stability)
+
+
+· FaceNet Strategy: Use semi-hard negatives for stable and e cient training.
+
+                                                                                                                                                                                                     28
+Margin Ranking Loss -- A Pairwise Variant
+
+· Margin Ranking Loss (PyTorch: `MarginRankingLoss`):
+
+   
+
+      = max(0, sim(a, n) - sim(a, p) + )
+
+   
+
+     We want: sim(a, p) to be much greater than sim(a, n)
+
+
+· Comparison with Triplet Loss:
+
+
+  · Triplet Loss uses distances (minimize positive distance, maximize negative
+
+      distance).
+
+
+· Margin Ranking Loss uses similarities (maximize positive similarity, minimize
+
+   negative similarity).
+
+
+· Mathematically equivalent when d = 1 - sim (e.g., cosine distance = 1 - cosine
+
+   similarity).
+
+29  (Full code comparison with Triplet Loss in Demo notebook.)
+Oord, Aaron van den, Yazhe Li, and Oriol Vinyals. "Representation learning with contrastive predictive coding." arXiv preprint arXiv:1807.03748 (2018).                                               30
+
+Multiple Negatives Ranking Loss (MNRL / InfoNCE)
+
+· MNRL -- The Modern Contrastive Loss for Sentence Embeddings:
+                                                                                          (a) Unsupervised SimCSE       Different hidden dropout masks
+   · Used in most modern sentence embedding training (E5, BGE, GTE).
+                                                                                                                  in two forward passes
+                                                                                                                                                             Two dogs are running.
+                                                                                                                                                           A man surfing on the sea.                                     Two dogs
+                                                                                                                                                                                                                       are running
+                                                                                                                                                                                      E
+
+   · Key Idea: In a batch of N pairs (qi, pi), treat pj (j  i) as negative for qi.
+                                                                      A kid is on a skateboard.                    A man surfin
+                                                                                                                                                         E Encoder                                      on the sea
+
+   · No explicit negatives needed -- in-batch negatives are "free."
+                                                                                     Positive instance                            A kid is on
+                                                                                                                                                         Negative instance                            skateboard
+
+·  Formula (InfoNCE-style): i = - log        exp(sim(qi, pi)/)     where  is thFeigtuerem1:p(ae) rUantsuupreervi(steydpSiimcCaSllEyp0re.d0ic5ts­the input sente
+                                          Nj=1 exp(sim(qi, pj)/)
+   0.1).
+                                                                                 dropout masks applied. (b) Supervised SimCSE leverage
+                                                                                          hypothesis) pairs as positives, and contradiction pairs as we
+
+· Why This Works Well:
+                                                                                                                                  datasets and find that NLI datasets are especially
+
+                                                                                                                                                         effective for learning sentence embeddings.
+
+   · Batch size N = 256  each query gets 255 free in-batch negatives -- highT-oqbueattelirtyungderrastdaniednthtesstirgongapl ewrfiotrhmance of
+   no explicit negative mining.
+                                                                                                                         SimCSE, we borrow the analysis tool from Wang
+
+                                                                                                                                                         and Isola (2020), which takes alignment between
+
+   · Temperature  (0.05 - 0.1) controls sharpness: low  = hard decision boundaosefrmytha;enhtwiicghaolhllye-rree=plartesesdoenpftotaestiirtoivnleesappaaricnresintaongdm.
+uenasifuorremtihtey
+
+·  Connection  to  SimCSE:  SimCSE  uses  this  exact  loss  with  dropout-augmentecqdaulaplainotyasloyitfsiivlse,eawrsnee(dnfineodmlbtaheabdtdeoilnuegrdsu. ndTsuahprtoeaurvgihseedmSpiimri--
+   needed).
+                                                                                                  CSE essentially improves uniformity while avoid-
+
+                                                                                                                                                         ing degenerated alignment via dropout noise, thus
+
+                                                                                                                                                         improving the expressiveness of the representa-
+
+                                                                                                                                                         tions. The same analysis shows that the NLI train-
+
+                                                                                                                                                         ing signal can further improve alignment between
+Loss Function Comparison -- Side by Side
+
+· Comprehensive Loss Function Comparison:
+
+
+Loss Function     Input Format Negatives Margin Typical Use
+
+Softmax Cross-    (sA, sB, label)  Implicit   N/A               NLI classi cation
+Entropy                            (classes)
+
+MSE (Regression)  (sA, sB, score) N/A         N/A STS regression
+Triplet Loss
+                  (a, p, n)        Explicit                     Retrieval (explicit neg.)
+
+Margin Ranking Loss (a, p, n)      Explicit                     Retrieval (explicit neg.)
+
+MNRL / InfoNCE    (q, p) batch In-batch        (temp) Modern retrieval (no
+
+                                                                explicit neg.)
+
+Cosine Similarity Loss (sA, sB, y  - 1,1) Implicit (label) N/A  Binary similar/dissimilar
+
+· Key Takeaway: MNRL is preferred in 2026 because it requires the simplest
+
+   data format (just positive pairs) and scales naturally with batch size.
+
+                                                                                              31
+
+if
+                                                                                                                                                                                                    32
+
+Worked Example -- Triplet Loss Gradient Computation
+
+· Setup: Anchor = "The cat sleeps" a = [0.3,0.7,0.1]; Positive = "A cat is resting"
+  p = [0.35,0.65,0.15]; Negative = "Cars drive fast" n = [0.8,0.2,0.5]; Margin  = 0.5.
+
+
+· Step 1 -- Distances (Euclidean):
+
+   · d(a, p) = (-0.05)2 + 0.052 + (-0.05)2 = 0.0075  0.087
+
+   · d(a, n) = (-0.5)2 + 0.52 + (-0.4)2 = 0.66  0.812
+
+
+· Step 2 -- Loss (easy negative):
+
+·  = max(0, 0.087 - 0.812 + 0.5) = max(0, - 0.225) = 0. Negative is far enough -- no
+
+   update.
+
+
+· Step 3 -- Hard negative contrast: n = [0.32,0.68,0.12] (nearly identical to anchor) 
+  d(a, n)  0.035   = max(0, 0.087 - 0.035 + 0.5) = 0 . 552. Loss > 0  gradient signal
+
+    model adjusts.
+
+
+                                                                                                                                                                                                      33
+
+Training SBERT -- The Complete Training Loop
+
+· Training Procedure:
+
+   · 1. Load pre-trained BERT-base + add mean pooling layer on top.
+
+   · 2. Dataset: SNLI + MultiNLI (~1M pairs)  sample sentence pairs (premise, hypothesis) + label per
+
+       batch.
+
+
+   · 3. Forward: encode both sentences with shared BERT  pool  apply the objective you chose (Slide
+
+       14). For this NLI phase: concatenate [u; v; |u-v|]  3-way softmax  cross-entropy.
+
+
+   · 4. Backpropagate through all BERT layers (not just pooling) -- this is what reshapes the embedding
+
+       geometry.
+
+
+   · 5. Optional Phase 2: ne-tune on STS-b with regression loss for ner similarity calibration.
+
+· Key Hyperparameters: batch 16, lr 2 × 10-5(Adam + warmup), 1 epoch, max seq 128, mean pooling.
+
+· Training Time: ~20 min (NLI phase) + ~5 min (STS ne-tune) on a single V100 GPU.
+
+
+· Critical Insight: Fine-tuning the full BERT (not frozen) lets the gradient reshape the embedding geometry
+
+   across all 12 layers -- that is exactly what cures anisotropy.
+
+
+· Modern recipe (2026): AllNLI triplets + MNRL -- di erent objective, better results
+
+f if f if
+                                                                                                                                                                                                       34
+
+Modern Training Approaches -- Instructor-based Models (E5, BGE)
+
+· Evolution of Sentence Embedding Training (2019­2026):
+
+
+  · 2019 -- SBERT: NLI + STS supervised training. Good quality, limited by data.
+
+
+  · 2021 -- SimCSE: Unsupervised contrastive (dropout augmentation). No labels needed.
+
+                                                    https://arxiv.org/pdf/2212.03533
+
+  · 2022 -- E5 (Wang et al.): Weakly-supervised pre-training on web-scale (query,
+
+      passage) pairs mined from CommonCrawl. "Embeddings from bidirectional Encoder
+      representations."
+
+
+  · 2023 -- BGE (BAAI): Similar approach + instruction tuning. 
+
+      "Represent this sentence: ..."
+
+
+  · 2024­2026 -- Instruction-based Embeddings:
+
+
+     · Models learn to produce di erent embeddings based on the intent of the encoding.
+
+
+· Key Insight: Modern embedding models are trained on massive (query, document) pairs
+
+   from the web -- not just NLI/STS. This is why they outperform SBERT signi cantly.
+
+ff
+        Thakur, Nandan, et al. "BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models." Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2).
+
+Training Data Sources for Sentence Embeddings
+
+Where Does Training Data Come From?
+
+Data Source          Size       Type               Examples
+SNLI + MultiNLI      ~1M pairs  Entailment labels  Premise  Hypothesis + label
+
+STS Benchmark        ~8.5K pairs Similarity score (0­5) Sentence pair + score
+
+MS MARCO             ~500K+ pairs Query  Passage   Search query  relevant passage
+
+Quora Duplicate Questions ~400K pairs Duplicate / Not duplicate Question pair + label
+
+AllNLI               ~1M pairs Combined NLI        SNLI + MultiNLI merged
+
+Web-mined (E5, BGE)  100M­1B+ Weak supervision     (title, body), (query, click), etc.
+
+· Data Quality vs. Scale: Gold (human-annotated: NLI, STS) -- highest quality, small scale 
+
+   Silver (curated: MS MARCO)  Weak (web-mined: E5, BGE) -- variable quality, billion-scale.
+
+
+· Modern Recipe: Pre-train on massive weak-supervision data, then ne-tune on gold-
+
+   standard data -- best of both worlds.
+
+                                                                                   https://arxiv.org/pdf/2104.08663
+
+                                                                                              35
+Vector Databases -- Why We Need Them
+
+· The Scaling Problem: 1M docs × 768 dims × 4 bytes = ~3 GB in memory. Brute-force
+  search (O(n  d) per query) takes ~7.7 seconds for 10M docs at 1GHz -- far too slow for
+
+   production.
+
+
+· Approximate Nearest Neighbor (ANN): Use indexing structures to prune the search
+
+   space. Trade a tiny accuracy loss for massive speedup. Typical result: 99%+ recall with
+   100× speedup.
+
+
+· Key ANN Algorithms: FAISS (Facebook), HNSW, Annoy (Spotify), ScaNN (Google).
+
+· Vector Database Ecosystem (2026):
+
+
+  · Standalone DB: Pinecone, Weaviate, Qdrant, Milvus, Chroma (managed or self-hosted).
+
+  · Embedded: pgvector (PostgreSQL extension), SQLite-VSS.
+
+  · Library: FAISS, ScaNN -- direct control over index type and hardware.
+
+                                                                                              36
+                                                                                                                                                                                                      37
+
+Evaluating Retrieval Quality -- Recall@k & MRR
+
+· Quality First: Fast retrieval is useless if the retrieved documents are irrelevant!
+
+
+· Metric 1: Recall@k (Coverage):
+
+
+· Proportion of relevant documents retrieved in the top-k returned results: 
+
+            | Retrievedk  Relevant |  
+
+                   | Relevant |
+Recall@k =
+
+· Metric 2: MRR (Mean Reciprocal Rank -- Ranking Quality):
+
+
+· Evaluates how high the rst correct document is placed:
+
+        1   |Q| 1             (Rank 1  1.0, Rank 2  0.5)
+
+       |Q|
+MRR =            ranki
+
+            i=1
+
+· Why This Matters for ANN:
+
+
+· We use Recall@k and MRR to verify that fast indexing (ANN) does not sacri ce search accuracy.
+
+                                         if
+                                                                                                                                                                                                      38
+
+Recap -- Why We Use Dot Product in FAISS
+
+· FAISS provides di erent metric types for its index structures:
+
+  · `IndexFlatL2`: Uses L2 (Euclidean) distance.
+
+
+  · `IndexFlatIP`: Uses Inner Product (Dot Product).
+
+
+· Recap from Slide 10 & 21: Once we L2-normalize our vectors ourselves (Slide 41 Step 2
+
+   -- don't assume the model did it):
+
+
+  · Ranking equivalence: Cosine Similarity = Inner Product.
+
+  · We should always choose `IndexFlatIP`!
+
+· Why `IndexFlatIP`?
+
+  · Dot product is a single fast hardware operation -- and the score it returns is the cosine
+
+      similarity ([-1, 1], higher = better). IndexFlatL2 returns a squared distance (lower =
+      better), which is harder to read and to threshold.
+
+ff
+                                                                                                                                                                                                     39
+
+Exact vs. Approximate Search -- The ANN Tradeo
+
+· Exact Search: Brute-force -- compare against ALL n vectors. Guarantees 100% correct 
+  top-k. Time: O(n  d). Impractical for n > 100K.
+
+
+· ANN Search: Uses indexing to prune the search space. Returns top-k with high recall (>95%). Time:
+  empirically sublinear -- roughly O(log n  d) with HNSW on well-behaved data.
+
+
+· Fundamental Rule: ANN is an accuracy­latency trade-o ; it is not correct to compare speed without
+
+   Recall@k.
+
+
+· Key ANN Index Types:
+
+
+Index   Method                 Query Time          Recall  Best For
+Flat    Brute-force (exact)                        100%    Small corpus (<100K)
+IVF     Cluster partitioning           O(n  d)     ~95%    Large corpus, low memory
+HNSW    Graph-based             O( n  d)           ~99%    Most production systems
+IVF+PQ  Cluster + compression   O(log n  d)        ~90%    Billion-scale datasets
+
+                               Very fast, low RAM
+
+· FAISS (Facebook AI Similarity Search): GPU-accelerated, supports all index types and combinations.
+
+   Industry standard.
+
+
+· Practical Guideline: corpus <1M  HNSW (best recall/speed tradeo ); corpus >1B  IVF+PQ
+
+   (memory-constrained).
+                                                                                                                                                                                                         40
+
+ HNSW -- The Graph-Based ANN Index (Conceptual Overview)
+
+· Multi-layer Graph (HNSW-Hierarchical Navigable Small World):
+
+   · Top Layers: Sparse "entry points" for fast jumping across the vector space.
+
+   · Bottom Layer (Layer 0): Dense graph containing ALL data points.
+
+
+· Search Process (Coarse-to-Fine):
+
+   · 1. Enter at the top layer.
+
+   · 2. Greedy Walk to the nearest neighbor in the current layer.
+
+   · 3. Drop Down to the next layer and repeat until Layer 0.
+
+
+· Performance:
+
+   · Empirical Sublinear Search: HNSW o ers strong empirical sublinear search, but complexity/
+
+      recall depend on graph construction, `efSearch`, data distribution, and dimension; report
+      measured Recall@k and latency.
+
+
+   · Industry Default: Used in Qdrant, Weaviate, and Pinecone due to its 99%+ recall accuracy.
+
+ff
+Building a Vector Index -- Step by Step with FAISS
+
+· Step 1 -- Prepare vectors: Encode all documents with your embedding model  shape
+
+   `[n, d]` (e.g., `[100000, 768]`). FAISS requires ` oat32` arrays.
+
+
+· Step 2 -- L2-normalize (critical): `faiss.normalize_L2(vectors)` -- sets every
+
+   vector to unit length. After this, inner product = cosine similarity. Skipping this step makes
+   search dominated by magnitude, not meaning.
+
+
+· Step 3 -- Build index: `faiss.IndexFlatIP(d)` creates an empty at (brute-force)
+
+   inner-product index in RAM.
+
+
+· Step 4 -- Add vectors: `index.add(vectors)` inserts all your normalized documents
+
+   into the index. Done -- ready to search.
+
+
+· Step 5 -- Query: Encode and normalize the query the same way 
+
+   `index.search(query, k=5)` returns two arrays: `D` (similarity scores 
+   `[1, k]`) and `I` (document indices `[1, k]`). Use `I` to look up the original documents.
+
+· (Full annotated code in Demo notebook.)                                                          41
+                                                                                                                                                                                                      42
+
+Choosing the Right Metric for Your Use Case
+
+· Metric Selection Decision Guide:
+
+Use Case            Recommended Metric        Reason
+Semantic Search     Cosine Similarity         Direction matters, magnitude doesn't
+Document Retrieval  Dot Product (after norm)  Same as cosine when normalized; fastest
+
+Image Similarity    Cosine Similarity         CLIP embeddings are directional
+Anomaly Detection   L2 Distance               Absolute displacement matters
+
+RAG Retrieval       Cosine Similarity         Standard for SBERT/E5/BGE embeddings
+
+· Practical Recommendation:
+
+
+· 1. L2-normalize your embeddings.
+
+
+· 2. Use Inner Product (dot product) for search -- it's the fastest operation.
+
+
+· 3. This is equivalent to cosine similarity after normalization.
+
+
+· Common Mistake: Using L2 distance on non-normalized embeddings. Vectors with di erent
+
+   magnitudes will appear dissimilar even if they point in the same direction.
+                                                                                                                                                                                                    43
+
+Putting It All Together -- The Semantic Search Pipeline
+
+· Complete Semantic Search Pipeline:
+
+
+                                                  · ONLINE (Query Phase -- run per query):
+
+· OFFLINE (Indexing Phase -- run once): 1. Receive query string
+
+1. Load documents (corpus)               2. Encode query: q = 
+
+2. Encode all documents: vectors =       model.encode([query]) # [1, d]
+
+model.encode(documents) # [n, d]         3. L2-normalize: q /= ||q||
+
+3. L2-normalize: vectors /= ||vectors||  4. Search index: D, I = index.search(q, k=10) 
+
+4. Build index: index.add(vectors)       # top-10
+
+5. Store: Save index to disk
+            5. Return: documents[I] ranked by similarity D
+
+· Latency Breakdown (typical):
+
+
+· Query encoding: ~5­10ms (GPU) / ~50ms (CPU)
+
+
+· Vector search: <1ms (exact, 100K vectors) / <5ms (ANN, 10M vectors)
+
+
+· Total: <20ms end-to-end on GPU. Production-ready.
+In-Class Activity -- Design a Vector Index Con guration
+
+· Exercise: Given the following scenario, choose the right con guration:
+
+   · Corpus: 5 million English research paper abstracts.
+
+   · Embedding model: `all-mpnet-base-v2` (dimension = 768).
+
+   · Hardware: Single server with 32GB RAM, 1× A100 GPU.
+
+   · Latency requirement: <50ms per query.
+
+
+· Questions:
+
+   · 1. Memory: How much RAM do the vectors require? (5M × 768 × 4 bytes = ?)
+
+   · 2. Metric: Which similarity metric would you use? Why?
+
+   · 3. Index Type: Flat (exact) or ANN? If ANN, which type?
+
+   · 4. Normalization: Should you normalize? At what step?
+
+                                                                                              44
+                                                                                                                                                                                                      45
+
+The Complete Week 9 Architecture -- One Diagram
+
+· End-to-End System Architecture (What We Built Today):
+
+
+· The Journey from Problem to Solution:
+
+  · Problem: BERT's objective (MLM) never optimises sentence geometry  anisotropy 
+
+      broken sentence embeddings.
+
+
+  · Fix: Siamese ne-tuning with contrastive loss  SBERT.
+
+  · Application: Encode  Index  Search  Retrieve.
+
+if
+Lab Preview -- What You'll Build Today
+
+· Lab Overview:
+
+
+  · Task 1: Manual SBERT Inference: Unbox the black box! Load a raw model, tokenize,
+
+      pass through the transformer, implement mean pooling, and L2 normalize from
+      scratch.
+
+
+  · Task 2: Prove the Anisotropy Problem: Compare the cosine similarities of raw BERT
+
+      vs. a ne-tuned SBERT model side-by-side to see the "collapsed space" in action.
+
+
+  · Task 3: Build a Vector Index: Create a FAISS Inner Product index and populate it with
+
+      your document corpus (O ine Indexing).
+
+
+  · Task 4: The Search Application: Write the online query loop to retrieve and display
+
+      the top 2 results. Save your index for the Week 12 RAG lab.
+
+
+· Deliverable: A complete semantic search system with FAISS indexing, ready to plug into
+
+   Week 12.
+
+                                                                                              46
+
+l ff if
+Key Takeaways -- Five Things to Remember
+
+· 1. Anisotropy = The Visible Symptom: Raw BERT embeddings sit in a narrow
+
+   cone -- no pair ever scores low, so cosine has no room to rank. The cause is
+   the training objective: MLM never asks for sentence-level geometry.
+
+
+· 2. Siamese/Bi-Encoder = The Fix: Share BERT weights to encode sentences
+
+   independently  contrastive loss reshapes the embedding space.
+
+
+· 3. Mean Pooling > CLS: Averaging (with attention mask) outperforms `[CLS]`
+
+   token for sentence representation.
+
+
+· 4. Contrastive Loss Drives Geometry: Triplet loss, MNRL, and other
+
+   contrastive objectives explicitly optimize for "similar close, dissimilar far."
+
+
+· 5. Vector Indexing Enables Scale: FAISS and ANN algorithms make semantic
+
+   search practical over millions of documents -- the foundation for RAG.
+
+                                                                                              47
+Bridge to Week 12 -- RAG Foundations
+
+· This Week's Output = Week 12's Input: The Bi-Encoder + FAISS index you built today is RAG's retrieval
+
+   stage.
+
+
+· Full RAG Pipeline (Week 12):
+
+   · 1. Dense retrieval: Bi-Encoder + FAISS ( today's output)  top-k chunks.
+
+   · 2. Sparse retrieval: BM25  keyword matches  merge via Reciprocal Rank Fusion (RRF).
+
+   · 3. Cross-Encoder re-ranking  precision ltering of merged results.
+
+   · 4. LLM generation with retrieved context  nal answer.
+
+
+· Weeks 10­11 Bridge:
+
+   · Week 10: Hardware-Aware NLP (PEFT, LoRA, Quantization) -- running large models on real hardware.
+
+   · Week 11: Post-Training Alignment (RLHF, DPO) -- making models safe and helpful.
+
+
+· The Big Picture: Retrieval (Wk 9) + E ciency (Wk 10) + Alignment (Wk 11) + Generation (Wk 12) =
+
+   Modern AI Assistant
+
+                                                                                              48
+
+if if i ff
+In your spare time
+
+· Read Reimers & Gurevych (2019), "Sentence-BERT," Sections 1­4
+
+   (architecture and experiments).
+
+
+  · https://aclanthology.org/D19-1410.pdf
+
+· (Optional) Read Gao et al. (2021), "SimCSE," Sections 1­3 (unsupervised
+
+   contrastive learning).
+
+
+  · https://aclanthology.org/2021.emnlp-main.552.pdf
+
+· Keep your lab FAISS index saved -- you will need it for Week 12.
+
+                                                                                              49
+

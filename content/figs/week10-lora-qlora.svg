@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 486">
+<defs><marker id="a-week10-lora-qlora" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker><marker id="aa-week10-lora-qlora" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker></defs>
+<text x="20" y="28" class="h">LoRA:  h = W₀x + B·A·x   (W₀ แช่แข็ง)</text>
+<rect x="20" y="92" width="50" height="36" rx="6" class="box"/>
+<text x="45" y="114.5" text-anchor="middle">x</text>
+<rect x="150" y="44" width="190" height="46" rx="6" class="mut"/>
+<text x="245" y="63" text-anchor="middle">W₀  d×d</text>
+<text x="245" y="80" text-anchor="middle">frozen</text>
+<rect x="130" y="132" width="110" height="52" rx="6" class="acc"/>
+<text x="185" y="154" text-anchor="middle">A  r×d</text>
+<text x="185" y="171" text-anchor="middle">Gaussian init</text>
+<rect x="270" y="132" width="110" height="52" rx="6" class="acc"/>
+<text x="325" y="154" text-anchor="middle">B  d×r</text>
+<text x="325" y="171" text-anchor="middle">init = 0</text>
+<polyline points="70,104 110,104 110,67 150,67" class="ln" marker-end="url(#a-week10-lora-qlora)"/>
+<polyline points="70,116 100,116 100,158 130,158" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<polyline points="240,158 270,158" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<text x="255" y="150" text-anchor="middle" class="s">r</text>
+<circle cx="470" cy="112" r="16" class="box"/>
+<text x="470" y="117" text-anchor="middle" class="h">+</text>
+<polyline points="340,67 470,67 470,96" class="ln" marker-end="url(#a-week10-lora-qlora)"/>
+<polyline points="380,158 470,158 470,128" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<polyline points="486,112 540,112" class="ln" marker-end="url(#a-week10-lora-qlora)"/>
+<text x="550" y="116" class="h">h</text>
+<text x="360" y="214" text-anchor="middle" class="s">พารามิเตอร์ที่เทรน: 2dr = 131,072 (d = 4096, r = 16) เทียบ d² = 16,777,216  → ลด 128×</text>
+<text x="360" y="234" text-anchor="middle" class="ac">Inference: W = W₀ + BA  →  latency เพิ่ม 0</text>
+<polyline points="20,256 700,256" class="ln dash"/>
+<text x="20" y="282" class="h">QLoRA:  ฐานเก็บ NF4 4-bit + LoRA 16-bit</text>
+<rect x="20" y="308" width="140" height="48" rx="6" class="mut"/>
+<text x="90" y="328" text-anchor="middle">W₀ (NF4 4-bit)</text>
+<text x="90" y="345" text-anchor="middle">frozen · ~4 GB</text>
+<rect x="200" y="308" width="170" height="48" rx="6" class="acc"/>
+<text x="285" y="328" text-anchor="middle">Dequantize</text>
+<text x="285" y="345" text-anchor="middle">NF4 → 16-bit</text>
+<polyline points="160,332 200,332" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<text x="180" y="300" text-anchor="middle" class="s">blockwise</text>
+<rect x="410" y="308" width="120" height="48" rx="6" class="box"/>
+<text x="470" y="328" text-anchor="middle">W_compute · x</text>
+<text x="470" y="345" text-anchor="middle">(16-bit)</text>
+<polyline points="370,332 410,332" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<circle cx="580" cy="332" r="16" class="box"/>
+<text x="580" y="337" text-anchor="middle" class="h">+</text>
+<polyline points="530,332 564,332" class="ln" marker-end="url(#a-week10-lora-qlora)"/>
+<polyline points="596,332 650,332" class="ln" marker-end="url(#a-week10-lora-qlora)"/>
+<text x="660" y="336" class="h">h</text>
+<rect x="200" y="392" width="170" height="48" rx="6" class="acc"/>
+<text x="285" y="412" text-anchor="middle">LoRA  A, B (16-bit)</text>
+<text x="285" y="429" text-anchor="middle">เทรนได้ ~0.17%</text>
+<polyline points="370,416 580,416 580,348" class="lna" marker-end="url(#aa-week10-lora-qlora)"/>
+<text x="475" y="408" text-anchor="middle" class="s">B·A·x</text>
+<text x="285" y="374" text-anchor="middle" class="s">dequantize ใน SRAM แล้วทิ้งทันที</text>
+<text x="360" y="474" text-anchor="middle" class="s">backward: gradient ไหลผ่านฐานที่แช่แข็ง แต่อัปเดตเฉพาะ A, B</text>
+</svg>

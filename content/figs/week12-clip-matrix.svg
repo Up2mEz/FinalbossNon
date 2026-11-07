@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 360">
+  <defs>
+    <marker id="a-week12-clip-matrix" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week12-clip-matrix" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- encoders -->
+  <rect x="250" y="14" width="240" height="34" rx="6" class="box"/>
+  <text x="370" y="36" text-anchor="middle">Text Encoder → T₁ … T₄</text>
+  <rect x="14" y="120" width="130" height="200" rx="6" class="box"/>
+  <text x="79" y="212" text-anchor="middle">Image Encoder</text>
+  <text x="79" y="230" text-anchor="middle" class="s">ViT / ResNet</text>
+  <text x="79" y="248" text-anchor="middle" class="s">→ I₁ … I₄</text>
+  <!-- column and row labels -->
+  <text x="280" y="82" text-anchor="middle">T₁</text>
+  <text x="340" y="82" text-anchor="middle">T₂</text>
+  <text x="400" y="82" text-anchor="middle">T₃</text>
+  <text x="460" y="82" text-anchor="middle">T₄</text>
+  <text x="236" y="126" text-anchor="end">I₁</text>
+  <text x="236" y="186" text-anchor="end">I₂</text>
+  <text x="236" y="246" text-anchor="end">I₃</text>
+  <text x="236" y="306" text-anchor="end">I₄</text>
+  <!-- 4x4 similarity matrix: cell 60 -->
+  <rect x="250" y="90" width="60" height="60" class="acc"/><text x="280" y="125" text-anchor="middle" class="ac">I₁·T₁</text>
+  <rect x="310" y="90" width="60" height="60" class="mut"/><text x="340" y="125" text-anchor="middle" class="s">I₁·T₂</text>
+  <rect x="370" y="90" width="60" height="60" class="mut"/><text x="400" y="125" text-anchor="middle" class="s">I₁·T₃</text>
+  <rect x="430" y="90" width="60" height="60" class="mut"/><text x="460" y="125" text-anchor="middle" class="s">I₁·T₄</text>
+  <rect x="250" y="150" width="60" height="60" class="mut"/><text x="280" y="185" text-anchor="middle" class="s">I₂·T₁</text>
+  <rect x="310" y="150" width="60" height="60" class="acc"/><text x="340" y="185" text-anchor="middle" class="ac">I₂·T₂</text>
+  <rect x="370" y="150" width="60" height="60" class="mut"/><text x="400" y="185" text-anchor="middle" class="s">I₂·T₃</text>
+  <rect x="430" y="150" width="60" height="60" class="mut"/><text x="460" y="185" text-anchor="middle" class="s">I₂·T₄</text>
+  <rect x="250" y="210" width="60" height="60" class="mut"/><text x="280" y="245" text-anchor="middle" class="s">I₃·T₁</text>
+  <rect x="310" y="210" width="60" height="60" class="mut"/><text x="340" y="245" text-anchor="middle" class="s">I₃·T₂</text>
+  <rect x="370" y="210" width="60" height="60" class="acc"/><text x="400" y="245" text-anchor="middle" class="ac">I₃·T₃</text>
+  <rect x="430" y="210" width="60" height="60" class="mut"/><text x="460" y="245" text-anchor="middle" class="s">I₃·T₄</text>
+  <rect x="250" y="270" width="60" height="60" class="mut"/><text x="280" y="305" text-anchor="middle" class="s">I₄·T₁</text>
+  <rect x="310" y="270" width="60" height="60" class="mut"/><text x="340" y="305" text-anchor="middle" class="s">I₄·T₂</text>
+  <rect x="370" y="270" width="60" height="60" class="mut"/><text x="400" y="305" text-anchor="middle" class="s">I₄·T₃</text>
+  <rect x="430" y="270" width="60" height="60" class="acc"/><text x="460" y="305" text-anchor="middle" class="ac">I₄·T₄</text>
+  <!-- annotations -->
+  <path d="M500 120 H536" class="lna" marker-end="url(#aa-week12-clip-matrix)"/>
+  <text x="542" y="112" class="ac">แถว: Image → Text</text>
+  <text x="542" y="130" class="s">softmax หาข้อความที่ถูก</text>
+  <path d="M460 338 V350" class="lna"/>
+  <text x="370" y="352" text-anchor="middle" class="s">คอลัมน์: Text → Image (softmax หาภาพที่ถูกจาก N ภาพ)</text>
+  <text x="542" y="190" class="ac">แนวทแยง = positive</text>
+  <text x="542" y="208" class="s">ดันขึ้น (N คู่)</text>
+  <text x="542" y="236" class="wn">นอกแนวทแยง = negative</text>
+  <text x="542" y="254" class="s">ดันลง (N² − N คู่)</text>
+  <text x="542" y="282" class="s">N = 32,768 → ทุก positive</text>
+  <text x="542" y="298" class="s">เจอ negative 32,767 ตัว</text>
+</svg>

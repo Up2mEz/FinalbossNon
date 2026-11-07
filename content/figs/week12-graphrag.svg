@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370">
+  <defs>
+    <marker id="a-week12-graphrag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week12-graphrag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <text x="12" y="26" class="ac">OFFLINE (indexing time)</text>
+  <!-- offline chain: 6 boxes w=96, gap 24 -->
+  <rect x="12" y="40" width="96" height="60" rx="6" class="box"/>
+  <text x="60" y="76" text-anchor="middle">Documents</text>
+  <path d="M108 70 H132" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="132" y="40" width="96" height="60" rx="6" class="box"/>
+  <text x="180" y="76" text-anchor="middle">Text Chunks</text>
+  <path d="M228 70 H252" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="252" y="40" width="96" height="60" rx="6" class="acc"/>
+  <text x="300" y="64" text-anchor="middle">Entities &amp;</text>
+  <text x="300" y="80" text-anchor="middle">Relations</text>
+  <text x="300" y="94" text-anchor="middle" class="s">(LLM สกัด)</text>
+  <path d="M348 70 H372" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="372" y="40" width="96" height="60" rx="6" class="box"/>
+  <text x="420" y="66" text-anchor="middle">Knowledge</text>
+  <text x="420" y="84" text-anchor="middle">Graph</text>
+  <path d="M468 70 H492" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="492" y="40" width="96" height="60" rx="6" class="acc"/>
+  <text x="540" y="66" text-anchor="middle">Communities</text>
+  <text x="540" y="84" text-anchor="middle" class="s">Leiden</text>
+  <path d="M588 70 H612" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="612" y="40" width="96" height="60" rx="6" class="acc"/>
+  <text x="660" y="62" text-anchor="middle">Community</text>
+  <text x="660" y="78" text-anchor="middle">Summaries</text>
+  <text x="660" y="93" text-anchor="middle" class="s">(LLM สรุป)</text>
+  <text x="360" y="124" text-anchor="middle" class="s">Leiden เพิ่ม modularity Q → ชุมชนที่เชื่อมแน่น มีลำดับชั้น (หยาบ → ละเอียด)</text>
+  <!-- summaries feed the map step -->
+  <path d="M660 100 V206 H250 V236" class="lna dash" marker-end="url(#aa-week12-graphrag)"/>
+  <text x="456" y="200" text-anchor="middle" class="s">summaries ทุกกลุ่มถูกส่งเข้า map</text>
+  <!-- ONLINE -->
+  <text x="12" y="186" class="ac">ONLINE (query time): Global Search</text>
+  <rect x="12" y="269" width="80" height="44" rx="6" class="box"/>
+  <text x="52" y="296" text-anchor="middle">Query</text>
+  <text x="131" y="228" text-anchor="middle" class="s">Map (fan-out)</text>
+  <path d="M92 291 L170 251" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <path d="M92 291 L170 291" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <path d="M92 291 L170 331" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <rect x="170" y="236" width="160" height="30" rx="5" class="box"/>
+  <text x="250" y="256" text-anchor="middle" class="s">Cluster 1: Computer Vision</text>
+  <rect x="170" y="276" width="160" height="30" rx="5" class="box"/>
+  <text x="250" y="296" text-anchor="middle" class="s">Cluster 2: LLMs</text>
+  <rect x="170" y="316" width="160" height="30" rx="5" class="box"/>
+  <text x="250" y="336" text-anchor="middle" class="s">Cluster 3: …</text>
+  <text x="365" y="228" text-anchor="middle" class="s">Reduce (fan-in)</text>
+  <path d="M330 251 L400 276" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <path d="M330 291 L400 291" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <path d="M330 331 L400 306" class="ln" marker-end="url(#a-week12-graphrag)"/>
+  <text x="365" y="360" text-anchor="middle" class="s">คำตอบกลางต่อกลุ่ม</text>
+  <rect x="400" y="261" width="120" height="60" rx="6" class="acc"/>
+  <text x="460" y="288" text-anchor="middle">Reduce</text>
+  <text x="460" y="306" text-anchor="middle" class="s">รวม + จัดอันดับ</text>
+  <path d="M520 291 H580" class="lna" marker-end="url(#aa-week12-graphrag)"/>
+  <text x="550" y="283" text-anchor="middle" class="s">LLM</text>
+  <rect x="580" y="261" width="128" height="60" rx="6" class="acc"/>
+  <text x="644" y="288" text-anchor="middle">Global Answer</text>
+  <text x="644" y="306" text-anchor="middle" class="s">query-focused</text>
+</svg>

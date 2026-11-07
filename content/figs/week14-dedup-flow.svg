@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 370">
+  <defs>
+    <marker id="a-week14-dedup-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week14-dedup-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <text x="20" y="24" class="h">Near-duplicate pair Doc 9 / Doc 10: shingle → MinHash → LSH bands</text>
+
+  <text x="80" y="52" class="s" text-anchor="middle">1. Shingle</text>
+  <text x="256" y="52" class="s" text-anchor="middle">2. MinHash</text>
+  <text x="432" y="52" class="s" text-anchor="middle">3. LSH bands</text>
+  <text x="608" y="52" class="s" text-anchor="middle">4. Candidate</text>
+
+  <!-- Doc 9 lane -->
+  <rect x="20" y="62" width="120" height="56" rx="6" class="box"/>
+  <text x="80" y="84" class="h" text-anchor="middle">Doc 9</text>
+  <text x="80" y="104" class="s" text-anchor="middle">133 shingles, k=3</text>
+  <rect x="196" y="62" width="120" height="56" rx="6" class="box"/>
+  <text x="256" y="84" class="h" text-anchor="middle">Doc 9</text>
+  <text x="256" y="104" class="s" text-anchor="middle">64 min-hashes</text>
+  <rect x="372" y="62" width="120" height="56" rx="6" class="box"/>
+  <text x="432" y="84" class="h" text-anchor="middle">Doc 9</text>
+  <text x="432" y="104" class="s" text-anchor="middle">16 bands × 4 rows</text>
+  <line x1="140" y1="90" x2="194" y2="90" class="ln" marker-end="url(#a-week14-dedup-flow)"/>
+  <text x="167" y="82" class="s" text-anchor="middle">min h_i</text>
+  <line x1="316" y1="90" x2="370" y2="90" class="ln" marker-end="url(#a-week14-dedup-flow)"/>
+  <text x="343" y="82" class="s" text-anchor="middle">split</text>
+
+  <!-- Doc 10 lane -->
+  <rect x="20" y="226" width="120" height="56" rx="6" class="box"/>
+  <text x="80" y="248" class="h" text-anchor="middle">Doc 10</text>
+  <text x="80" y="268" class="s" text-anchor="middle">133 shingles, k=3</text>
+  <rect x="196" y="226" width="120" height="56" rx="6" class="box"/>
+  <text x="256" y="248" class="h" text-anchor="middle">Doc 10</text>
+  <text x="256" y="268" class="s" text-anchor="middle">64 min-hashes</text>
+  <rect x="372" y="226" width="120" height="56" rx="6" class="box"/>
+  <text x="432" y="248" class="h" text-anchor="middle">Doc 10</text>
+  <text x="432" y="268" class="s" text-anchor="middle">16 bands × 4 rows</text>
+  <line x1="140" y1="254" x2="194" y2="254" class="ln" marker-end="url(#a-week14-dedup-flow)"/>
+  <text x="167" y="246" class="s" text-anchor="middle">min h_i</text>
+  <line x1="316" y1="254" x2="370" y2="254" class="ln" marker-end="url(#a-week14-dedup-flow)"/>
+  <text x="343" y="246" class="s" text-anchor="middle">split</text>
+
+  <!-- comparison pills between lanes -->
+  <line x1="80" y1="118" x2="80" y2="138" class="ln dash"/>
+  <line x1="80" y1="186" x2="80" y2="226" class="ln dash"/>
+  <rect x="18" y="138" width="124" height="48" rx="6" class="acc"/>
+  <text x="80" y="159" class="t" text-anchor="middle">J = 0.662</text>
+  <text x="80" y="176" class="s" text-anchor="middle">true Jaccard</text>
+
+  <line x1="256" y1="118" x2="256" y2="138" class="ln dash"/>
+  <line x1="256" y1="186" x2="256" y2="226" class="ln dash"/>
+  <rect x="190" y="138" width="132" height="48" rx="6" class="acc"/>
+  <text x="256" y="159" class="t" text-anchor="middle">42/64 = 0.656</text>
+  <text x="256" y="176" class="s" text-anchor="middle">J-hat (estimate)</text>
+
+  <line x1="432" y1="118" x2="432" y2="138" class="ln dash"/>
+  <line x1="432" y1="186" x2="432" y2="226" class="ln dash"/>
+  <rect x="366" y="138" width="132" height="48" rx="6" class="acc"/>
+  <text x="432" y="159" class="t" text-anchor="middle">0.656^4 = 0.185</text>
+  <text x="432" y="176" class="s" text-anchor="middle">P(1 band matches)</text>
+
+  <!-- candidate column -->
+  <rect x="548" y="62" width="144" height="220" rx="6" class="acc"/>
+  <text x="620" y="100" class="h" text-anchor="middle">Candidate pair</text>
+  <text x="620" y="124" class="s" text-anchor="middle">1 of 66 pairs</text>
+  <text x="620" y="146" class="s" text-anchor="middle">in the 12-doc corpus</text>
+  <text x="620" y="182" class="s" text-anchor="middle">P(≥ 1 of 16 bands)</text>
+  <text x="620" y="204" class="ac" text-anchor="middle">= 0.96</text>
+  <text x="620" y="240" class="s" text-anchor="middle">then verify with</text>
+  <text x="620" y="256" class="s" text-anchor="middle">the real Jaccard</text>
+  <line x1="492" y1="90" x2="546" y2="90" class="lna" marker-end="url(#aa-week14-dedup-flow)"/>
+  <text x="519" y="82" class="s" text-anchor="middle">≥1 band</text>
+  <line x1="492" y1="254" x2="546" y2="254" class="lna" marker-end="url(#aa-week14-dedup-flow)"/>
+  <text x="519" y="246" class="s" text-anchor="middle">≥1 band</text>
+
+  <text x="20" y="312" class="wn">Exact dedup (SHA-256) misses this pair: the digests differ.</text>
+  <text x="20" y="332" class="s">LSH files each doc into N × b shelves instead of comparing N² pairs.</text>
+  <text x="20" y="350" class="s">The 0.185 and 0.96 come from the slide's numbers: s = 0.656, r = 4, b = 16.</text>
+</svg>

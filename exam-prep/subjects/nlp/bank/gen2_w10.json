@@ -1,0 +1,104 @@
+[
+ {
+  "id": "n10-X4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "BF16 vs FP16 overflow, hardware support and memory",
+  "stem": "ทีมเทรน LLaMA-3 8B บน Colab T4 ด้วย FP16 แล้วเกิด gradient spike ขนาดประมาณ 1.2 x 10^5 ทำให้ loss กลายเป็น inf หัวหน้าทีมเสนอย้ายไปเช่า GPU A100 (Ampere) และเปลี่ยนเป็น BF16 ข้อใดประเมินแผนนี้ รวมถึงทางเลือกอื่นที่ทีมคิด ได้ถูกต้อง",
+  "opts": {
+   "A": "ไม่ต้องย้าย ใช้ BF16 บน T4 เดิมได้เลย เพราะ BF16 มี exponent 8 bit ให้ range เท่า FP32 ครอบค่า 1.2 x 10^5 ได้ และ tensor core ของ T4 (Turing) รองรับ BF16 อยู่แล้ว",
+   "B": "ย้ายไป A100 แล้วใช้ BF16 จะแก้ overflow และ weights ของ 8B เหลือ 8 GB เพราะ BF16 ใช้ exponent กว้างขึ้นจึงเก็บค่าได้ด้วยประมาณ 1 byte ต่อ parameter",
+   "C": "ย้ายไป A100 แล้วใช้ BF16: ค่า 1.2 x 10^5 เกิน max ของ FP16 (65,504) แต่อยู่ใน range ของ BF16 weights 8B ยังใช้ 16 GB เท่าเดิม แต่ mantissa เหลือ 7 bit จาก 10 bit",
+   "D": "ย้ายไป A100 แล้วใช้ BF16 จะแก้ overflow และได้ precision ดีกว่า FP16 ด้วย เพราะ BF16 มี exponent 8 bit มากกว่า FP16 ที่มี 5 bit จึงแทนทศนิยมได้ละเอียดขึ้น"
+  },
+  "ans": "C",
+  "expl": "FP16 max = 65,504 ดังนั้น 1.2 x 10^5 = 120,000 > 65,504 จึง overflow เป็น inf ส่วน BF16 มี exponent 8 bit (max ~ 3.4 x 10^38 เท่า FP32) จึงรับค่านี้ได้ แต่ BF16 ยังเป็น 16 bit = 2 bytes ต่อ parameter เหมือน FP16 ดังนั้น weights 8B = 8 x 10^9 x 2 = 16 GB เท่าเดิม และ BF16 แลก precision (mantissa 7 bit เทียบ 10 bit) เพื่อ range. A ผิดเพราะ native BF16 ต้อง Ampere ขึ้นไป T4 (Turing) ไม่มี ต้องใช้ FP16. B ผิดเพราะ BF16 ยังเป็น 2 bytes ไม่ใช่ 1 byte (INT8 ต่างหากที่เป็น 1 byte). D ผิดเพราะ exponent ให้ range ไม่ใช่ precision; precision มาจาก mantissa ซึ่ง BF16 มีน้อยกว่า.",
+  "src": "text/slides_w10.txt s.4, s.10 ; notes week_10 sec 2.3, 7.9"
+ },
+ {
+  "id": "n10-X4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "Gradient checkpointing vs 16N model states",
+  "stem": "ทีมจะ full fine-tune LLaMA-3 8B ด้วย Adam (FP16 weights, ประมาณแบบ 16N, ไม่ shard) บน H100 80 GB ใบเดียว และเกิด OOM ตั้งแต่ step แรก เพื่อนร่วมทีมบอกว่า \"เปิด gradient checkpointing แล้วจะลด memory จาก O(L) เป็น O(sqrt(L)) ปัญหาจะหาย\" ถ้า baseline ใช้เวลาเทรน 10 ชั่วโมง ข้อใดประเมินได้ถูกต้อง (ใช้ค่า compute เพิ่ม ~30% ตามสไลด์)",
+  "opts": {
+   "A": "OOM หาย: checkpointing ลดหน่วยความจำจาก O(L) เป็น O(sqrt(L)) ทำให้ทุกส่วนของ 128 GB หดจนใส่ 80 GB ได้ และเวลาเทรนเพิ่มเป็น ~13 ชั่วโมง",
+   "B": "ยัง OOM: model states = 8 x 10^9 x 16 = 128 GB เกิน 80 GB อยู่ 48 GB ก่อนนับ activations และ checkpointing ไม่ลดส่วนนี้ ทั้งยังเพิ่มเวลาเป็น ~13 ชั่วโมง",
+   "C": "ยัง OOM: model states 128 GB เกิน 80 GB อยู่ 48 GB และถ้าเปิด checkpointing เวลาเทรนจะลดเหลือ ~7 ชั่วโมง เพราะ activations ที่เก็บน้อยลงทำให้ backward เร็วขึ้น",
+   "D": "ยัง OOM: model states 128 GB เกิน 80 GB อยู่ 48 GB และ checkpointing ไม่ลดส่วนนี้ แต่ recompute ทำให้เวลาเทรนเพิ่มเป็น ~30 ชั่วโมง เพราะเพิ่ม 30% ต่อทุกชั่วโมง"
+  },
+  "ans": "B",
+  "expl": "16N = weights 2N + gradients 2N + optimizer 12N = 16 x 8 x 10^9 = 128 GB (สไลด์: เกิน 80 GB H100 และยังไม่นับ activations) ส่วนเกิน = 128 - 80 = 48 GB. Gradient checkpointing ลดเฉพาะ activations (O(L) -> O(sqrt(L))) ไม่แตะ weights/gradients/optimizer states จึงต่อให้ activations = 0 ก็ยังเกิน. ราคาที่จ่ายคือ recompute: เวลาเพิ่ม ~30% = 10 x 1.3 = 13 ชั่วโมง. A ผิดเพราะ checkpointing ไม่ลด model states. C ผิดทิศทาง: เวลาเพิ่มไม่ใช่ลด (10 x 0.7 = 7 เป็นการอ่านผิด). D คูณผิด: +30% ของ 10 ชม. คือ 13 ชม. ไม่ใช่ 30 ชม.",
+  "src": "text/slides_w10.txt s.15-16 ; notes week_10 sec 2.6, 3.4, 7.14, 7.15"
+ },
+ {
+  "id": "n10-X4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "Tensor vs pipeline parallelism layout on 2 nodes",
+  "stem": "คลัสเตอร์มี 2 node แต่ละ node มี 8 GPU (80 GB) เชื่อมกันภายใน node ด้วย NVLink และเชื่อม 2 node ด้วย InfiniBand ต้องการ serve LLaMA-3 70B แบบ FP16 (weights 140 GB ซึ่งใส่ได้ครบใน 1 node) ให้ latency ต่ำและรองรับผู้ใช้จำนวนมาก ข้อใดเป็นการจัด parallelism ที่เหมาะสมที่สุดตามสไลด์",
+  "opts": {
+   "A": "ใช้ pipeline parallelism ข้าม 2 node โดยครึ่งแรกของ layers อยู่ node 1 และครึ่งหลังอยู่ node 2 แล้วใช้ tensor parallelism ภายในแต่ละ node เพราะ PP เหมาะกับ inter-node",
+   "B": "ใช้ tensor parallelism ขนาด 16 ข้ามทั้ง 2 node ให้แต่ละ GPU ถือ weights เพียง 140 / 16 = 8.75 GB และใช้ all-reduce ผ่าน InfiniBand ในทุก layer",
+   "C": "ใช้ pipeline parallelism 8 stage ภายใน node เดียว แต่ละ GPU ถือ 1/8 ของ layers เพื่อให้ตัดเฉพาะ activations ระหว่าง stage แล้วปล่อย node ที่สองว่าง",
+   "D": "ใช้ tensor parallelism 8 ทาง ภายในแต่ละ node (GPU ละ 17.5 GB) ให้แต่ละ node เป็น replica เต็มของโมเดล แล้วใช้ data parallelism 2 replica รับ batch ต่างกัน"
+  },
+  "ans": "D",
+  "expl": "140 GB เก็บได้ใน 1 node (8 x 80 = 640 GB) อยู่แล้ว สไลด์ให้ข้าม node เฉพาะเมื่อโมเดลต้องใช้เกิน 8 GPU จึงไม่จำเป็นต้องข้าม node. TP แบ่ง weight matrices ทุก layer ข้าม GPU ให้ latency ต่ำแต่ต้อง all-reduce ที่เร็วมาก จึงเหมาะ intra-node (NVLink): 140 / 8 = 17.5 GB ต่อ GPU. การใช้ 2 node เพิ่ม throughput ทำด้วย Data Parallelism (replicate ชุดเดิมสำหรับ batch ต่างกัน) ตาม 3D parallelism. A ผิดเพราะ PP ข้าม node เพิ่ม pipeline bubbles โดยไม่จำเป็น เมื่อโมเดลพอดีใน node เดียว. B ผิดเพราะ all-reduce ทุก layer ผ่านเครือข่ายข้าม node คือ Network Wall. C ผิดเพราะ PP เหมาะ inter-node และเพิ่ม bubbles/latency ทั้งที่ NVLink ภายใน node รองรับ TP ได้ อีกทั้งทิ้ง node ที่สองเปล่าประโยชน์.",
+  "src": "text/slides_w10.txt s.36-37 ; notes week_10 sec 2.11, 7.17"
+ },
+ {
+  "id": "n10-X4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "FlashAttention scope vs KV cache memory",
+  "stem": "LLaMA-3 8B (n_layers = 32, n_kv = 8, d_head = 128, FP16, 32 heads) ทำ prefill prompt ยาว N = 32,000 tokens batch 1 โดยสไลด์ระบุว่า standard attention ต้องเก็บเมทริกซ์ S = QK^T ประมาณ 2 GB ต่อ head (รวม 32 heads ~64 GB) ทีมเปิดใช้ FlashAttention ข้อใดอธิบายสถานการณ์หลังเปิดได้ถูกต้อง",
+  "opts": {
+   "A": "ไม่ต้องเขียนเมทริกซ์ N x N ลง HBM (extra memory O(N)) ผลลัพธ์เท่า standard attention แต่ KV cache ยังเท่าเดิม ~ 131,072 x 32,000 = 4.19 GB",
+   "B": "ไม่ต้องเขียนเมทริกซ์ N x N ลง HBM และ KV cache ลดเหลือประมาณ 4.19 / 4 = 1.05 GB เพราะการแบ่ง tile ทำให้เก็บ K, V ได้น้อยลง ผลลัพธ์ยังเท่ากับ standard attention",
+   "C": "ไม่ต้องเขียนเมทริกซ์ N x N ลง HBM และไม่ต้องมี KV cache อีกต่อไป เพราะ tile ของ K, V ถูกคำนวณและเก็บใน SRAM ระหว่างทำงาน จึงไม่ต้องเก็บไว้ใน VRAM",
+   "D": "เมทริกซ์ S ลดจาก ~64 GB เหลือประมาณครึ่งหนึ่ง (~32 GB) เพราะประมาณค่า attention แบบตัดค่าเล็กทิ้ง คุณภาพลดลงเล็กน้อย และ KV cache เท่าเดิม ~ 4.19 GB"
+  },
+  "ans": "A",
+  "expl": "KV per token = 2 x 2 x 32 x 8 x 128 = 131,072 B; x 32,000 = 4,194,304,000 B = 4.19 GB. FlashAttention (tiling + online softmax ใน SRAM) เป็น compute kernel ที่คำนวณ exact attention โดยไม่เขียน S ขนาด N x N ลง HBM เขียนกลับเฉพาะ output N x d จึง extra memory เป็น O(N) แทน O(N^2) แต่ไม่เปลี่ยนจำนวน K, V ที่ต้องเก็บ (KV cache ยังจำเป็นสำหรับ decode; ตัวที่ลด KV cache คือ GQA/MQA และตัวที่จัดการ KV cache คือ PagedAttention). B ผิดเพราะสับสนกับ GQA (ลดด้วย n_heads / n_kv). C ผิดเพราะ tile ใน SRAM ไม่ใช่ที่เก็บถาวร KV cache ยังอยู่ใน VRAM. D ผิดเพราะ FlashAttention เป็น exact ไม่ใช่ approximation และ S ไม่ได้ลดครึ่ง แต่ไม่ถูกสร้างเต็มใน HBM เลย.",
+  "src": "text/slides_w10.txt s.8-9, s.19-22, s.32, s.38 ; notes week_10 sec 2.8, 3.2, 3.7, 7.4, 7.5"
+ },
+ {
+  "id": "n10-X4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "TTFT arithmetic, prefill vs decode, speculative decoding vs chunked prefill",
+  "stem": "บริการแชตวัดได้: network latency 60 ms, prefill ของ prompt ยาว 410 ms, decode ของ token แรก 40 ms และ decode ของ token ถัดๆ ไปประมาณ 25 ms ต่อ token ผู้ใช้บ่นว่าช้า วิศวกรเสนอใช้ speculative decoding หรือ chunked prefill ข้อใดวิเคราะห์ตามสไลด์ได้ถูกต้อง (เกณฑ์ lag คือ TTFT > 500 ms, TPS ลื่นคือ > 10-15)",
+  "opts": {
+   "A": "TTFT = 60 + 410 + 25 = 495 ms ต่ำกว่า 500 ms จึงไม่ lag และ TPS = 1000 / 25 = 40 ก็ลื่น ปัญหาที่ผู้ใช้เจออาจไม่ได้มาจากระบบนี้",
+   "B": "TTFT = 60 + 410 + 40 = 510 ms เกิน 500 ms ส่วน TPS = 40 ลื่นแล้ว ตัวครอบงำคือ prefill (compute-bound) ซึ่ง speculative decoding ไม่ช่วยแก้",
+   "C": "TTFT = 60 + 410 + 40 = 510 ms เกิน 500 ms ควรใช้ speculative decoding เพราะ decode เป็น memory-bandwidth-bound ซึ่งเป็นสาเหตุหลักที่ทำให้ token แรกมาช้า",
+   "D": "TTFT = 60 + 410 + 40 = 510 ms เกิน 500 ms ควรใช้ chunked prefill เพราะช่วยให้ request ใหม่ได้ token แรกเร็วขึ้นโดยแบ่ง prefill เป็นชิ้นเล็กๆ"
+  },
+  "ans": "B",
+  "expl": "TTFT = network + prefill + decode ของ token แรก = 60 + 410 + 40 = 510 ms > 500 ms จึงรู้สึก lag (ต้องใช้เวลา decode ของ token แรก 40 ms ไม่ใช่ 25 ms ของ token ถัดไป ดังนั้น A ที่ได้ 495 ผิด). TPS = 1000 ms / 25 ms = 40 token/s ซึ่งเกิน 10-15 แล้ว ส่วนที่ครอบงำ TTFT คือ prefill 410 ms (GEMM, compute-bound) speculative decoding ปรับปรุง TPS (decode) ไม่ได้ลด prefill และ decode ใน TTFT มีแค่ 40 ms จึงแก้ lag ไม่ได้ (C ผิด). chunked prefill ช่วย TPS/inter-token latency ของ request ที่กำลังรันอยู่ แต่ทำให้ TTFT ของ request ใหม่แย่ลง (D ผิดทิศทาง).",
+  "src": "text/slides_w10.txt s.11, s.13, s.33 ; notes week_10 sec 2.4, 7.7, 7.8, 7.20"
+ },
+ {
+  "id": "n10-X4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "QLoRA parameter and memory arithmetic with higher rank",
+  "stem": "LLaMA-3 8B (32 layers, d_model = 4096, K/V projection ออกขนาด 1024 เพราะ GQA) ใช้ QLoRA โดยใส่ LoRA ที่ Q, K, V, O ทุก layer ด้วย rank r = 64 (เมทริกซ์ d x k ใช้ r(d + k) parameters ต่อเมทริกซ์) จำนวน trainable parameters = ___ ล้าน (ทศนิยม 1 ตำแหน่ง) คิดเป็น ___ % ของ 8B (ทศนิยม 2 ตำแหน่ง) และถ้า LoRA ถูกเก็บแบบ FP32 พร้อม grads และ Adam (16 B ต่อ parameter), base NF4 = 4 GB, activations และ overhead = 2.0 GB หน่วยความจำรวมประมาณ ___ GB (ทศนิยม 1 ตำแหน่ง, decimal)",
+  "key": "54.5; 0.68; 6.9",
+  "note": "ต่อ layer: Q และ O = 64 x (4096 + 4096) = 524,288 เมทริกซ์ละ ส่วน K และ V = 64 x (4096 + 1024) = 327,680 เมทริกซ์ละ รวมต่อ layer = 2 x 524,288 + 2 x 327,680 = 1,703,936; x 32 = 54,525,952 = 54.5M (เป็น 4 เท่าของ 13.6M ที่ r = 16 เพราะ params โตเชิงเส้นกับ r ไม่ใช่ r^2). 54.5M / 8,000M = 0.68%. LoRA states = 54,525,952 x 16 B = 0.872 GB; total = 4 + 0.87 + 2.0 = 6.9 GB (พอ T4 16 GB). รับ 54.4 (จาก 13.6M x 4) และรับ 7.0 เมื่อใช้ NF4 4.13 GB. ถ้าตอบ 218 (r^2) หรือ 0.068 หรือใช้ base 16 GB (ได้ ~18.9 GB) คือผิด.",
+  "src": "text/slides_w10.txt s.42, s.47, s.50 ; notes week_10 sec 3.5"
+ }
+]

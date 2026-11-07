@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 300">
+  <defs>
+    <marker id="a-week14-ccnet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week14-ccnet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <text x="20" y="24" class="h">CCNet: perplexity buckets instead of a fixed cut-off</text>
+
+  <rect x="20" y="40" width="170" height="44" rx="6" class="box"/>
+  <text x="105" y="67" class="t" text-anchor="middle">Wikipedia text</text>
+  <line x1="190" y1="62" x2="238" y2="62" class="ln" marker-end="url(#a-week14-ccnet)"/>
+  <text x="214" y="54" class="s" text-anchor="middle">train</text>
+  <rect x="240" y="40" width="130" height="44" rx="6" class="acc"/>
+  <text x="305" y="59" class="t" text-anchor="middle">KenLM</text>
+  <text x="305" y="75" class="s" text-anchor="middle">5-gram LM</text>
+  <line x1="370" y1="62" x2="468" y2="62" class="ln" marker-end="url(#a-week14-ccnet)"/>
+  <text x="419" y="54" class="s" text-anchor="middle">PPL per doc</text>
+  <rect x="470" y="40" width="230" height="44" rx="6" class="box"/>
+  <text x="585" y="67" class="t" text-anchor="middle">web docs, one language</text>
+
+  <text x="20" y="116" class="s">low PPL = Wikipedia-like</text>
+  <text x="360" y="116" class="s" text-anchor="middle">docs sorted by PPL</text>
+  <text x="700" y="116" class="s" text-anchor="end">high PPL = unlike Wikipedia</text>
+  <line x1="20" y1="126" x2="698" y2="126" class="lna" marker-end="url(#aa-week14-ccnet)"/>
+
+  <rect x="20" y="140" width="226" height="64" class="box"/>
+  <text x="133" y="166" class="h" text-anchor="middle">head</text>
+  <text x="133" y="186" class="s" text-anchor="middle">lowest-PPL third</text>
+  <rect x="247" y="140" width="226" height="64" class="box"/>
+  <text x="360" y="166" class="h" text-anchor="middle">middle</text>
+  <text x="360" y="186" class="s" text-anchor="middle">middle third</text>
+  <rect x="474" y="140" width="226" height="64" class="box"/>
+  <text x="587" y="166" class="h" text-anchor="middle">tail</text>
+  <text x="587" y="186" class="s" text-anchor="middle">highest-PPL third</text>
+  <text x="360" y="226" class="t" text-anchor="middle">three equal buckets per language; the user chooses which to keep</text>
+
+  <rect x="20" y="242" width="680" height="46" rx="6" class="warn"/>
+  <text x="360" y="262" class="wn" text-anchor="middle">Trap: PPL measures similarity to the reference LM, not true quality</text>
+  <text x="360" y="280" class="s" text-anchor="middle">rare educational text can land in the tail and be lost</text>
+</svg>

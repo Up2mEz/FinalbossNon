@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 280">
+  <defs>
+    <marker id="a-week13-tool-protocol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week13-tool-protocol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+    <marker id="aw-week13-tool-protocol" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker>
+  </defs>
+  <!-- failure modes (top) -->
+  <rect x="119" y="26" width="140" height="50" rx="6" class="warn"/>
+  <text x="189" y="46" text-anchor="middle">JSON ผิดรูป</text>
+  <text x="189" y="64" text-anchor="middle" class="s">→ parser error, retry</text>
+  <rect x="269" y="26" width="140" height="50" rx="6" class="warn"/>
+  <text x="339" y="46" text-anchor="middle">ชื่อ tool ที่ไม่มีจริง</text>
+  <text x="339" y="64" text-anchor="middle" class="s">→ Tool not found</text>
+  <rect x="581" y="26" width="130" height="50" rx="6" class="warn"/>
+  <text x="646" y="46" text-anchor="middle">ลูปไม่รู้จบ</text>
+  <text x="646" y="64" text-anchor="middle" class="s">→ max_steps</text>
+  <path d="M189 130 V76" class="lnw dash" marker-end="url(#aw-week13-tool-protocol)"/>
+  <path d="M339 130 V76" class="lnw dash" marker-end="url(#aw-week13-tool-protocol)"/>
+  <path d="M651 130 V76" class="lnw dash" marker-end="url(#aw-week13-tool-protocol)"/>
+  <!-- main row: y 130..180 -->
+  <rect x="8" y="130" width="76" height="50" rx="6" class="acc"/>
+  <text x="46" y="160" text-anchor="middle">LLM</text>
+  <path d="M84 155 H144" class="lna" marker-end="url(#aa-week13-tool-protocol)"/>
+  <text x="114" y="147" text-anchor="middle" class="s">1 call</text>
+  <rect x="144" y="130" width="90" height="50" rx="6" class="box"/>
+  <text x="189" y="160" text-anchor="middle">Parser</text>
+  <path d="M234 155 H294" class="ln" marker-end="url(#a-week13-tool-protocol)"/>
+  <text x="264" y="147" text-anchor="middle" class="s">2 valid</text>
+  <rect x="294" y="130" width="90" height="50" rx="6" class="box"/>
+  <text x="339" y="160" text-anchor="middle">Dispatcher</text>
+  <path d="M384 155 H444" class="ln" marker-end="url(#a-week13-tool-protocol)"/>
+  <text x="414" y="147" text-anchor="middle" class="s">3 route</text>
+  <rect x="444" y="130" width="90" height="50" rx="6" class="box"/>
+  <text x="489" y="160" text-anchor="middle">Tool fn</text>
+  <path d="M534 155 H594" class="ln" marker-end="url(#a-week13-tool-protocol)"/>
+  <text x="564" y="147" text-anchor="middle" class="s">4 string</text>
+  <rect x="594" y="130" width="114" height="50" rx="6" class="box"/>
+  <text x="651" y="160" text-anchor="middle">Observation</text>
+  <!-- notes under boxes -->
+  <text x="189" y="198" text-anchor="middle" class="s">ตรวจ JSON เทียบ schema</text>
+  <text x="339" y="198" text-anchor="middle" class="s">ส่งไปฟังก์ชันที่ถูก</text>
+  <text x="489" y="198" text-anchor="middle" class="s">คืนผลเป็น string</text>
+  <!-- return path -->
+  <path d="M651 180 V240 H46 V180" class="lna" marker-end="url(#aa-week13-tool-protocol)"/>
+  <text x="350" y="232" text-anchor="middle" class="ac">5 ต่อท้ายเป็น Observation แล้ววนให้ LLM รอบถัดไป</text>
+  <text x="350" y="262" text-anchor="middle" class="s">ส่วน {"query": ...} มาจาก schema ของเรา key ชั้นนอกเป็นของ protocol</text>
+</svg>

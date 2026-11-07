@@ -1,0 +1,1492 @@
+Context Optimization,
+Hybrid Retrieval,
+Knowledge Graphs 
+(RAG Foundations)
+
+                                                                                       Asst. Prof. Nont Kanungsukkasem, Ph.D.
+                                                                                                      Shuster, Kurt, et al. "Retrieval augmentation reduces hallucination in conversation." Findings of the Association for Computational Linguistics: EMNLP 2021. 2021.
+
+Recap -- The LLM's Core Limitation: Static Parametric Memory
+
+· Parametric Memory: Knowledge baked into weights  at training time.
+
+· Two Failure Modes:
+
+
+  · 1. Knowledge Cuto : Events after training date  unknown.
+
+  · 2. Private Data: Corporate docs, personal les  never seen.
+
+· The Hallucination Trap: When queried on unknown facts, 
+
+   LLMs don't say "I don't know" -- they confabulate con dently.
+
+
+· Naive Fix #1 -- Stu the System Prompt: Works for tiny docs; collapses at scale
+
+   (O(N²) attention cost).
+
+
+· Naive Fix #2 -- Fine-Tune: Expensive, slow, and creates a new cuto problem.
+
+· The Correct Fix: External, queryable, updatable knowledge store  RAG.
+
+                                                                                                                                                                                                      2
+
+if f f f
+3                          Lewis, Patrick, et al. "Retrieval-augmented generation for knowledge-intensive nlp tasks." Advances in neural information processing systems 33 (2020): 9459-9474.
+
+   The RAG Core Architecture
+
+   · Theoretical Architecture (Lewis et al., 2020):
+
+
+   · Retriever (p): Non-parametric memory. Uses a Query Encoder (q) to convert
+
+      queries into vectors, and performs Maximum Inner Product Search (MIPS) to
+      retrieve relevant document vectors (d(z)) from the Document Index.
+
+
+   · Generator (p): Parametric memory. Takes the query and retrieved documents to
+
+      generate the nal answer (y), marginalizing over the retrieved documents.
+
+
+   · End-to-End Backprop: Both the generator and query encoder can be trained
+   jointly 
+                                   Define "middle ear"(x)                                                                                                 The middle ear includes
+
+   for the downstream task.
+ Question Answering:                           End-to-End Backprop through q and p                                            the tympanic cavity and
+                                                                                                                                                          the three ossicles. (y)
+
+                                        Question Query             Query         Retriever p           Document                 Generator p               Question Answering:
+                                                                  Encoder                                                                                  Answer Generation
+                                   Barack Obama was                                  (Non-Parametric)        Index                   (Parametric)
+                                   born in Hawaii.(x)                                                                                                       supports (y)
+   · Versatility: Can be applied                                           q(x)                        d(z)                 z4                  Margin-
+                                                                                                                                                   alize    Fact Verification:
+   to Question Answering,          Fact Verification: Fact Query                                                        z3                                 Label Generation
+
+                                                                                                                    z2
+
+   Fact Veri cation, and           The Divine                     q        MIPS                              z1                 p                         This 14th century work
+                                   Comedy (x)
+                                                                                                                                                          is divided into 3
+
+                                   Jeopardy Question                                                                                                      sections: "Inferno",
+
+   Jeopardy Generation.             Generation:                                                                                                           "Purgatorio" &
+                                   Answer Query
+                                                                                                                                                          "Paradiso"            (y)
+
+                                                                                                                                                          Question Generation
+
+                                   Figure 1: Overview of our approach. We combine a pre-trained retriever (Query Encoder + Document
+                                   Index) with a pre-trained seq2seq model (Generator) and fine-tune end-to-end. For query x, we use
+                                   Maximum Inner Product Search (MIPS) to find the top-K documents zi. For final prediction y, we
+                                   treat z as a latent variable and marginalize over seq2seq predictions given different documents.
+
+             if if
+                                                                                                                                                  4
+
+Why RAG is Hard -- The Seven Failure Points
+Seven Failure Points When Engineering a Retrieval Augmented Generation System  CAIN 2024, April 14­15, 2024, Lisbon, Portugal
+
+  Figure 1: Indexing and Query processes required for creating a Retrieval Augmented Generation (RAG) system. The indexing
+  process is typically done at development time and queries at runtime. Failure points identi!ed in this study are shown in red
+Babrneottx, Secso.tt,Aetlall. r"Seeqveun ifarileurde psotinatsgwehsenaerngeineuenrindg ea rreltirinevealdau.gFmiegntuedrgeeneexratpioan nsydsteemd." fPrroocemedin[g1s9of]t.he IEEE/ACM 3rd International Conference on AI Engineering-Software Engineering for AI. 2024.
+
+   The !nal stage of a RAG pipeline is when the answer is extracted            on a robust data processing pipeline to handle uploaded documents
+from the generated text. Readers are responsible for !ltering the              i.e. no quality control possible at development time. This system
+                                                                                                                                                                                                      5
+
+Roadmap
+
+· Act 1 -- The Data Ingestion Engine: 
+
+   How to split docs and build the index without information loss.
+
+· Act 2 -- Multi-Stage Retrieval:
+
+   BM25 + Dense Retrieval  RRF  Cross-Encoder.
+
+
+· Act 3 -- Beyond Text Vectors:
+
+   CLIP embeddings, Multimodal RAG, and GraphRAG for complex multi-hop
+   questions.
+
+
+· Act 4 -- The Long-Context Trap:
+
+   Why longer context  better retrieval and how to avoid the "Lost in the
+   Middle" failure.
+
+                                                                                                                                                                                         Lewis, Patrick, et al. "Retrieval-augmented generation for knowledge-intensive nlp tasks." Advances in neural information processing systems 33 (2020): 9459-9474.
+                                                                                                                                                                                                                                        Gao, Yunfan, et al. "Retrieval-augmented generation for large language models: A survey." arXiv preprint arXiv:2312.10997 (2023).
+                                                                                                           Johnson, Jeff, Matthijs Douze, and Hervé Jégou. "Billion-scale similarity search with GPUs." IEEE transactions on big data 7.3 (2019): 535-547.
+
+Act 1 -- The Data Ingestion Engine
+
+The Document Pipeline -- End-to-End Overview
+
+· Pipeline Stages (O ine Phase):
+
+   · 1. Load: PDF, DOCX, HTML, Markdown  raw text strings.
+
+   · 2. Parse: Extract structure -- headings, tables, sections.
+
+   · 3. Chunk: Split into semantically coherent segments.
+
+   · 4. Embed: Each chunk  dense vector v  d.
+
+   · 5. Index: Store `(chunk_text, vector)` pairs in a Vector Store (FAISS, Qdrant, Chroma).
+
+
+· Critical Design Insight: Every decision in Steps 1­3 determines what information is
+
+   *retrievable* downstream. Garbage in  garbage retrieved.
+
+
+· Embedding Dimension Typical Values: `d = 384` (MiniLM), `768` (BERT-base), `1536` (text-
+
+   embedding-3-small), `3072` (text-embedding-3-large).
+
+                                                                                                                                                                                                       6
+
+l ff
+Barnett, Scott, et al. "Seven failure points when engineering a retrieval augmented generation system." Proceedings of the IEEE/ACM 3rd International Conference on AI Engineering-Software Engineering for AI. 2024.
+
+Naive Chunking -- Fixed-Size Character Splitting
+
+· Simplest Strategy: Split every `chunk_size` characters, with `chunk_overlap`
+
+characters of shared context.
+    # chunk_size=512, chunk_overlap=64
+                                  chunks = [text[i:i+512] for i in range(0, len(text), 512-64)]
+
+· Three Critical Failure Modes:
+
+
+· 1. Context Fragmentation (Despite Overlap): Overlap patches short splits,
+
+   but fails if the core subject (e.g., document title) is far from the key fact. Chunk
+
+   B gets the fact but loses the premise.
+
+
+· 2. Mid-Table Cut: Table headers in Chunk A; 
+
+   data rows in Chunk B  orphaned numbers.
+
+
+· 3. Cross-Section Bleed: Conclusion of Section 3 fused with Introduction of
+
+   Section 4  retrieval confusion.
+
+
+· Result: High false-positive retrieval rates; LLM receives semantically incoherent
+
+context.                                                                                         7
+Structural Chunking -- Layout-Aware Document Parsing
+
+· Goal: Find natural boundaries before splitting: 
+
+   headings, sections, and paragraphs.
+
+
+· Tools: `unstructured`, `PyMuPDF`, or 
+
+   `pdfminer.six`, depending on layout 
+   complexity.
+
+
+· Split Priority: Chapter > Section > Paragraph > Sentence > Token
+
+
+· Token Rule: Split at the largest natural unit that ts `max_tokens`.
+
+
+· Tables: Keep headers with each row group.
+
+
+· Check: Evaluate retrieval quality; structure-aware splitting is not automatically
+
+   better.
+
+                                                                                                                                                                                                      8
+Semantic Shift Detection -- The Embedding Cosine Breakpoint
+
+· Problem: Even paragraph-level splitting can merge topically unrelated content.
+
+
+· Solution -- Embedding-Based Breakpoint Detection (using a fast Bi-Encoder e.g., SBERT):
+
+
+   · s   Softmax classifier                                                  d          -1 ... 1
+   1.  Compute  sentence  embeddings                                   i          cosine-sim(u, v)
+                                                        (u, v, |u-v|)
+
+   for each sentence i.
+                 u                                v             u           v
+                                                                                    pooling     pooling
+   · 2. Compute consecutive cospionolineg distpaoonlingce:                            BERT        BERT
+                                                                                  Sentence A  Sentence B
+   (i, i + 1) = 1 - cos(s , s ) dist
+                          i i+1 
+ BERT          BERT
+                               Sentence A   Sentence B
+
+   · 3. Find "breakpoints" where distance spikes above a threshold :  Figure 1: SBERT architecture with classification ob- Figure 2: SBERT architecture at inference, for exam-
+                                                                                      jective function, e.g., for fine-tuning on SNLI dataset. ple, to compute similarity scores. This architecture is
+      a sudden spike signals a topic shift. The two BERT networks have tied weights (siamese also used with the regression objective function.
+                                                                                      network structure).
+
+                                                                                           training data. We experiment with the following
+
+                          computed candidate embeddings using attendtiions.tasntrcucetusres=and[ocbjoecstiivenfeun_ctdioinss. tance(s[i], s[i+1]) for i in range(len(s)-1)]
+
+                          This idea works for finding the highest scborrinegakpoCilansstifiscat=ion [Oibjefctoivre Fuin,ctiovn. iWne ceonn-umerate(distances) if v > ]
+
+                                                                                catenate the sentence embeddings u and v with
+
+                                                                                the element-wise difference |u v| and multiply it
+                                                                                with the trainable weight Wt 2 R3nk:
+· Example Adaptive Heuristic:  = 95th percentile of distances.
+ sentence in a larger collection. However, poly-
+                                                                                    encoders have the drawback that the score function
+                                                                                    is not symmetric and the computational overhead
+
+                          is too large for use-cases like clustering, which                o = softmax(Wt(u, v, |u v|))
+
+                                                                                   where n is the dimension of the sentence em-
+                                                                                beddings and k the number of labels. We optimize
+                                                                                cross-entropy loss. This structure is depicted in
+·                                                                               would require O(n2) score computations.
+
+   Caveat: Requires one embedding pass per sentence -- compute cost scales linearly with doc Previous neural sentence embedding methods
+
+                                                                                started the training from a random initialization.
+
+   length. In this publication, we use the pre-trained BERT
+
+                          and RoBERTa network and only fine-tune it to Figure 1.
+                          yield useful sentence embeddings. This reduces                                                                                                                                9
+                          significantly the needed training time: SBERT can        Regression Objective Function. The cosine-
+                                                                                similarity between the two sentence embeddings
+                          be tuned in less than 20 minutes, while yielding
+                          better results than comparable sentence embed-        u and v is computed (Figure 2). We use mean-
+                                                                                squared-error loss as the objective function.
+                          ding methods.
+                                                                                Triplet Objective Function. Given an anchor
+
+                                                                                sentence a, a positive sentence p, and a negative
+
+                          3 Model                                               sentence n, triplet loss tunes the network such that
+
+                          SBERT adds a pooling operation to the output the distance between a and p is smaller than the
+Reimers, Nils, and Iryna Gurevych. "Sentence-bert: Sentence embeddings using siamese bert-networks." Proceedings of the 2019 conference on empirical methods in natural language processing and the 9th international joint conference on natural language processing (EMNLP-IJCNLP). 2019.
+
+Embedding Models -- Bi-Encoders & SentenceTransformers
+
+· Recap (Week 9): query and document are embedded separately, so document
+
+   vectors are precomputed once. L2-normalise and the dot product *is* cosine.
+
+
+· Limit 1 -- the encoder caps your chunk: `all-MiniLM-L6-v2` truncates at 256
+
+   tokens. No error; the tail is dropped and bSoeftcmaox cmlasseifiser unretrievable.                                                             -1 ... 1
+
+   Check your chunker against this (Slide 7). 
+                                                                                       cosine-sim(u, v)
+                                                                                                              (u, v, |u-v|)
+
+· Limit 2 -- dimension is a storage bill: N × d × 4 bytes. u                                                                 v              u                     v
+                                                                                                                                        pooling               pooling
+   One million chunks = 1.5 GB at d = 384, 12.3 GB at d = 3072.
+                                                                          BERT                  BERT
+                                                                                                                                      Sentence A            Sentence B
+                                   pooling                                                                                   pooling
+
+·  Example Models (verify current model cards and benchmark 
+                                   BERT                                                                                      BERT
+   snapshot):
+
+                                   Sentence A  Sentence B
+
+             Model            Dim  Figure 1: SBERT architecture with classiUficsatieon-coab-se Figure 2: SBERT architecture at inference, for exam
+   all-MiniLM-L6-v2
+   bge-m3                          jective function, e.g., for fine-tuning on SNLI dataset. ple, to compute similarity scores. This architecture i
+   API embedding model
+                        384        TheFtwaosBt EERnT gnelitwsohr-kos rhiaeventtieeddwbeigahstse(lsiinameese also used with the regression objective function.
+                        1024
+                                   network structure).
+
+                                      Multilingual and multiple retrieval modes
+                                                                                                                                      training data. We experiment with the following
+                        provider-speci ccomMpuatendacganeddidasteeermvbiceded;indgismuseinngsaitotennstioan.nd sbtreuchtuarevsioanrdaobrejecvtiveersfuinocntioends.
+                                                                                                                                                                        10
+
+                                   This idea works for finding the highest scoring                                                    Classification Objective Function. We con
+
+                                   sentence in a larger collection. However, poly- catenate the sentence embeddings u and v with
+
+                                   encoders have the drawback that the score function the element-wise difference |u v| and multiply i
+                                   is not symmetric and the computational overhead with the trainable weight Wt 2 R3nk:
+
+                        if         is too large for use-cases like clustering, which
+The Hubness Problem & Anisotropy in Embedding Spaces
+
+· Two Embedding Space Pathologies:
+
+
+  · 1. Hubness: A few vectors become nearest 
+
+      neighbors for many unrelated queries.
+
+
+     · RAG Symptom: The same generic chunks 
+
+         repeatedly appear in top-k results.
+
+
+  · 2. Anisotropy: Embeddings occupy a narrow 
+
+      region instead of spreading uniformly.
+
+
+     · E ect: Unrelated vectors can receive in ated cosine similarity.
+
+
+· Diagnose: Inspect mean pairwise cosine and how often each chunk appears in top-k.
+
+
+· Mitigate: Use retrieval-trained embeddings, normalization, whitening, or hard-
+
+   negative training.
+
+                                                                                                                                                                                                     11
+
+lf ff
+In-Class Activity -- The Vector Space Mental Model
+
+· Activity: "Map Your Classmates as Vectors"
+
+· Round 1 (1D): Feature = sleep hours last night. Plot on a number line -- who is your
+
+   nearest neighbor?
+
+
+· Round 2 (2D): Add co ee cups as 2nd feature. Re-plot -- neighbors may shift.
+
+· Discussion Prompts:
+
+
+  · 1. "Add 100 features (exam score, height, favorite color...) -- do you still have clear
+
+      nearest neighbors?"
+
+
+  · 2. "What would Hubness look like if one person were perfectly average on every
+
+      feature?"
+
+
+· Key Insight: This is exactly what happens to document chunks in 768-dimensional
+
+   space.
+
+                                                                                                                                                                                                     12
+
+ff
+Act 2 -- Multi-Stage Retrieval
+
+What is Information Retrieval (IR)? -- A 70-Year Evolution
+
+· De nition: The science of nding relevant unstructured material (text
+
+   documents) within large collections to satisfy an information need.
+
+
+· Core Shift: From ranking 10 web links for human reading -> retrieving grounded
+
+facts for LLM reasoning.                                                          13
+
+if if
+The Retrieval Landscape - Sparse vs. Dense
+
+· Two Fundamentally Di erent Retrieval Paradigms:
+
+
+                      Sparse (Lexical)              Dense (Semantic)
+
+Representation  High-dim sparse vector (vocabulary-size) Low-dim dense vector  d
+
+Speed           Very fast (inverted index)          Slower (ANN search)
+
+Strengths       Rare terms, product codes, names    Paraphrase, concept matching
+
+Weaknesses      Vocabulary mismatch                 Hallucinated relevance
+
+Example         BM25                                Bi-Encoder (SBERT)
+
+· Failure modes complement each other: 
+
+- BM25 misses "myocardial infarction therapy" when query says "heart
+
+attack treatment" (vocabulary mismatch);; 
+
+- Dense retrieval can return semantically close but factually wrong docs for rare entity
+
+queries -- motivation for Hybrid Retrieval.                                               14
+
+                                             ff
+Sparse Retrieval -- BM25 Theory & Mechanics
+
+· BM25 (Best Match 25) -- Core Idea: Score a document d for query q by summing per-term scores with
+
+   saturation and length normalization.
+
+
+·  BM25 Formula: BM25(d, q) =  IDF(t)                              f(t, d)  (k1 + 1)             
+
+                                                         f(t, d) + k1  (1 - b + b 
+                                                     tq                                 |d|
+
+                                                                                      avgdl )
+
+   Component 1: IDF Weight (Term Speci  city):           IDF(t)  =  ln  N  -   nt  + 0.5  
+
+                                                                           nt  +   0.5
+·
+
+   · Frequent stopwords ("the", "is")  n > N/2  IDF goes negative (it is exactly 0 at n = N/2). Two
+
+      conventions handle this: Lucene / Elasticsearch use ln(1 + ...), always positive; `rank_bm25` -- today's
+      demo and lab -- oors negatives at  × avg_idf, so every negative-IDF term collapses to the same value.
+
+
+   · Rare entities / part numbers (`"INV-7832"`, `"myocardial"`)  nt  N  IDF is high.
+
+· Why BM25 Beats Traditional TF-IDF:
+
+
+   · 1. TF-IDF: Linear term frequency explodes  easily spammed by keyword stu ng.
+
+
+   · 2. BM25: Solves this with TF Saturation (k1) and Length Normalization (b).                                 15
+
+   if lf
+BM25 Component 2 -- TF Saturation & Parameter
+
+· The Problem: Keyword Stu ng in Linear TF:
+
+
+· TF-IDF: Score  f(t, d)  repeating a keyword 1,000 times gives 1000x score.
+
+
+· BM25 Saturated TF Formula -- length normalization is switched o on this slide (b = 0):
+           f(t, d)  (k1 + 1) 
+
+TFBM25  =    f(t, d) + k1
+
+·  Asymptote ceiling:  lim  TFBM25  =  (k1  +  1)  =  2  .  50  (when  k1  =  1.50).  This  ceiling  does  not  depend  on
+
+                       f
+   document length -- it is still k + 1 once we turn b on.
+
+
+· Diminishing Returns Table (k = 1.5, b = 0):
+
+· Role of k1: Half-saturation point -- when f(t, d) = k1, score reaches exactly 50 % of maximum ceiling                     16
+
+   (1.25).
+
+                                                                i ff
+BM25 Component 3 -- Document Length Normalization & Parameter
+
+·  The  Problem:  Unfairness Across Document Sizes:
+           BM25(d,  q)  =      IDF(t)                  f(t, d)  (k1  +  1)     |d|
+        500-word  page naturally repeats keywords more                                                    k1  (1 - b     +  b
+   ·A                                                   often                  tq            f(t,  d)  +                        avgdl   )
+
+   than a 50-word note, simply due to document length.
+
+
+·  Length Normalization Factor: L(d)  =  1-b+b  |d| 
+
+
+                                                avgdl
+
+· Fairness Behavior Across 
+  Document Sizes (b = 0.75):
+
+
+· Hyperparameter b  [0.0,1.0]:
+
+   · b = 0.0: No length penalty (ignores document length).
+
+   · b = 1.0: Full proportional penalty.
+
+   · b = 0.75: Standard TREC benchmark setting.
+
+                                                                                                                                                                                                     17
+BM25 Complete Calculation -- Multi-Case Comparative Walkthrough
+
+· Worked Benchmark Setup:
+
+  · Query: "deep learning"  t1 = "deep" (IDF =1.50), t2 = "learning" (IDF=2.50).
+
+  · Corpus Parameters: avgdl = 100 words, k1= 1.50, b = 0.75.
+
+
+· Side-by-Side Evaluation Across 4 Scenarios:
+
+· Key Takeaway: BM25 simultaneously balances term rarity, spam resistance, and length
+
+   fairness in a single closed-form score.
+
+                                                                                                                                                                                                     18
+Dense Retrieval -- Bi-Encoder Training with Contrastive Loss
+
+·  Recap - InfoNCE / In-batch Negatives:      i  =  - log           exp(sim(qi, pi)/) 
+                                                                 Nj=1 exp(sim(qi, pj)/)
+   
+
+   Numerator: the one right pair. Denominator: every passage in the batch, the right one included.  sets the sharpness.
+
+
+· In-Batch Negatives Trick: in a batch of N pairs, each p with j  i is a free negative for
+
+   q -- N = 256 gives 255 of them. Cost: O(N²) comparisons per batch.
+
+
+· What changes for retrieval: positives are (query, passage) pairs -- asymmetric, and the
+
+   passage side is long. sim(q, p) = q · p on L2-normalised vectors (Slide 10).
+
+
+· Hard Negative Mining (ANCE, Xiong et al., 2021): in-batch negatives are too easy --
+
+   sample instead from near the decision boundary (high-scoring non-relevant passages) 
+
+   sharper representations.
+
+
+· Training Data Format:
+   # Each training example: (query, positive_passage, [negative_passages])
+
+   {"query": "What causes fever?",
+
+   "pos": "Fever is caused by infection...",
+
+   "neg": ["Fever is a symptom measured by...", # hard negative
+
+   "The patient's temperature was..."]} # random negative                                                                 19
+Why Neither Sparse Nor Dense Alone Wins
+
+· Real-World Failure Cases:
+
+Query Type                   BM25 Result                               Dense Result                  Winner
+
+heart attack treatment       Miss (doc says "myocardial infarction") Hit                             Dense 
+
+invoice #INV-2024-7832       Exact hit                                 May return similar invoice numbers BM25 
+
+explain quantum entanglement simply Hit on "quantum" / "entanglement"  Hit on conceptual simplicity  Dense 
+
+python 3.11 asyncio bug fix  Exact version + keyword match             May retrieve python 3.10 bug  BM25 
+
+· Empirical Evidence: On BEIR (Thakur et al., 2021, 18 datasets) BM25 is a
+
+   strong zero-shot baseline that beats DPR on most sets;
+
+
+  · fusing BM25 with a dense retriever improves over either alone on most
+
+      datasets (Ma et al., 2021; Karpukhin et al., 2020).
+
+
+· Conclusion: Use both retrieval pipelines in parallel, then fuse results.
+
+                                                                                                                                                                                                     20
+Hybrid Retrieval Architecture
+
+· Parallel Retrieval 
+
+   Architecture:
+
+· Score Incompatibility Problem: BM25 scores are unbounded (0,); cosine
+
+   scores are bounded [-1, 1]. Cannot add directly!
+
+
+· Naive Normalization Fix: Min-Max normalize each score list to [0, 1], then add.
+
+   Problem: sensitive to outliers in either list.
+
+
+· Better Fix: Reciprocal Rank Fusion (RRF) -- rank-based, distribution-free.
+                                                                                                                                                                                                     21
+Cormack, Gordon V., Charles LA Clarke, and Stefan Buettcher. "Reciprocal rank fusion outperforms condorcet and individual rank learning methods." Proceedings of the 32nd international ACM SIGIR conference on Research and development in information retrieval. 2009.
+
+Reciprocal Rank Fusion (RRF) -- The Algorithm
+
+· Core Insight: Ignore raw scores entirely. Use only the rank position of each
+
+   document in each retrieval list.
+
+
+· (d) =  k + 1 (d) RRF Formula: RRF    where R = set of retrieval systems, 
+rR                         rankr
+                                     
+ k = smoothing constant (typically k = 60), 
+
+                                       rankr(d) = rank of document d in retrieval system r.
+
+· Worked Example (k=60):
+
+
+· Key Property: Documents that rank high in multiple lists get boosted; outlier
+
+   single-list high rankers get tempered by the k constant.
+                                                                                                                                                                                                     22
+Cormack, Gordon V., Charles LA Clarke, and Stefan Buettcher. "Reciprocal rank fusion outperforms condorcet and individual rank learning methods." Proceedings of the 32nd international ACM SIGIR conference on Research and development in information retrieval. 2009.
+
+RRF -- Why the Constant k=60 Works
+
+· The k=60 Intuition:
+
+
+  · Without k: Rank 1 scores 1/1 = 1.0; Rank 2 scores 1/2 = 0.5 -- 50% penalty for one
+
+      position drop is too aggressive.
+
+
+   · With k=60: Rank 1 scores 1/61  0.01639; Rank 2 scores 1/62  0.01613 -- about a
+
+      1.6% relative decrease, much smoother than k=0.
+
+
+·  E  ect of k on Score Curve: score(r) =    1  -      1  =  1                   
+
+                                           k+r     k+r+1
+                                                             (k + r)(k + r + 1)
+
+   · Small k  steep early dropo (aggressive). Large k  at curve (all ranks treated equally).
+
+
+· Empirical Default (k = 60): Cormack et al. (2009) xed k = 60 in a pilot study on TREC data
+
+   and never re-tuned it; later practice nds results fairly insensitive across roughly k  [40, 80],
+
+   which is why k = 60 is the standard zero-shot default.
+
+
+· Practical Rule: Start with k=60, truncate input lists consistently, and tune only if validation
+
+   data shows a bene t.                                                                              23
+
+if ff if ff
+The Recall-Precision Gap -- Why Re-Ranking Exists
+
+· Retriever Goal: Find a broad candidate set quickly; prioritize recall.
+
+· Reranker Goal: Reorder that set carefully; prioritize precision.
+
+· Bi-Encoder Limit: Query and document are encoded independently.
+
+· Cross-Encoder Bene t: Joint attention captures negation and token-level
+
+   interactions.
+
+
+· Trade-o : Larger K may improve recall but increases reranking cost.
+
+· Pipeline: Retrieve K candidates, rerank them, then send only top N to the
+
+   LLM.
+
+                                                                                                                                                                                                     24
+
+if ff
+                                                                                        Nogueira, Rodrigo, et al. "Document ranking with a pretrained sequence-to-sequence model." Findings of the association for computational linguistics: EMNLP 2020. 2020.
+                                                                                                                                                                                                             Nogueira, Rodrigo, and Kyunghyun Cho. "Passage Re-ranking with BERT." arXiv preprint arXiv:1901.04085 (2019).
+
+Cross-Encoder Re-Ranking Architecture
+
+· Input & Joint Attention: `[CLS] query [SEP] document [SEP]` - all
+
+   query tokens attend to all document tokens across all Transformer layers.
+
+
+· Scoring Head: Extract `[CLS]` embedding -> Linear layer -> raw scalar logit
+  score wTh[CLS] + b.
+
+· Cost & Constraint: O(( | q | + | d | )2) cross-attention prevents o ine
+  precomputation  run online only on top K = 20-100 candidate pairs from
+
+   RRF.
+
+
+· Examples: `cross-encoder/ms-marco-MiniLM-L-6-v2`, `BAAI/bge-
+
+   reranker-large`.
+
+                                                                                                                                                                                                     25
+Bi-Encoder vs. Cross-Encoder -- The Complete Tradeo
+
+· ColBERT (2020): The Middle Ground -- Late interaction: independent encoders but
+
+   token-level matching at inference time via MaxSim operator. ~2 orders of magnitude
+   cheaper than a Cross-Encoder at query time; quality between Bi- and Cross-Encoder.
+
+                                                                                                                                                                                                     26
+The Full Two-Stage Retrieval Pipeline -- Worked Numbers
+
+· Illustrative Pipeline Example (measure these values on your own hardware and
+
+   corpus):
+
+
+· Illustrative Retrieval Latency: If Stage 1a and 1b run in parallel, wall-clock time is
+  approximately max(5,10) + 1 + 200 = 211 ms; real latency varies with hardware,
+
+   batch size, index, and sequence length.
+
+
+· Tip: For latency-sensitive apps, skip Stage 3 and tune k for Stage 2 carefully instead.
+                                                                                                                                                                                                     27
+In-Class Discussion -- Design Your RAG System
+
+· Scenario: Your team is building a legal document QA system for a law rm.
+
+   · Corpus: 50,000 legal contracts (avg. 40 pages each = ~2M chunks).
+
+   · User Queries: Mix of:
+
+      · Exact clause search: "termination clause section 12.3"
+
+      · Conceptual questions: "What are our obligations if the client defaults?"
+
+      · Multi-document: "How do our contracts with Company A compare to Company B on liability?"
+
+
+· Discussion Questions:
+
+   · 1. What chunking strategy would you use? (Fixed-size? Layout-aware? Semantic shift?)
+
+   · 2. Would you use Sparse, Dense, or Hybrid retrieval? Why?
+
+   · 3. Would you deploy a Cross-Encoder? What are the latency implications?
+
+   · 4. The third query type (comparison) -- can standard RAG handle it? What would you need extra?
+
+                                                                                                                                                                                                     28
+Demo 1 -- Hybrid RAG Pipeline in Code
+
+· Demo: Part 1 (Sections 1­15).
+
+· BM25: Build the sparse baseline with `rank_bm25`.
+
+· Dense: Encode chunks and search a FAISS at index.
+
+· Fusion: Implement `rrf_merge(..., k=60)` from scratch.
+
+· Rerank: Score the fused candidates with a Cross-Encoder.
+
+· End-to-End QA: Form context and prompt the LLM for nal generation.
+
+                                                                                                                                                                                                     29
+Act 3 -- Beyond Text Vectors
+
+The Multimodal Challenge
+
+· Why Multimodal: Important evidence may appear in charts, scans, or
+
+   diagrams.
+
+
+· Text-Only Failure: OCR can capture labels while losing visual structure or
+
+   trends.
+
+
+· Goal: Place related images and text near each other in one embedding
+
+   space.
+
+
+· CLIP: Contrastively trains an image encoder and a text encoder.
+
+· Result: Text can retrieve images, and images can retrieve text.
+
+                                                                                                                                                                                                     30
+                                                                                                                                                            Radford, Alec, et al. "Learning transferable visual models from natural language supervision." International conference on machine learning. PmLR, 2021.
+
+CLIP Architecture -- A Shared Embedding Space
+
+· (1) Contrastive Pre-training: Jointly trains Text Encoder (Transformer) and Image Encoder (ViT /
+  ResNet) on 400M pairs. Maximizes cosine similarity on the diagonal (Ii  Ti) while minimizing o -
+
+   diagonal negatives.
+
+
+· (2) Create Dataset Classi er: Synthesizes class labels using prompt templates (e.g., "A photo of
+  a {object}.") -> passed through Text Encoder to produce class embedding vectors T1, T2, ..., TN.
+
+
+·  (3) Zero-Shot Prediction: Encodes                                                          an unseen query image into vector I1                                    ->  computes        similarity
+   againsLt eaarllnicnlgaTsrsansvfeercabtloe rVsisu-a>l Mpordeedls iFcrtosm                                                                                           a   dog.").
+                                                                                              tNhaeturaalrgLamngauxagecSlaupsesrv(iseio.ng., "A photo of                                        2
+
+   (1) Contrastive pre-training                                                                                        (2) Create dataset classifier from label text
+
+                                                                                                                       plane
+
+   PaaPeuaPeuspaPeupspsuesppsiesppseierspiereieretpretphuptuhpepthupehuepep                                            car
+
+                                                                               Text                   ...              dog      A photo of                 Text
+                                                                             Encoder                                            a {object}.              Encoder
+
+                                                                                                                                                                                          ...
+
+                                                                                          T1  T2  T3  ...  TN
+
+                                                                                                                       bird
+
+                                                                                      I1  I1·T1 I1·T2 I1·T3 ... I1·TN  (3) Use for zero-shot prediction
+
+                                                                                      I2  I2·T1 I2·T2 I2·T3 ... I2·TN                                                     T1  T2  T3      ...  TN
+
+                                                                              Image   I3  I3·T1 I3·T2 I3·T3 ... I3·TN            Image                                I1  I1·T1 I1·T2 I1·T3 ... I1·TN
+                                                                             Encoder                                            Encoder
+
+                                                                                                           
+
+                                                                                      IN  IN·T1 IN·T2 IN·T3 ... IN·TN                                                         A photo of               31
+                                                                                                                                                                                  a dog.
+
+   Figure 1. Summary of our approach. While standard image models jointly train an image feature extractor and a linear classifier to predict
+   some label, CLIP jointly trains an image encoder and a text encoder to predict the correct pairings of a batch of (image, text) training
+   examples. At test time the learned text encoder synthesizes a zero-shot linear classifier by embedding the names or descriptions of the
+
+                                                                                                                       if
+                                                                                   Learning Transferable Visual Mode
+
+                                                                                   (1) Contrastive pre-training
+
+Alexey Dosovitskiy et al, "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale," in International Conference on Learning Representations, 2021.
+
+Vision Transformer (ViT) -- How Images Become Tokens Published as a conference paper at ICLR 2021 PaPauePauespPauesppseusppseispspeirepsieereireptretphutpuhpetpuhepuhpepeText
+                                                                                                              Encoder
+
+                                                                                                                                                                            I1
+
+· Images as Sequences: Splits a 2D image into                                                                                                                               I2
+
+   a grid of xed-size spatial patches.
+                                           Vision Tr ansfor mer (ViT)   Image                                                        I3
+                                                                                                              Encoder
+
+· Linear Projection: Flattens each patch and      Class                 MLP                                                                                    
+                                                                        Head
+linearly projects it into a 1D token embedding.
+   Bird                                                                                                                IN
+                                                   Ball
+                                                                                        Figure 1. Summary of our approach. W
+                                                  Car                              Transsfoomrme elarbEenl,cCodLeIrP jointly trains an ima
+                                                  ...
+                                                                                        examples. At test time the learned tex
+· Position & `[CLS]` Token: Prepends a learnable `0*`                                   target dataset's classes.
+
+   `[class]` token and adds 1D Position Embeddings.
+
+
+                                                  Patch + Position
+                                                    Embedding
+
+                                                   * Extra learnable
+                                                   [ cl ass] embedding
+                                              if                                *  1 23 45 6 78 9
+
+· Standard ViT vs. CLIP:
+                                                      0        Linear PrcoljaescstiiofincaotfiFolnatdteanteadsePtastcbhyesscoring
+                                                                                                  their dictionary of learned visual n-
+· In Standard ViT: Token `0*` passes through                                                      one with the highest score. Adopti
+
+MLP Head to predict xed classes                                                    tures and pre-training approaches, V
+(`Bird, Ball, Car, ...`).
+                                                         2020), ICMLM (Bulent Sariyildiz
+                                                                                   VIRT (Zhang et al., 2020) have re
+
+                                                                                   potential of transformer-based lang
+
+· In CLIP: Replaces MLP Head with a PFriogujreec1t: iMoondeHl oevaerdvietwo. oWuetsppulittaenlaamginemgrbuaeapgegreeedsmiendnotdaoientilfioignnxgse,fdaron-msdicztoeexnttp.raasttcivh
+
+I I , ..., I vector i (such as 1N  in  Slide  33ad)dfoporsmitiounlteimmboedddainlgas,liagnndmfeeedntth.Wehirleeseuxcltitiinngg assepqrouoefns coef coo3n2fcevpe
+
+                                                encoder. In order to perform classificatisoupne,rwviseiounsefotrhiemsatgaenrdeparredseanptapt
+                                              "classification token" to the sequence.TThihseisillilkueslytrbaetcioaunseodfetmhoenTstrraatne
+
+                                              Vaswani et al. (2017).               mon benchmarks is much lower tha
+
+                                                                                   For example, Li et al. (2017) reac
+
+if
+                                                                    Learning Transferable Visual Models From Natural Language Supe
+
+                                                                    (1) Contrastive pre-training                                                                                                            (2)
+
+CLIP Contrastive Pre-training -- Symmetric InfoNCE Loss p
+                                                                    aPaPeuaPeupsPaeupsspeusppsiepspsieerpseireeiretpertpuhtpuhpeptuhepuhpeep
+                                                                                                                                                       Text                      ...
+                                                                                                                                                     Encoder
+
+· Training Setup: Mini-batch of N image-text pairs (N = 32,768 in CLIP paper).
+                                                                                      T1  T2  T3  ...                   TN
+
+                                                                                                                                                                                                                 b
+
+· Symmetric InfoNCE Loss:                                                                                                                                        I1  I1·T1 I1·T2 I1·T3 ... I1·TN            (3)
+
+                            N           exp(Ii  Ti/)               exp(Ti  Ii/                                                                                   I2  I2·T1 I2·T2 I2·T3 ... I2·TN
+                                     jN=1 exp(Ii  Tj /)         jN=1 exp(Ti 
+   CLIP  =  -           1       log                      + log                                                                                )       Image   
+  I3  I3·T1 I3·T2 I3·T3 ... I3·TN
+                       2N                                                                                                                     Ij     Encoder
+                           i=1                                                                                                                    /                                                    
+                                                                                                                                                     )
+
+· Symmetric Dual Objectives:
+                                                                                                                                    IN  IN·T1 IN·T2 IN·T3 ... IN·TN
+
+   · Image-to-Text (Term 1 / Rows): For each image, identify Fsiotigmsuermela1ba.eStlu,cmChLmiIanPrygjooifcnotaluyrptartapiiponrsonaacnhoi.muWatghieoleefnstcaaonlddleaNrrdanitmdeaaxgteetxsmt.oe
+dneclosdjoeirnttoly
+
+                                                                                                                        examples. At test time the learned text encoder synthesizes a zero-shot
+
+   · Text-to-Image (Term 2 / Columns): For each text captiont,arigdetednatatsifeyt's ictlsassmes.atching image out of all
+
+      N images.
+
+
+·  Matrix Geometric E  ect:  Pushes  cosine  similarities  on  the  dcthilaaesigrsidofiincctaiatoilnoan(IryidaotfaTlseeiat)rsnuebpdy v,sicasounraildnng-agtarlalrgmNest²acn-ladspNsreesdobicatsi-negd  on   m
+                                                                                                                                                                                                       the  th
+   diagonal negative pairs down relative to it.
+
+                                                                    one with the highest score. Adopting more recent architec- N
+
+                                                                                                              tures and pre-training approaches, VirTex (Desai & Johnson, a
+
+· Scale of In-Batch Negatives: With N = 32,768, every positiv2e02p0a),irICiMs LcMon(BtrualesnteSdariayigldaizinest atl.3, 220,2706),7and Con- it
+
+   negative distractors in a single forward pass.                   VIRT (Zhang et al., 2020) have recently demonstrated the pe
+
+                                                                    potential of transformer-based language modeling, masked 33 pu
+
+                                                                    language modeling, and contrastive objectives to learn im- "z
+
+                                                                    age representations from text.                                                                                                          A
+
+                                                                    While exciting as proofs of concept, using natural language el
+
+                                                                    supervision for image representation learning is still rare. di
+
+                                     ff
+CLIP in Action -- Zero-Shot Prediction & Multimodal RAG
+
+·  Zero-Shot Classi  cation Math: p(c  image) =     exp(I  Tc/) 
+
+                                                 Ck=1 exp(I  Tk /)
+
+· Breakthrough Benchmark: Zero-shot CLIP (ViT-L/14@336px) achieves 76.2% Top-1 on
+
+   ImageNet -- matching a fully-supervised ResNet-50 without training on a single ImageNet label.
+
+
+· Prompt Engineering & Ensembling: Using prompts like "a photo of a {label}, a type
+
+   of pet" improves ImageNet zero-shot accuracy by almost 5 points over raw label strings.
+
+
+· Multimodal RAG (Cross-Modal Retrieval):
+
+
+   · Index Phase: Pre-compute CLIP embeddings for all PDF gures, diagrams, and scanned
+
+      charts into FAISS.
+
+
+   · Text -> Image Search: User asks "Show Q3 revenue chart" -> retrieve the exact nancial
+
+      graph.
+
+
+   · Image -> Document Search: User uploads a component photo -> retrieve matching repair
+
+      manuals.
+
+                                                                                                                                                                                                  34
+
+                     if
+35
+Liu, Haotian, et al. "Visual instruction tuning." Advances in neural information processing systems 36 (2023): 34892-34916.
+
+                                                                                                         36
+CLIP Mental Model
+
+· Question: Does CLIP learn composition or mainly visual­text association?
+
+· Relation Test: "A dog chasing a cat" may retrieve animals that are merely
+
+   adjacent.
+
+
+· Attribute Test: "A broken phone screen" may over-rely on the object "phone".
+
+· Negation Test: "A bird without wings" often retrieves ordinary birds.
+
+· Interpretation: Contrastive similarity can miss relations, attributes, and
+
+   negation.
+
+
+· Takeaway: Test compositional queries instead of assuming semantic
+
+   understanding.
+
+                                                                                                                                                                                                     37
+38
+When Vector-based RAG Fails -- The Global Summarization Problem
+
+· The Core Dilemma: Vector-based RAG (Dense Embeddings + Cosine Similarity)
+
+   excels at local retrieval, but collapses under macro-level synthesis.
+
+· Query Types and RAG Suitability:
+
+
+· The Root Cause: Vector search treats text chunks as isolated points in
+
+   embedding space, completely blind to explicit entity relationships.
+
+
+· The Missing Structure: How do we explicitly connect entities across
+
+   documents? -> Knowledge Graphs
+                                                                                                                                                                                                     39
+                                    Hogan, Aidan, et al. "Knowledge graphs." ACM Computing Surveys (Csur) 54.4 (2021): 1-37.              40
+Edge, Darren, et al. "From local to global: A GraphRAG approach to query-focused summarization." arXiv preprint arXiv:2404.16130 (2024).
+                                                                                                                 Edge, Darren, et al. "From local to global: A GraphRAG approach to query-focused summarization." arXiv preprint arXiv:2404.16130 (2024).
+
+Extracting Triples from Text -- The LLM Extraction Step
+
+· Goal: Extract structured Triples `(Subject, Relation, Object)` from raw text chunks.
+
+· Traditional NLP Pipeline:
+
+
+  · NER: Identify entity spans -> `(Einstein, PERSON)`, `(Germany, LOCATION)`
+
+  · Relation Extraction: Identify relations -> `(Einstein, born_in, Germany)`
+
+  · Entity Linking: Merge aliases/pronouns ("Einstein", "he") into a canonical node
+
+  · Triple Validation: Filter invalid or noisy extractions
+
+· Modern GraphRAG Approach (LLM Extraction):
+
+  · One-Shot Extraction: Prompt LLM to extract `(entity1, relation, entity2,
+
+      description)` directly from `{chunk}`.
+
+
+  · Key Trade-o : High extraction exibility vs. token costs across thousands of chunks.
+
+                                                                                                                                                                                                     41
+
+lf f
+GraphRAG Architecture -- Microsoft's Approach
+
+· Two Distinct Phases (Edge et al.,       Source Documents               community            Global Answer
+                                                                          detection
+   2024):
+                                              text extraction                                   query-focused
+                                                        and chunking                                      summarization
+   · Indexing Time (O ine / Purple): 
+                                              Text Chunks                                 Community Answers
+      Extract graph -> 
+      detect communities ->                             domain-tailored                                   query-focused
+      pre-generate community                            summarization                                     summarization
+      summaries.
+
+                                       Entities & Relationships                          Community Summaries
+   · Query Time (Online / Green):
+                                                        domain-tailored                                   domain-tailored
+      Map-Reduce query across                           summarization                                     summarization
+      community summaries ->
+      synthesize nal global answer.
+      Knowledge Graph                                  Graph Communities
+
+· Core Breakthrough:                   Indexing Time                     Pipeline Stage  Query Time
+
+   Pre-computes holistic corpus    Figure 1: Graph RAG pipeline using an LLM-derived graph index of source document text. Th
+
+   understanding o ine, bypassing
+
+   context limits at query time.
+
+                                   graph index spans nodes (e.g., entities), edges (e.g., relationships),  and covariates   d(oem.g.a,in4c2loafimt
+                                   that have been detected, extracted, and summarized by LLM prompts       tailored to the
+
+                                   dataset. Community detection (e.g., Leiden, Traag et al., 2019) is used to partition the graph ind
+
+                                   into groups of elements (nodes, edges, covariates) that the LLM can summarize in parallel at bo
+
+                                   indexing time and query time. The "global answer" to a given query is produced using a final rou
+
+                                   of query-focused summarization over all community summaries reporting relevance to that query
+
+l ff l ff if
+                             Traag, V. A., L. Waltman, and N. J. van Eck. "From Louvain to Leiden: guaranteeing well-connected communities." Scienti c Reports 9.1 (2019): 5233.
+
+Community Detection & Graph Summarization
+
+· 1. Leiden Algorithm (Clustering):
+
+· Clusters densely connected entities by optimizing Modularity Q (internal vs.
+
+   expected edge density).
+
+
+· Guarantees well-connected communities without internal disconnections
+
+   (improves on Louvain).
+
+
+· 2. Hierarchical Structure (Multi-Level):
+
+
+· Coarse Levels: High-level clusters for broad, corpus-wide themes.
+
+
+· Fine-Grained Levels: Detailed sub-clusters for speci c topical inquiries.
+
+
+· 3. Community Report Generation (LLM Summarization):
+
+
+· For each detected community, LLM receives `(Entities, Relations,
+
+Source Snippets)` -> generates a structured summary report.                                                                                                                       43
+GraphRAG -- Local vs. Global Query Modes
+
+· Local Search (Entity-Focused):
+
+   · Concept: Traverses entities, relationships, and chunks around target entities.
+
+   · Example: "What are the key achievements of Sam Altman?" (1 LLM call, low latency).
+
+
+· Global Search (Corpus-Wide Map-Reduce):
+
+   · Concept: Answers broad thematic queries across the entire dataset without a xed entity anchor.
+
+   · Example Query: "What are the top 5 emerging technology themes in all 500 reports?"
+
+   · Map Step (Fan-Out): Send query to all Community Summaries in parallel -> each cluster gives an
+
+      intermediate answer (e.g., Cluster 1: Computer Vision, Cluster 2: LLMs).
+
+
+   · Reduce Step (Fan-In): Aggregate & rank top intermediate answers -> LLM synthesizes into a
+
+      single holistic Global Answer.
+
+
+· Cost Trade-O : Global search requires signi cantly more LLM calls and tokens than Local search.
+
+                                                                                                                                                                                                     44
+
+if f
+Multi-Hop Reasoning with Knowledge Graphs
+
+· Example Multi-Hop Query: "Which companies did executives who worked for OpenAI subsequently found?"
+
+
+· The Complete 3-Step Graph Execution Flow:
+
+
+   · Step 1 -- Query Decomposition (LLM / Text-to-Cypher):
+
+
+       · LLM analyzes question structure -> generates dynamic multi-hop Cypher query (2 hops in this example):
+
+            
+                  MATCH (p:PERSON)-[:WORKED_AT]->(:ORG {name:"OpenAI"})
+                  MATCH (p)-[:FOUNDED]->(c:COMPANY)
+                  RETURN p.name, c.name
+
+
+   · Step 2 -- Deterministic 2-Hop Traversal (Graph DB): Graph DB executes Cypher query by strictly following stored graph pointers.
+       · Hop 1 (Incoming): `(:ORG "OpenAI")` WORKED_AT `(:PERSON)` -> `{Sam Altman, Dario Amodei}`
+
+       · Hop 2 (Outgoing): `(:PERSON)` FOUNDED `(:COMPANY)` -> `{Worldcoin, Anthropic}`
+
+
+   · Step 3 -- Answer Synthesis (LLM):
+
+       · Retrieved exact sub-graph triples LLM Natural language response.
+
+
+· Why Vector RAG Fails Here: Cosine similarity retrieves disconnected chunks mentioning "OpenAI" or "executives", or
+
+   "founded companies", but cannot deterministically chain (A -> B -> C) across separate documents.
+
+                                                                                                                                                                                                     45
+GraphRAG vs. Vector RAG -- Decision Framework
+
+· Decision Framework -- Vector RAG vs. GraphRAG:
+
+
+· Hybrid Strategy: Build both. Route with a lightweight classi er: speci c factual  Vector
+
+   RAG; thematic/relational  GraphRAG.
+
+
+· A third design point (2026) -- the "LLM Wiki" pattern: compile the corpus once into an
+
+   interlinked Markdown wiki, then query the wiki instead of the chunks. Same instinct as
+   GraphRAG's community reports (precompute the synthesis), di erent structure (pages +
+   links, not graph + communities). Practitioner proposal -- no published evaluation; targets
+   ~100­10,000 documents, not millions.
+
+                                                                                                                                                                                                     46
+Act 4 -- The Long-Context Trap
+
+Long Context Does Not Eliminate Retrieval
+
+· The "Just Stu Everything" Temptation: If context is 1M tokens, why bother
+
+   with RAG at all?
+
+
+· Two Remaining Problems:
+
+
+· 1. Computational Cost: Standard full attention forms O(N2) pairwise
+
+   scores. Actual deployed cost depends on attention architecture, kernels,
+   caching, sparsity, and hardware.
+
+
+· 2. The "Lost in the Middle" Phenomenon: LLMs have trouble using
+
+   information from the middle of long contexts (Liu et al., 2024).
+
+
+· Conclusion: Even with million-token contexts, RAG remains valuable for cost
+
+   and attention-quality reasons.
+
+Liu, Nelson F., et al. "Lost in the middle: How language models use long contexts." Transactions of the association for computational linguistics 12 (2024): 157-173.  47
+
+ff
+Sliding Window Attention (SWA) -- E cient Long-Context
+
+· Quadratic Bottleneck: Full attention attends to all prior tokens; O(N2)
+
+   compute/memory blows up at long contexts.
+
+
+· Sliding Window Attention (SWA): Each token 
+
+   attends only to the preceding w tokens (window size).
+
+
+· Linear Complexity: Reduces computational 
+  complexity from O(N2) to O(N  w).
+
+
+· Fixed KV Cache: Caches only the most recent w tokens per layer via rolling
+
+   bu er.
+
+
+· The Core Question: If each layer only sees w local tokens, how does the
+
+   model comprehend long documents?
+
+    Beltagy, Iz, Matthew E. Peters, and Arman Cohan. "Longformer: The long-document transformer." arXiv preprint arXiv:2004.05150 (2020).  48
+
+ff
+49
+Context Length Extension -- Linear Interpolation
+
+· Problem: A RoPE model may degrade at positions beyond its training
+
+   context.
+
+
+· Interpolation: Scale positions by m = m/s.
+
+· Example: Extending 4K to 16K gives s = 4, so positions are divided by 4;
+
+   position 8000 maps to 2000.
+
+
+· Formula: With s = Ltarget /Ltrain, replace m by m/s: RoPE(z, m) = z  ejmi
+
+· Trade-o : Compression reduces positional separation.
+
+· Practice: Adapt and evaluate the model on extended-context data.
+
+Chen, Shouyuan, et al. "Extending context window of large language models via positional interpolation." arXiv preprint arXiv:2306.15595 (2023).  50
+
+ f 
+                                                                                                     Peng, Bowen, et al. "Yarn: Efficient context window extension of large language models." International Conference on Learning Representations. Vol. 2024. 2024.
+
+NTK-Aware Interpolation -- A Smarter Scaling
+
+· The Frequency Insight: RoPE frequency bands serve di erent roles:
+
+
+  · High Frequencies ( large): Encode ne-grained local position (nearby
+
+      words).
+
+
+  · Low Frequencies ( small): Encode global position (document structure).
+
+· Linear Scaling Flaw: Uniformly compressing all frequencies blurs local word
+
+   order.
+
+
+· NTK-Aware Solution: Non-uniform scaling -- compress low frequencies,
+
+   preserve high frequencies.
+
+
+· YaRN (Peng et al., 2023): Extends LLaMA-2 from 4K to 128K context with
+
+   ~400 ne-tuning steps (0.1% of pre-training tokens).
+
+                                                                                                                                                                                                     51
+
+if if
+                                                                               Liu, Nelson F., et al. "Lost in the middle: How language models use long contexts." Transactions of the association for computational linguistics 12 (2024): 157-173.
+
+The "Lost in the Middle" Phenomenon
+
+· Finding: Multi-document QA can perform worse 
+
+   when evidence is in the middle.
+
+
+· Setup: Move the relevant document across 
+
+   positions in a xed long context.
+
+
+· Result: Accuracy often forms a U-shaped curve: 
+
+   stronger at the beginning and end.
+
+
+· Nature: Empirical nding observed across 
+
+   multiple leading LLMs.
+
+
+· Core Takeaway: Retrieval quality is not enough; 
+
+   document placement order directly impacts answer accuracy
+
+                                                                                                                                                                                                     52
+
+if if
+Practical RAG Design Implications from Long-Context Research
+
+· Four Production Rules from "Lost in the Middle":
+
+· 1. Reranker First: Filter for top-quality chunks with a cross-encoder before ordering.
+
+· 2. Bookend Ordering: Place top evidence in high-attention zones (start & end).
+
+· 3. Tune Chunk Count (K): Balance recall vs. distraction; more chunks  better
+
+   answers.
+
+
+· 4. Context Distillation: Summarize long chunks before nal synthesis for complex
+
+   queries.
+
+
+· Optimal Bookend Prompt Structure:
+
+                                                                                                                                                                                                     53
+Demo 2 -- RAG Synthesis & Long-Context Demonstration
+
+· Sec 16: Bookend Reordering Algorithm (`bookend_order` implementation).
+
+· Sec 17: Applying Bookend Reordering to Retrieved Chunks & Final Optimized
+
+   Prompt.
+
+                                                                                                                                                                                                     54
+55
+RAG vs. Fine-Tuning vs. Long-Context -- When to Use What
+
+· Decision Rule:
+
+  · 1. Knowledge changes often  RAG.
+
+  · 2. Output format/style needs to change  Fine-Tune.
+
+  · 3. Reason across a xed, small document set  Long-Context. Large corpus
+
+      with relational queries  GraphRAG.
+
+                                                                                                                                                                                                     56
+
+if
+Summary & Lab Preview
+
+· Act 1: Parse, chunk, embed, and index documents.
+
+
+· Act 2: Combine BM25 and dense retrieval with RRF and Cross-Encoder reranking.
+
+
+· Act 3: Extend retrieval to multimodal images (CLIP) and knowledge graphs (GraphRAG).
+
+
+· Act 4: Manage long context, attention di usion, and Bookend evidence positioning.
+
+
+· Lab
+
+· Part A: Token-Aware Text Splitter.
+
+
+· Part B: BM25 + FAISS Dual Retrieval.
+
+
+· Part C: Reciprocal Rank Fusion (RRF) from scratch.
+
+
+· Part D: Cross-Encoder Reranking.
+
+
+· Part E: Full Pipeline Assembly & QA Generation.
+
+
+· Next Week: Prompt Engineering, Autonomous Agents & Tool Use.                           57
+
+                                                                                  ff
+

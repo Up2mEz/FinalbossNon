@@ -1,0 +1,491 @@
+[
+ {
+  "id": "n11-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "ChatML roles",
+  "stem": "ใน ChatML (Chat Markup Language) role ใดทำหน้าที่กำหนดพฤติกรรมโดยรวม persona และ constraints ของโมเดล",
+  "opts": {
+   "A": "Assistant",
+   "B": "User",
+   "C": "System",
+   "D": "Critic"
+  },
+  "ans": "C",
+  "expl": "สไลด์กำหนด 3 role คือ System (global behavior, persona, constraints), User (คำถามจากมนุษย์) และ Assistant (คำตอบที่ LLM สร้าง) ส่วน Critic ไม่ใช่ role ของ ChatML",
+  "src": "text/slides_w11.txt s.3 ; notes 2.1"
+ },
+ {
+  "id": "n11-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "apply_chat_template (demo)",
+  "stem": "ใน demo เรียก tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True) ค่า add_generation_prompt=True ทำอะไร",
+  "opts": {
+   "A": "เติมส่วนหัวของ assistant turn ไว้ท้าย prompt เพื่อให้โมเดลเริ่มสร้างคำตอบต่อจากนั้น",
+   "B": "แปลงข้อความทั้งหมดเป็น token ID ทันทีโดยไม่ต้องเรียก tokenizer อีก",
+   "C": "เติม stop token ท้ายคำตอบของโมเดลเพื่อจบ generation loop ให้เรียบร้อย",
+   "D": "เพิ่ม temperature ให้โมเดลสุ่มคำตอบหลากหลายขึ้นในรอบ generation แรก"
+  },
+  "ans": "A",
+  "expl": "add_generation_prompt=True เติม assistant turn prefix (เช่น <|im_start|>assistant) ให้โมเดลรู้ว่าถึงตาตอบแล้ว ส่วน tokenize=False คือค่าที่ทำให้ได้ string กลับมา (ไม่ใช่ token ID) และ stop token เป็นสิ่งที่โมเดลสร้างเองตอนจบ",
+  "src": "text/demo_w11.txt (chat template section) ; notes 4 Chat template"
+ },
+ {
+  "id": "n11-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "RLHF reward model architecture",
+  "stem": "ใน RLHF Step 2 Reward Model ถูกสร้างโดย initialize จาก SFT model แล้วเปลี่ยน LM head เป็นอะไร",
+  "opts": {
+   "A": "softmax head ขนาดเท่า vocabulary",
+   "B": "binary classification head ตอบแค่ winner หรือ loser",
+   "C": "embedding lookup head สำหรับ special tokens",
+   "D": "scalar regression head ที่ให้ค่ารางวัลหนึ่งค่า"
+  },
+  "ans": "D",
+  "expl": "สไลด์ระบุว่า RM init จาก SFT model และแทน LM head ด้วย scalar regression head เพื่อให้ r(x,y) เป็นตัวเลขเดียว แล้วนำส่วนต่างของ winner กับ loser ไปใส่ใน Bradley-Terry loss ไม่ใช่ head ที่ทำนาย token",
+  "src": "text/slides_w11.txt s.35 ; notes 2.18"
+ },
+ {
+  "id": "n11-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "Reflection and self-critique",
+  "hinted": true,
+  "stem": "วงจร Reflection and Self-Critique ตามสไลด์มีลำดับขั้นตอนใด",
+  "opts": {
+   "A": "Critique, Generate, Refine",
+   "B": "Generate, Critique, Refine",
+   "C": "Generate, Refine, Critique",
+   "D": "Refine, Generate, Critique"
+  },
+  "ans": "B",
+  "expl": "เริ่มจากสร้างร่างแรก (Generate) ให้โมเดลตรวจว่าขาดข้อเท็จจริงหรือตรรกะผิดหรือไม่ (Critique) แล้วจึงเขียนคำตอบใหม่ตามคำวิจารณ์ (Refine) ลำดับอื่นไม่มีร่างให้วิจารณ์",
+  "src": "text/slides_w11.txt s.15 ; notes 2.10 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "Sandwich defense",
+  "stem": "Sandwich defense ใน prompt security คือวิธีใด",
+  "opts": {
+   "A": "วาง user input ไว้ระหว่าง system reminder ด้านบน (Header) และด้านล่าง (Footer)",
+   "B": "ใช้ LLM ตัวที่สองตัดสินว่าคำตอบของ LLM ตัวแรกปลอดภัยหรือไม่",
+   "C": "กรอง keyword อันตรายออกจาก prompt ของผู้ใช้ก่อนส่งเข้า LLM (input filtering)",
+   "D": "จำกัดสิทธิ์ของ tools และ APIs ที่ LLM เรียกใช้ได้ และให้คนยืนยันก่อนทำสิ่งเสี่ยง"
+  },
+  "ans": "A",
+  "expl": "Sandwich = ใส่ user input ระหว่าง system reminder สองชั้น ส่วนข้อ B คือ output evaluation, ข้อ C คือ input filtering, ข้อ D คือ least privilege",
+  "src": "text/slides_w11.txt s.21 ; notes 2.12"
+ },
+ {
+  "id": "n11-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "Few-shot prompting",
+  "hinted": true,
+  "stem": "Prompt: 'Bad -> Negative / Good -> Positive / Amazing ->' จัดเป็นเทคนิค prompting แบบใด",
+  "opts": {
+   "A": "Zero-shot prompting",
+   "B": "Chain-of-Thought prompting",
+   "C": "Program-of-Thought prompting",
+   "D": "Few-shot prompting (k = 2)"
+  },
+  "ans": "D",
+  "expl": "มีตัวอย่างงานจริง 2 ตัวอย่าง (Bad, Good) ก่อนโจทย์ Amazing จึงเป็น few-shot (in-context learning ที่ไม่อัปเดต weights) ถ้าไม่มีตัวอย่างเลยจึงเรียก zero-shot และไม่มีขั้นตอนเหตุผลหรือโค้ดจึงไม่ใช่ CoT หรือ PoT",
+  "src": "text/slides_w11.txt s.6 ; notes 2.3"
+ },
+ {
+  "id": "n11-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "DPO loss calculation",
+  "stem": "DPO ใช้ beta = 0.5 ตัวอย่างหนึ่งมี log ratio ของ chosen = log pi(yw|x) - log pi_ref(yw|x) = +1.5 และ log ratio ของ rejected = -0.5 กำหนด e^-1 = 0.3679 ค่า loss = -ln sigma( beta x (ratio_w - ratio_l) ) ใกล้เคียงข้อใดที่สุด",
+  "opts": {
+   "A": "1.3133",
+   "B": "0.3133",
+   "C": "0.1269",
+   "D": "0.6931"
+  },
+  "ans": "B",
+  "expl": "ratio_w - ratio_l = 1.5 - (-0.5) = 2.0 คูณ beta = 0.5 ได้ 1.0 แล้ว loss = ln(1 + e^-1) = ln(1.3679) = 0.3133 ข้อ C คือกรณีลืมคูณ beta (ใช้ 2.0 ได้ 0.1269) ข้อ A คือกรณีใส่เครื่องหมายผิด (-1.0) ข้อ D คือกรณี logit = 0",
+  "src": "text/slides_w11.txt s.41 ; notes 3.0-3.1"
+ },
+ {
+  "id": "n11-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "CO-STAR components",
+  "hinted": true,
+  "stem": "Prompt ตามกรอบ CO-STAR มี 2 บรรทัดคือ (1) 'ใช้น้ำเสียงเห็นอกเห็นใจ (empathetic)' และ (2) 'เขียนแบบทางการ (formal)' ตามลำดับ เป็นองค์ประกอบใดของ CO-STAR",
+  "opts": {
+   "A": "Tone และ Style",
+   "B": "Style และ Tone",
+   "C": "Audience และ Context",
+   "D": "Objective และ Response format"
+  },
+  "ans": "A",
+  "expl": "สไลด์นิยาม Style = สไตล์การเขียน (เช่น formal, creative) ส่วน Tone = น้ำเสียงเชิงอารมณ์ (เช่น empathetic) ดังนั้นบรรทัดที่ 1 คือ Tone และบรรทัดที่ 2 คือ Style ข้อ B สลับกัน ส่วน Audience คือผู้อ่านและ Response format คือรูปแบบผลลัพธ์ เช่น JSON",
+  "src": "text/slides_w11.txt s.5 ; notes 2.2 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "Zero-shot CoT vs few-shot CoT",
+  "hinted": true,
+  "stem": "ข้อใดอธิบายความแตกต่างระหว่าง Zero-shot CoT กับ Few-shot CoT (แบบ Wei et al.) ได้ถูกต้อง",
+  "opts": {
+   "A": "Zero-shot CoT ต้อง fine-tune weights ด้วยโจทย์เลข ส่วน Few-shot CoT ไม่ต้องอัปเดต weights",
+   "B": "Zero-shot CoT ใส่ตัวอย่างพร้อมขั้นตอนเหตุผลหลายตัวอย่าง ส่วน Few-shot CoT ใช้วลีกระตุ้นแทนตัวอย่าง",
+   "C": "ทั้งสองแบบต้องใช้ตัวอย่างพร้อมเฉลยเท่ากัน ต่างกันเพียงค่า temperature ที่ตั้งตอนสร้างคำตอบ",
+   "D": "Zero-shot CoT ไม่ใส่ตัวอย่างแต่ต่อท้ายด้วย Let's think step by step ส่วน Few-shot CoT ใส่ตัวอย่างที่มีเหตุผลเป็นขั้นตอน"
+  },
+  "ans": "D",
+  "expl": "Kojima et al. ใช้เพียงวลี 'Let's think step by step' (MultiArith 17% เป็น 78% บน 175B InstructGPT) ขณะที่ Wei et al. ใส่ exemplars ที่มี reasoning steps (เช่น PaLM 540B กับ 8 exemplars) ทั้งสองแบบเป็น prompting ไม่ได้อัปเดต weights ข้อ B สลับนิยามกัน",
+  "src": "text/slides_w11.txt s.8, s.10 ; notes 2.4, 2.6"
+ },
+ {
+  "id": "n11-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "Reward model Bradley-Terry loss",
+  "stem": "Reward Model ให้ r(x,yw) = 3.0 และ r(x,yl) = 1.0 กำหนด e^-2 = 0.1353 ค่า L_RM = -log sigma( r(x,yw) - r(x,yl) ) (ln ธรรมชาติ) ใกล้เคียงข้อใดที่สุด",
+  "opts": {
+   "A": "0.8808",
+   "B": "2.1269",
+   "C": "0.1269",
+   "D": "0.3133"
+  },
+  "ans": "C",
+  "expl": "diff = 3.0 - 1.0 = 2.0 ได้ loss = ln(1 + e^-2) = ln(1.1353) = 0.1269 ข้อ A คือค่า sigma(2.0) เอง (ลืมใส่ -log) ข้อ B คือ loss เมื่อ diff = -2.0 (winner ต่ำกว่า loser) ข้อ D คือกรณี diff = 1.0",
+  "src": "text/slides_w11.txt s.35-36 ; notes 3.5"
+ },
+ {
+  "id": "n11-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "Base model behavior",
+  "stem": "ป้อน 'The capital of France is' ให้ base model แล้วได้ 'Paris. The capital of Italy is Rome.' ต่อไปเรื่อย ๆ ไม่หยุด สาเหตุหลักตามสไลด์คือข้อใด",
+  "opts": {
+   "A": "base model ฝึกด้วย next-token prediction บนข้อความเว็บ จึงแค่ continue เอกสารและไม่รู้ว่าต้องหยุดเมื่อตอบเสร็จ",
+   "B": "base model ถูก SFT มากเกินไปจน overfit ตัวอย่างถาม-ตอบสั้น ๆ ทำให้เพิ่มประโยคเองต่อท้ายไม่หยุด",
+   "C": "base model เกิด reward hacking เพราะ KL penalty ต่ำเกินไปในขั้น PPO ของ RLHF",
+   "D": "base model โดน prompt injection จากข้อมูลภายนอกที่ฝังอยู่ใน prompt ที่ป้อนเข้ามา"
+  },
+  "ans": "A",
+  "expl": "Base model minimize cross-entropy ของ P(x_t | x_<t) บน trillions of tokens จึงเลียนแบบการต่อเอกสาร ไม่ได้เรียนว่าต้องตอบแล้วจบ ข้อ B และ C เป็นของขั้น alignment ซึ่ง base model ยังไม่ผ่าน ข้อ D ไม่เกี่ยวกับ prompt ที่ไม่มีคำสั่งแทรก",
+  "src": "text/slides_w11.txt s.23-24 ; notes 2.13"
+ },
+ {
+  "id": "n11-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "Chat template and special tokens",
+  "stem": "ข้อใดอธิบายบทบาทของ chat template และ special tokens ในโมเดลที่ผ่าน SFT ได้ถูกต้อง",
+  "opts": {
+   "A": "เป็นเพียงรูปแบบแสดงผลภายนอก จึงส่งข้อความดิบโดยไม่ใช้ template ก็ได้ผลเท่าเดิมกับโมเดลที่ผ่าน SFT แล้ว",
+   "B": "ทุก model family ใช้ stop token ตัวเดียวกัน คือ <|im_end|> ไม่ว่าจะเป็น ChatML หรือ Llama 3",
+   "C": "ใน SFT โมเดลเรียนว่าเห็น assistant header ต้องตอบ และจบด้วย stop token ของ family นั้น จึงต้องใช้ template ตรงกันตอน inference",
+   "D": "template ทำให้จำนวน parameters ของโมเดลเพิ่มขึ้นเพื่อรองรับ role ทั้ง 3 ของบทสนทนา"
+  },
+  "ans": "C",
+  "expl": "สไลด์ย้ำว่าถ้า inference โดยไม่ใช้ chat template ที่ตรงกัน performance จะตกหนัก เพราะโมเดลผูก assistant header กับการตอบและ stop token (<|im_end|> ใน ChatML, <|eot_id|> ใน Llama 3) ข้อ B ผิดเพราะแต่ละ family ต่างกัน",
+  "src": "text/slides_w11.txt s.27-28 ; notes 2.15"
+ },
+ {
+  "id": "n11-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "DPO loss from per-token log probs",
+  "stem": "คู่ preference หนึ่งคู่ ใช้ beta = 0.1 และ log prob ของคำตอบ = ผลรวม log prob ทุก token ข้อมูลต่อ token ดังนี้ chosen ยาว 30 tokens: policy เฉลี่ย -2.0 ต่อ token, ref เฉลี่ย -2.1 ต่อ token และ rejected ยาว 20 tokens: policy เฉลี่ย -3.2 ต่อ token, ref เฉลี่ย -3.0 ต่อ token กำหนด e^-0.7 = 0.4966 ค่า DPO loss ใกล้เคียงข้อใดที่สุด",
+  "opts": {
+   "A": "0.6783",
+   "B": "0.6931",
+   "C": "1.1032",
+   "D": "0.4032"
+  },
+  "ans": "D",
+  "expl": "รวมเป็น total ก่อน: chosen policy = -60, ref = -63 ratio = +3 และ rejected policy = -64, ref = -60 ratio = -4 logit = 0.1 x (3 - (-4)) = 0.7 loss = ln(1 + 0.4966) = 0.4032 ข้อ A คือกรณีเอาค่าเฉลี่ยต่อ token มาลบกัน ((-2.0+2.1) - (-3.2+3.0)) = 0.3 x 0.1 = 0.03 ข้อ B คือ ln 2 ข้อ C คือใส่เครื่องหมาย logit ผิด",
+  "src": "text/slides_w11.txt s.40-41 ; notes 3.1, 3.3"
+ },
+ {
+  "id": "n11-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "ToT vs GoT scenario",
+  "stem": "ทีมแก้ปัญหาที่ต้องแตกเป็นหลาย sub-solution จาก path ที่แยกกัน แล้วรวมหลาย thought เข้าเป็น thought เดียวที่แข็งแรงกว่า และวนกลับไปปรับปรุง thought เดิมได้ โครงสร้าง reasoning แบบใดตรงกับงานนี้ที่สุด",
+  "opts": {
+   "A": "Chain-of-Thought เพราะเป็นเส้นตรงจึงควบคุมง่าย",
+   "B": "Graph-of-Thoughts เพราะมี aggregation และ refinement (self-loop)",
+   "C": "Tree-of-Thoughts เพราะ prune branch ที่แย่แล้วขุดต่อ branch ที่ดี",
+   "D": "Self-consistency เพราะ sample หลาย path แล้วโหวต"
+  },
+  "ans": "B",
+  "expl": "GoT เป็น arbitrary graph มี Aggregation (รวมหลาย path) และ Refinement (วนกลับ node เดิม) ToT เป็น search ที่ branch แยกขาดจากกัน (generate, evaluate, prune) จึงรวมไม่ได้ CoT เป็นเส้นตรงย้อนไม่ได้ ส่วน self-consistency เลือกคำตอบสุดท้ายด้วย majority vote ไม่ได้สร้าง thought ใหม่หรือวนปรับปรุง",
+  "src": "text/slides_w11.txt s.16-17 ; notes 2.11"
+ },
+ {
+  "id": "n11-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "GRPO advantage calculation",
+  "stem": "GRPO กลุ่ม G = 4 ได้ rewards [2, 4, 6, 8] ใช้ A_i = (r_i - mu) / sigma โดย sigma = sqrt( (1/G) x sum (r_i - mu)^2 ) กำหนด sqrt(5) = 2.236 ค่า advantage ของคำตอบที่ได้ reward 8 ใกล้เคียงข้อใดที่สุด",
+  "opts": {
+   "A": "1.162",
+   "B": "0.600",
+   "C": "3.000",
+   "D": "1.342"
+  },
+  "ans": "D",
+  "expl": "mu = 20/4 = 5 ผลรวมกำลังสองของส่วนเบี่ยงเบน = 9 + 1 + 1 + 9 = 20 variance = 20/4 = 5 sigma = sqrt(5) = 2.236 A = (8 - 5)/2.236 = 1.342 ข้อ A คือกรณีหารด้วย G-1 (sigma = 2.582) ข้อ B คือหารด้วย variance (3/5) ข้อ C คือไม่ได้หารด้วย sigma",
+  "src": "text/slides_w11.txt s.51 ; notes 3.4"
+ },
+ {
+  "id": "n11-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "Choosing prompting technique per task",
+  "hinted": true,
+  "stem": "มี 3 งาน (X) จัดประเภท sentiment ให้ได้ label รูปแบบเดียวกันทุกครั้ง (Y) โจทย์หลายขั้นที่ถามตรง ๆ แล้วตอบผิด เช่น 23 - 20 + 6 ในเรื่องแอปเปิล (Z) คูณเลขหลายหลักที่ต้องได้ผลลัพธ์ exact การจับคู่งานกับเทคนิคข้อใดเหมาะสมที่สุดตามสไลด์",
+  "opts": {
+   "A": "X: Few-shot, Y: Chain-of-Thought, Z: Program-of-Thought",
+   "B": "X: Chain-of-Thought, Y: Few-shot, Z: Program-of-Thought",
+   "C": "X: Program-of-Thought, Y: Chain-of-Thought, Z: Few-shot",
+   "D": "X: Few-shot, Y: Program-of-Thought, Z: Chain-of-Thought"
+  },
+  "ans": "A",
+  "expl": "Few-shot ช่วย formatting consistency และ edge cases (X) แต่ล้มเหลวกับ reasoning จึงใช้ CoT ให้โมเดลสร้างขั้นตอนเหตุผลเป็น scratchpad (Y) ส่วนงานที่ LLM อ่อนเรื่อง raw arithmetic (Z) ให้ LLM เขียนโค้ด Python แล้วให้ interpreter คำนวณ (PoT/PAL)",
+  "src": "text/slides_w11.txt s.6-8, s.12 ; notes 2.3, 2.4, 2.8 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "Hardware cost of long CoT",
+  "stem": "ระหว่างให้บริการโมเดล reasoning ความยาว reasoning trace เพิ่มจาก 1,000 เป็น 3,000 tokens โดยที่ KV cache ตอน 1,000 tokens เท่ากับ 5 GB ใช้โมเดลตามสไลด์ (attention compute รวมโตแบบ quadratic, KV cache โตแบบ linear) ข้อใดถูกต้อง",
+  "opts": {
+   "A": "KV cache 45 GB, attention compute x9, decoding เป็น memory-bandwidth bound",
+   "B": "KV cache 15 GB, attention compute x9, decoding เป็น memory-bandwidth bound",
+   "C": "KV cache 15 GB, attention compute x3, decoding เป็น memory-bandwidth bound",
+   "D": "KV cache 15 GB, attention compute x9, decoding เป็น compute bound"
+  },
+  "ans": "B",
+  "expl": "trace x3 ดังนั้น KV cache (linear) = 5 x 3 = 15 GB และ attention compute (quadratic) = 3^2 = 9 เท่า สไลด์ระบุว่า KV cache ครอง VRAM จนทำให้ autoregressive decoding เป็น memory-bandwidth bound ข้อ A ใช้ quadratic กับ KV (5 x 9 = 45) ข้อ C ใช้ linear กับ attention ข้อ D สลับชนิด bottleneck",
+  "src": "text/slides_w11.txt s.9 ; notes 2.5, 3.6"
+ },
+ {
+  "id": "n11-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "Limitations of SFT and exposure bias",
+  "stem": "ข้อใดอธิบายข้อจำกัดของ SFT และ exposure bias ผิด",
+  "opts": {
+   "A": "Costly and slow: demonstrations คุณภาพสูง เช่น โค้ดหรือคำตอบทางการแพทย์ มีต้นทุนสูงเมื่อต้องทำในปริมาณมาก",
+   "B": "No negative feedback: SFT บอกโมเดลว่าควรทำอะไร แต่ไม่ได้ลงโทษสิ่งที่ไม่ควรทำอย่างชัดเจน",
+   "C": "Exposure bias: ตอน train โมเดลป้อน token ที่ตัวเองสร้างกลับเข้าไป แต่ตอน inference ถูกป้อน token จริงจากมนุษย์ (teacher forcing)",
+   "D": "Distribution shift: SFT เห็นแต่คำตอบที่สมบูรณ์ จึงไม่เคยเห็นการแก้ไขหลังพลาด error จึงสะสมระหว่าง generation"
+  },
+  "ans": "C",
+  "expl": "ข้อ C กลับด้าน: teacher forcing คือตอน train (ป้อน token จริง) ส่วนตอน inference เป็น autoregressive (ป้อน token ที่โมเดลสร้างเอง) mismatch นี้คือ exposure bias ข้อ A, B และ D ตรงกับหัวข้อ Costly and Slow, No Negative Feedback และ Distribution Shift ในสไลด์",
+  "src": "text/slides_w11.txt s.30-32 ; notes 2.17"
+ },
+ {
+  "id": "n11-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "DPO relative margin edge case",
+  "stem": "ระหว่างฝึก DPO ด้วย beta = 0.1 พบว่า log pi(yw|x) ของ chosen ลดลงจาก log pi_ref = -20 เป็น -21 และ log pi(yl|x) ของ rejected ลดลงจาก log pi_ref = -30 เป็น -37 กำหนด e^-0.6 = 0.5488 ข้อใดถูกต้อง",
+  "opts": {
+   "A": "loss ประมาณ 0.4375 ต่ำกว่า ln 2 แม้ prob ของ chosen ลดลง เพราะ DPO ดูส่วนต่างสัมพัทธ์ (-1) - (-7) = +6",
+   "B": "loss ประมาณ 1.0375 ซึ่งสูงกว่า ln 2 เพราะ prob ของ chosen ลดลงจาก ref จึงถูกลงโทษโดยตรง",
+   "C": "loss เท่ากับ ln 2 = 0.6931 เพราะ chosen และ rejected ลดลงทั้งคู่ ผลจึงหักล้างกันเป็นศูนย์",
+   "D": "loss ประมาณ 0.6457 ซึ่งเท่ากับ sigma(0.6) ที่ได้จาก beta x 6 ต่ำกว่า ln 2 เล็กน้อย"
+  },
+  "ans": "A",
+  "expl": "ratio_w = -21 - (-20) = -1 และ ratio_l = -37 - (-30) = -7 ส่วนต่าง = +6 คูณ beta ได้ 0.6 loss = ln(1 + 0.5488) = 0.4375 < 0.6931 loss วัดจากส่วนต่างของ log ratio ไม่ใช่ prob ของ chosen ตัวเดียว ข้อ B ใส่เครื่องหมาย logit ผิด ข้อ C เข้าใจว่าหักล้าง ข้อ D ลืมใส่ -log (0.6457 คือค่า sigma ไม่ใช่ loss)",
+  "src": "text/slides_w11.txt s.40-41 ; notes 2.19, 3.1"
+ },
+ {
+  "id": "n11-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "Model memory PPO vs GRPO vs DPO",
+  "stem": "ทีมมี GPU 80 GB (GB = 10^9 bytes) โมเดลทุกตัวขนาด 13B parameters เก็บแบบ FP16 (2 bytes ต่อ parameter) นับเฉพาะ weights ของโมเดลที่ต้องโหลดพร้อมกัน ไม่รวม optimizer states และ activations GRPO ที่ใช้ตัดเฉพาะ Critic ออกจากชุดของ PPO และใช้ neural reward model ข้อใดสรุปได้ถูกต้อง",
+  "opts": {
+   "A": "PPO 104 GB, GRPO 52 GB, DPO 52 GB จึงมีเพียง PPO ที่เกิน 80 GB",
+   "B": "PPO 104 GB, GRPO 104 GB, DPO 52 GB จึงมีเพียง DPO ที่โหลดได้",
+   "C": "PPO 104 GB, GRPO 78 GB, DPO 52 GB จึงมีเพียง PPO ที่เกิน 80 GB",
+   "D": "PPO 104 GB, GRPO 78 GB, DPO 26 GB จึงโหลดได้ทั้ง GRPO และ DPO"
+  },
+  "ans": "C",
+  "expl": "13 x 10^9 x 2 bytes = 26 GB ต่อโมเดล PPO ใช้ 4 โมเดล (Actor, Critic, Reward, Reference) = 104 GB เกิน 80 GB GRPO ตัด Critic เหลือ 3 โมเดล = 78 GB ยังโหลดได้ และ DPO ใช้ 2 โมเดล (Policy และ Reference) = 52 GB ข้อ A นับ GRPO เป็น 2 โมเดล ข้อ B เข้าใจว่า GRPO ไม่ลดโมเดล ข้อ D นับ DPO เป็น 1 โมเดล",
+  "src": "text/slides_w11.txt s.37, s.42, s.49-50 ; notes 2.22, 3.6"
+ },
+ {
+  "id": "n11-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "Self-consistency temperature and cost",
+  "hinted": true,
+  "stem": "ทีม A ใช้ self-consistency ตั้ง temperature > 0 sample 7 paths ได้ final answers 18, 14, 18, 26, 18, 14, 26 ทีม B ทำ self-consistency 7 paths เช่นกันแต่ตั้ง temperature = 0 (greedy) แต่ละ path สร้างประมาณ 300 tokens ข้อใดถูกต้อง",
+  "opts": {
+   "A": "ทีม A เลือกคำตอบไม่ได้ เพราะไม่มีคำตอบใดได้เสียงเกินครึ่งคือ 4 จาก 7 จึงต้องสุ่มเพิ่มใหม่ทั้งหมด",
+   "B": "ทีม B ให้ผลดีกว่า เพราะ 7 paths ตรงกันทั้งหมดแสดงว่ามั่นใจสูง และจ่าย token น้อยกว่าทีม A",
+   "C": "ทีม A ต้องฝึก verifier model เพิ่มเพื่อเลือก 18 จึงจะถือว่าเป็น self-consistency ที่ถูกต้อง",
+   "D": "ทีม A ได้ 18 (3 จาก 7 เสียง) ส่วนทีม B ไม่มีความหลากหลายให้โหวต แต่ยังจ่าย 7 x 300 = 2,100 tokens เทียบ 300 ของ CoT เดียว"
+  },
+  "ans": "D",
+  "expl": "คำตอบที่ได้เสียงมากที่สุดคือ 18 (3 เสียง เทียบ 14 และ 26 ที่ได้ 2 เสียง) การโหวตเลือกคำตอบที่ได้เสียงมากสุด ไม่ต้องเกินครึ่ง และ self-consistency ไม่ต้องมี verifier หรือ human annotation ส่วน temperature = 0 ทำให้ได้ path เดิมซ้ำ ไม่มีความหลากหลายให้โหวต แต่ยังเสีย token เป็น 7 เท่า (2,100 เทียบ 300)",
+  "src": "text/slides_w11.txt s.11 ; notes 2.7 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "Self-consistency vs reflection latency",
+  "hinted": true,
+  "stem": "วิธี S: self-consistency 5 paths (ไม่นับเวลา vote) วิธี R: reflection ที่สร้างร่างแรก 1 ครั้ง แล้วทำรอบละ 2 calls (critique 1 call แล้ว refine 1 call) ซ้ำ 2 รอบ แต่ละ LLM call ใช้ 10 วินาที และฮาร์ดแวร์รองรับ 5 requests พร้อมกันได้ ข้อใดถูกต้อง",
+  "opts": {
+   "A": "S ใช้ 5 calls ประมาณ 50 วินาที เพราะต้องรอทุก path ส่วน R ใช้ 5 calls ประมาณ 10 วินาที เพราะ refine เร็วกว่า",
+   "B": "ทั้งสองใช้ 5 calls โดย S ใช้ประมาณ 10 วินาที (paths อิสระ ขนานได้) ส่วน R ประมาณ 50 วินาที (แต่ละ call รอผลก่อนหน้า)",
+   "C": "ทั้งสองใช้ 5 calls และใช้เวลาประมาณ 50 วินาทีเท่ากัน เพราะ call ละ 10 วินาทีและต้องรันตามลำดับเหมือนกัน",
+   "D": "S ใช้ 5 calls ประมาณ 10 วินาที ส่วน R ใช้ 3 calls (generate, critique, refine) ประมาณ 30 วินาที เพราะทำ refine รอบเดียว"
+  },
+  "ans": "B",
+  "expl": "R = 1 draft + 2 x (critique + refine) = 5 calls ที่ต้องทำต่อเนื่องกัน (แต่ละ call อาศัยผลก่อนหน้า) = 5 x 10 = 50 วินาที ส่วน S ใช้ 5 calls ที่เป็น independent paths ขนานกันได้ = ประมาณ 10 วินาที จำนวน calls เท่ากันแต่ latency ต่างกัน ข้อ D นับ R เพียง 1 รอบ",
+  "src": "text/slides_w11.txt s.11, s.15 ; notes 2.7, 2.10 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "GRPO scale invariance of advantage",
+  "stem": "GRPO กลุ่ม G = 4 โดย rule checker ให้ reward 0 หรือ 1 แล้วมีคำตอบถูกเพียงตัวเดียว (rewards [1, 0, 0, 0]) ต่อมาทีมเปลี่ยน checker ให้ reward 0 หรือ 6 (rewards [0, 0, 0, 6]) ใช้ A_i = (r_i - mu)/sigma โดย sigma หารด้วย G (sqrt(3) = 1.732) advantage ของคำตอบที่ถูกตัวนั้นหลังเปลี่ยนเป็นเท่าใด",
+  "opts": {
+   "A": "10.39",
+   "B": "4.50",
+   "C": "1.732",
+   "D": "0.289"
+  },
+  "ans": "C",
+  "expl": "mu = 6/4 = 1.5 ผลรวมกำลังสองส่วนเบี่ยงเบน = 3 x 1.5^2 + 4.5^2 = 6.75 + 20.25 = 27 variance = 27/4 = 6.75 sigma = 2.598 A = 4.5/2.598 = 1.732 เท่ากับกรณี reward 0/1 เพราะ Z-score ไม่ขึ้นกับสเกลของ reward ข้อ A คือคูณ 6 ข้อ B คือส่วนเบี่ยงเบนดิบที่ไม่หารด้วย sigma ข้อ D คือหารด้วย 6",
+  "src": "text/slides_w11.txt s.51 ; notes 3.4"
+ },
+ {
+  "id": "n11-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "R1-Zero style RL limits and thinker trade-off",
+  "stem": "ทีมอยากใช้สูตรแบบ DeepSeek R1-Zero (GRPO, ข้าม SFT, rule-based reward ที่เทียบคำตอบสุดท้ายกับ ground truth บวก format reward) ฝึกบอทตอบอีเมลลูกค้าให้สุภาพและมีประโยชน์ ข้อใดวิเคราะห์ถูกต้องที่สุด",
+  "opts": {
+   "A": "ความสุภาพและประโยชน์ของอีเมลไม่มีคำตอบเดียวที่ rule ตรวจเทียบได้โดยตรง จึงขาด verifiable reward แบบ math/code (ที่สไลด์ยืนยัน) และ Thinker ใช้ token กับ TTFT สูง งานง่ายควรใช้ Helper",
+   "B": "ทำไม่ได้เพราะ GRPO ต้องมี Critic model เพื่อประมาณ baseline ของแต่ละคำตอบ ซึ่งงานอีเมลสร้างไม่ได้ในทางปฏิบัติเลย",
+   "C": "ต้องเก็บ human step-by-step demonstrations ด้วย SFT ก่อนเสมอ เพราะ R1-Zero เริ่มจาก aligned model ที่ผ่าน SFT มาแล้วเท่านั้น",
+   "D": "ทำได้เท่ากันทุกงาน เพราะ format reward ของ <think> tag ก็เพียงพอจะเป็น reward ของงานภาษาธรรมชาติทุกแบบที่ต้องการ"
+  },
+  "ans": "A",
+  "expl": "R1-Zero ใช้ pure RL กับ rule-based reward จึงเหมาะกับงานที่ตรวจคำตอบได้ (math, code) สไลด์สรุปว่า verifiable rewards ดึง reasoning ได้ 'on math and code so far' ข้อ B ผิดเพราะ GRPO ตัด Critic ทิ้ง ข้อ C ผิดเพราะ R1-Zero ข้าม SFT และเริ่มจาก base model ข้อ D ผิดเพราะ format reward เป็นแค่โบนัสเล็ก ๆ ไม่ได้วัดคุณภาพคำตอบ และ Thinker ใช้ tokens และเวลามากกว่า จึงควรใช้ Helper กับงานง่าย",
+  "src": "text/slides_w11.txt s.48, s.52, s.54 ; notes 2.21-2.23"
+ },
+ {
+  "id": "n11-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 11,
+  "level": 1,
+  "topic": "In-context learning",
+  "hinted": true,
+  "stem": "การที่ LLM เรียนงานใหม่ตอน inference จากตัวอย่างใน prompt โดยไม่อัปเดต weights เรียกว่า ___ (ตัวย่อ ___)",
+  "key": "In-Context Learning; ICL",
+  "note": "รับ in-context learning (ตัวพิมพ์เล็กได้) และตัวย่อ ICL ใช้ได้ทั้ง zero-shot และ few-shot prompting",
+  "src": "text/slides_w11.txt s.6 ; notes 2.3"
+ },
+ {
+  "id": "n11-L2-F2",
+  "kind": "fill",
+  "set": "bank",
+  "week": 11,
+  "level": 2,
+  "topic": "Reflection and self-critique",
+  "hinted": true,
+  "stem": "Reflection loop มีขั้นตอน Generate, ___, Refine และได้ผลเพราะการ ___ text ง่ายกว่าการสร้าง text ที่สมบูรณ์จากศูนย์",
+  "key": "Critique; ประเมิน",
+  "note": "รับ self-critique/review สำหรับช่องแรก และ evaluate/evaluating/วิจารณ์/ตรวจสอบ สำหรับช่องที่สอง",
+  "src": "text/slides_w11.txt s.15 ; notes 2.10 ; hints Week 11 15-19-48"
+ },
+ {
+  "id": "n11-L3-F3",
+  "kind": "fill",
+  "set": "bank",
+  "week": 11,
+  "level": 3,
+  "topic": "DPO loss calculation",
+  "stem": "DPO ใช้ beta = 0.1 log ratio ของ chosen = +3 และของ rejected = -2 ได้ logit ที่ใส่ใน sigma เท่ากับ ___ และเมื่อกำหนด e^-0.5 = 0.6065 ค่า loss = -ln sigma(logit) เท่ากับ ___ (ทศนิยม 4 ตำแหน่ง)",
+  "key": "0.5; 0.4741",
+  "note": "logit = 0.1 x (3 - (-2)) = 0.5 loss = ln(1 + 0.6065) = ln(1.6065) = 0.4741 รับ 0.474 ได้",
+  "src": "text/slides_w11.txt s.41 ; notes 3.0"
+ },
+ {
+  "id": "n11-L4-F4",
+  "kind": "fill",
+  "set": "bank",
+  "week": 11,
+  "level": 4,
+  "topic": "GRPO advantage with G = 5",
+  "stem": "GRPO กลุ่ม G = 5 ได้ rewards [1, 1, 1, 1, 0] ใช้ sigma แบบหารด้วย G ได้ sigma = ___ advantage ของคำตอบที่ผิด (reward 0) = ___ และ advantage ของคำตอบที่ถูก (reward 1) = ___",
+  "key": "0.4; -2; 0.5",
+  "note": "mu = 0.8 variance = (4 x 0.04 + 0.64)/5 = 0.16 sigma = 0.4 A(0) = -0.8/0.4 = -2.0 A(1) = 0.2/0.4 = +0.5 (ผลรวม advantage ทั้งกลุ่ม = 0) รับ -2.0 และ +0.5",
+  "src": "text/slides_w11.txt s.51 ; notes 3.4"
+ }
+]

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 366">
+  <text x="20" y="28" class="h">Data contraction funnel (illustrative numbers)</text>
+  <text x="622" y="28" class="s" text-anchor="end">docs</text>
+  <text x="672" y="28" class="s" text-anchor="end">cum.</text>
+  <text x="714" y="28" class="s" text-anchor="end">r_i</text>
+
+  <text x="20" y="68" class="t">Raw Common Crawl</text>
+  <rect x="200" y="50" width="360" height="26" class="acc"/>
+  <text x="622" y="68" class="t" text-anchor="end">~40 B</text>
+  <text x="672" y="68" class="t" text-anchor="end">100%</text>
+  <text x="714" y="68" class="s" text-anchor="end">-</text>
+
+  <text x="20" y="108" class="t">+ Language filter</text>
+  <rect x="200" y="90" width="72" height="26" class="acc"/>
+  <text x="622" y="108" class="t" text-anchor="end">~8 B</text>
+  <text x="672" y="108" class="t" text-anchor="end">~20%</text>
+  <text x="714" y="108" class="ac" text-anchor="end">0.20</text>
+
+  <text x="20" y="148" class="t">+ Heuristic filters</text>
+  <rect x="200" y="130" width="18" height="26" class="acc"/>
+  <text x="622" y="148" class="t" text-anchor="end">~2 B</text>
+  <text x="672" y="148" class="t" text-anchor="end">~5%</text>
+  <text x="714" y="148" class="ac" text-anchor="end">0.25</text>
+
+  <text x="20" y="188" class="t">+ Deduplication</text>
+  <rect x="200" y="170" width="10.8" height="26" class="acc"/>
+  <text x="622" y="188" class="t" text-anchor="end">~1.2 B</text>
+  <text x="672" y="188" class="t" text-anchor="end">~3%</text>
+  <text x="714" y="188" class="ac" text-anchor="end">0.60</text>
+
+  <text x="20" y="228" class="t">+ Neural classifier</text>
+  <rect x="200" y="210" width="2" height="26" class="acc"/>
+  <text x="622" y="228" class="t" text-anchor="end">~200 M</text>
+  <text x="672" y="228" class="t" text-anchor="end">~0.5%</text>
+  <text x="714" y="228" class="ac" text-anchor="end">0.167</text>
+
+  <text x="20" y="268" class="t">Educational subset</text>
+  <rect x="200" y="250" width="2" height="26" class="warn"/>
+  <text x="622" y="268" class="t" text-anchor="end">~60 M</text>
+  <text x="672" y="268" class="t" text-anchor="end">~0.15%</text>
+  <text x="714" y="268" class="ac" text-anchor="end">0.30</text>
+
+  <line x1="20" y1="292" x2="700" y2="292" class="ln dash"/>
+  <text x="20" y="314" class="t">cum. = |D_i| / |D_0|        r_i = |D_i| / |D_(i-1)|</text>
+  <text x="20" y="334" class="t">0.20 × 0.25 × 0.60 × 0.167 × 0.30 = 0.0015 (≈ 0.15%)</text>
+  <text x="20" y="354" class="s">bar width = cumulative % on a linear scale (bars under 2px are drawn at 2px)</text>
+</svg>

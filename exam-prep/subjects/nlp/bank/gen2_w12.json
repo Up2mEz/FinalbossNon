@@ -1,0 +1,86 @@
+[
+ {
+  "id": "n12-X4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "Fixed-size chunking edge case",
+  "stem": "ใช้โค้ดจากสไลด์ chunks = [text[i:i+512] for i in range(0, len(text), 512-64)] กับข้อความยาว 9,920 ตัวอักษร ข้อใดอธิบายผลลัพธ์ได้ถูกต้อง?",
+  "opts": {
+   "A": "22 chunks เพราะ 9,920 / 448 = 22.14 ปัดลง และตัวอักษรท้ายสุดถูกรวมอยู่ใน chunk ที่ 22 แล้ว",
+   "B": "20 chunks เพราะ 9,920 / 512 = 19.4 ปัดขึ้น ส่วน overlap ไม่ได้เปลี่ยนจำนวน chunk",
+   "C": "23 chunks โดย chunk สุดท้ายมี 64 ตัวอักษรและซ้ำกับ chunk ก่อนหน้าครบทุกตัว",
+   "D": "23 chunks โดย chunk สุดท้ายมี 64 ตัวอักษรเป็นเนื้อหาท้ายเอกสารที่ chunk ก่อนหน้าไม่ครอบคลุม เพราะ overlap 64 ตัวนับจากหัว chunk"
+  },
+  "ans": "C",
+  "expl": "stride = 512 - 64 = 448 จุดเริ่มคือ 0, 448, ..., 22 x 448 = 9,856 (ยังน้อยกว่า 9,920 จึงมีจุดเริ่มที่ 23) รวม 23 chunks. chunk ที่ 22 เริ่มที่ 9,408 ยาว 512 จึงครอบคลุมถึง 9,920 พอดี ส่วน chunk ที่ 23 คือ text[9856:9920] ยาว 64 ตัว อยู่ใน chunk ที่ 22 ทั้งหมด (ซ้ำซ้อนทั้ง chunk, เสีย 1 vector ใน index โดยไม่ได้ข้อมูลใหม่). A ผิด: range() นับจุดเริ่มทุกจุดที่ < len(text) จึงเป็นการปัดขึ้น (ceil) ไม่ใช่ปัดลง. B ผิด: ใช้ขนาด chunk 512 แทน stride 448 (overlap ทำให้ chunk มากขึ้น ไม่ใช่เท่าเดิม). D ผิด: overlap 64 ตัวอยู่ที่ส่วนท้ายของ chunk ก่อนหน้าซ้อนกับหัว chunk ถัดไป ดังนั้น 64 ตัวท้ายเอกสารจึงถูกครอบคลุมแล้ว.",
+  "src": "text/slides_w12.txt s.7 ; notes sec 3.8"
+ },
+ {
+  "id": "n12-X4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "RRF with missing ranks",
+  "stem": "ใช้ RRF ที่ k = 60 โดยตาม rrf_merge ใน demo เอกสารที่ไม่อยู่ในลิสต์ใดจะไม่ได้คะแนนจากลิสต์นั้น แต่ละระบบคืน top-100 (อันดับเริ่มที่ 1) เอกสาร P: BM25 อันดับ 1 และไม่อยู่ใน dense; Q: BM25 อันดับ 20 และ dense อันดับ 20; R: BM25 อันดับ 3 และ dense อันดับ 70; S: BM25 อันดับ 50 และ dense อันดับ 60 ลำดับหลัง fuse จากมากไปน้อยคือข้อใด?",
+  "opts": {
+   "A": "Q, R, S, P",
+   "B": "P, R, Q, S",
+   "C": "P, Q, R, S",
+   "D": "Q, R, P, S"
+  },
+  "ans": "A",
+  "expl": "คะแนน: P = 1/61 = 0.01639; Q = 1/80 + 1/80 = 0.02500; R = 1/63 + 1/130 = 0.01587 + 0.00769 = 0.02356; S = 1/110 + 1/120 = 0.00909 + 0.00833 = 0.01742. ลำดับ Q > R > S > P. B ผิด: เรียงตามอันดับที่ดีที่สุดในลิสต์เดียว (P=1, R=3, Q=20, S=50) ซึ่งไม่ใช่สิ่งที่ RRF ทำ. C ผิด: เรียงตามอันดับเฉลี่ยเฉพาะลิสต์ที่เอกสารปรากฏ (1, 20, 36.5, 55) ทำให้การหายจากลิสต์ไม่เสียอะไร. D ผิด: ถ้าสมมติว่า P ที่หายไปมีอันดับ 101 จะได้ P = 1/61 + 1/161 = 0.02261 แซง S แต่ demo ไม่ให้คะแนนส่วนที่หายไป (เทียบเท่าเพิ่ม 0) ตัวเลขที่ถูกคือ 0.01639 ซึ่งต่ำกว่า S.",
+  "src": "text/slides_w12.txt s.22-23 ; text/demo_w12.txt rrf_merge ; verify/verify_6_13.md #9"
+ },
+ {
+  "id": "n12-X4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "Cross-encoder rerank latency budget",
+  "stem": "ใช้ตัวเลขตัวอย่างของสไลด์: BM25 ~5 ms ทำขนานกับ dense ~10 ms, RRF ~1 ms, cross-encoder rerank 80 pairs ~200 ms สมมติเวลา cross-encoder เป็นสัดส่วนเส้นตรงกับจำนวน pair และไม่นับ LLM generation ถ้า SLO ของ Stage 1 ถึง 3 รวมกันต้องไม่เกิน 60 ms ระบบ rerank ได้มากที่สุดกี่ pair?",
+  "opts": {
+   "A": "17 pairs",
+   "B": "24 pairs",
+   "C": "20 pairs",
+   "D": "19 pairs"
+  },
+  "ans": "D",
+  "expl": "ต้นทุนต่อ pair = 200 / 80 = 2.5 ms. Stage 1 ขนานจึงใช้ max(5, 10) = 10 ms รวม RRF 1 ms = 11 ms เหลืองบ 60 - 11 = 49 ms; 49 / 2.5 = 19.6 ปัดลงเป็น 19 pairs (11 + 19 x 2.5 = 58.5 ms; ถ้า 20 pairs = 61 ms เกิน SLO). A ผิด: ลบ Stage 1 แบบอนุกรม 5 + 10 + 1 = 16 ได้ (60 - 16)/2.5 = 17.6 แต่สไลด์ให้รันขนาน. B ผิด: 60 / 2.5 = 24 โดยลืมหัก Stage 1-2. C ผิด: ปัด 19.6 ขึ้นเป็น 20 ซึ่งเกินงบ.",
+  "src": "text/slides_w12.txt s.27 ; verify/verify_6_13.md #11"
+ },
+ {
+  "id": "n12-X4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "Entity linking and multi-hop traversal",
+  "stem": "ทีมสร้าง knowledge graph จากข่าว 2 ฉบับด้วย LLM extraction ฉบับแรกได้ triple (Sam Altman, WORKED_AT, OpenAI) ฉบับที่สองได้ (Altman, FOUNDED, Worldcoin) แล้วรัน Cypher จากสไลด์ MATCH (p:PERSON)-[:WORKED_AT]->(:ORG {name:\"OpenAI\"}) MATCH (p)-[:FOUNDED]->(c:COMPANY) RETURN p.name, c.name ผลลัพธ์ว่าง ทั้งที่ข้อเท็จจริงทั้งสองอยู่ในกราฟ สาเหตุที่น่าจะเป็นที่สุดและทางแก้คือข้อใด?",
+  "opts": {
+   "A": "คำถามนี้ต้องใช้ 3 hop ไม่ใช่ 2 hop จึงต้องเพิ่ม MATCH อีกชั้นใน Cypher",
+   "B": "Leiden จัดสองโหนดไว้คนละ community จึงเดินข้ามไม่ได้ ต้องเปลี่ยนไปใช้ Louvain",
+   "C": "ชื่อสองแบบกลายเป็นสองโหนด person ขาด Entity Linking ที่รวม alias เป็น canonical node",
+   "D": "cosine ของ chunk ทั้งสองต่ำเกินไป จึงต้องเพิ่ม top-K ของ vector search"
+  },
+  "ans": "C",
+  "expl": "การ traverse ใน Graph DB เป็นแบบ deterministic ตาม pointer ที่เก็บไว้: p ที่ WORKED_AT OpenAI คือโหนด 'Sam Altman' แต่ edge FOUNDED อยู่ที่โหนด 'Altman' คนละโหนด จึง match ไม่ได้ สาเหตุคือข้ามขั้น Entity Linking (รวม alias/pronoun เป็นโหนดเดียว) ใน traditional pipeline NER, Relation Extraction, Entity Linking, Triple Validation; แก้โดยเพิ่ม/ปรับขั้นนี้แล้ว rebuild กราฟ. A ผิด: Cypher 2 hop ตรงกับตัวอย่างสไลด์ และปัญหาอยู่ที่โหนดแตก ไม่ใช่ความยาว chain. B ผิด: Cypher เดินตาม edge ไม่เกี่ยวกับ community (ใช้ตอน summarization) และ Leiden ดีกว่า Louvain อยู่แล้ว. D ผิด: ขั้น traversal ไม่ใช้ cosine หรือ top-K.",
+  "src": "text/slides_w12.txt s.41-43, s.45"
+ },
+ {
+  "id": "n12-X4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 12,
+  "level": 4,
+  "topic": "Semantic shift chunking arithmetic",
+  "stem": "เอกสารมี 21 ประโยค ใช้ semantic shift detection ที่ embed ทุกประโยค คำนวณ dist_i = 1 - cos(s_i, s_i+1) แล้วตัดที่ distance ซึ่งสูงกว่า tau อย่างเคร่งครัด โดย tau = 95th percentile แบบ linear interpolation ของ distances (ไม่มีค่า distance ซ้ำกัน) ต้อง embed ___ ประโยค ได้ distance ___ ค่า และได้ ___ chunks",
+  "key": "21; 20; 2",
+  "note": "embed ทุกประโยค = 21 รอบ; distance ของประโยคติดกัน = 21 - 1 = 20 ค่า; 95th percentile ของ 20 ค่า (5% x 20 = 1) มี distance สูงกว่า tau อยู่ 1 ค่า จึงมี 1 breakpoint และได้ 1 + 1 = 2 chunks. ยอมรับ 'ประมาณ 1 breakpoint' ในโน้ตแต่คำตอบช่องสุดท้ายต้องเป็น 2.",
+  "src": "text/slides_w12.txt s.9 ; notes sec 2.1 Semantic shift detection"
+ }
+]

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 352">
+<defs><marker id="a-week10-speculative-decoding" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker><marker id="aa-week10-speculative-decoding" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker><marker id="aw-week10-speculative-decoding" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahw"/></marker></defs>
+<text x="30" y="34" class="h">1) Draft: โมเดลเล็กสร้าง γ = 5 โทเคนทีละตัว (q)</text>
+<rect x="30" y="50" width="80" height="34" rx="6" class="box"/>
+<text x="70" y="71.5" text-anchor="middle">d1</text>
+<polyline points="110,67 140,67" class="ln" marker-end="url(#a-week10-speculative-decoding)"/>
+<rect x="140" y="50" width="80" height="34" rx="6" class="box"/>
+<text x="180" y="71.5" text-anchor="middle">d2</text>
+<polyline points="220,67 250,67" class="ln" marker-end="url(#a-week10-speculative-decoding)"/>
+<rect x="250" y="50" width="80" height="34" rx="6" class="box"/>
+<text x="290" y="71.5" text-anchor="middle">d3</text>
+<polyline points="330,67 360,67" class="ln" marker-end="url(#a-week10-speculative-decoding)"/>
+<rect x="360" y="50" width="80" height="34" rx="6" class="box"/>
+<text x="400" y="71.5" text-anchor="middle">d4</text>
+<polyline points="440,67 470,67" class="ln" marker-end="url(#a-week10-speculative-decoding)"/>
+<rect x="470" y="50" width="80" height="34" rx="6" class="box"/>
+<text x="510" y="71.5" text-anchor="middle">d5</text>
+<rect x="30" y="140" width="520" height="40" rx="6" class="acc"/>
+<text x="290" y="164.5" text-anchor="middle">2) Verify: target ประมวลผล d1..d5 ในรอบเดียว (ขนาน) → p</text>
+<polyline points="70,84 70,140" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<polyline points="180,84 180,140" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<polyline points="290,84 290,140" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<polyline points="400,84 400,140" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<polyline points="510,84 510,140" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<text x="630" y="116" text-anchor="middle" class="s">ส่งทั้ง γ ตัว</text>
+<rect x="30" y="226" width="80" height="34" rx="6" class="acc"/>
+<text x="70" y="247.5" text-anchor="middle">d1 ✓</text>
+<polyline points="70,180 70,226" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<rect x="140" y="226" width="80" height="34" rx="6" class="acc"/>
+<text x="180" y="247.5" text-anchor="middle">d2 ✓</text>
+<polyline points="180,180 180,226" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<rect x="250" y="226" width="80" height="34" rx="6" class="acc"/>
+<text x="290" y="247.5" text-anchor="middle">d3 ✓</text>
+<polyline points="290,180 290,226" class="lna" marker-end="url(#aa-week10-speculative-decoding)"/>
+<rect x="360" y="226" width="80" height="34" rx="6" class="warn"/>
+<text x="400" y="247.5" text-anchor="middle">d4 ✗</text>
+<polyline points="400,180 400,226" class="lnw" marker-end="url(#aw-week10-speculative-decoding)"/>
+<rect x="470" y="226" width="80" height="34" rx="6" class="mut"/>
+<text x="510" y="247.5" text-anchor="middle">d5 ทิ้ง</text>
+<polyline points="510,180 510,226" class="ln dash" marker-end="url(#a-week10-speculative-decoding)"/>
+<text x="630" y="250" text-anchor="middle" class="h">3) Accept / Reject</text>
+<text x="130" y="286" text-anchor="middle" class="s">รับด้วยความน่าจะเป็น min(1, p/q)</text>
+<text x="500" y="286" text-anchor="middle" class="s">ปฏิเสธ → สุ่มแก้จาก p′ = norm(max(0, p − q))</text>
+<text x="360" y="320" text-anchor="middle" class="ac">คาดหวัง ≈ 3.69 โทเคน/รอบ (α = 0.8, γ = 5) · ได้ ≥ 1 เสมอ</text>
+<text x="360" y="340" text-anchor="middle" class="s">การแจกแจงของผลลัพธ์เท่ากับการสุ่มจาก target ตัวเดียว</text>
+</svg>

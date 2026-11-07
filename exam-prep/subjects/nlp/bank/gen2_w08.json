@@ -1,0 +1,105 @@
+[
+ {
+  "id": "n08-X4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "BART vs T5 overall cost from exact token counts",
+  "stem": "เอกสาร 60 tokens ถูกตัด 3 span ที่ไม่ติดกัน span ละ 4 tokens (ตัดรวม 12 tokens) BART ใช้ text infilling แทนแต่ละ span ด้วย [MASK] หนึ่งตัว ส่วน T5 ใช้ sentinel หนึ่งตัวต่อ span นับตามสไลด์ s.14 และ s.17 คือ src_len ไม่นับ special token, BART tgt_len นับ <s> และ </s>, T5 tgt_len นับ sentinel ปิดท้ายและ </s> สมมติต้นทุน encoder self-attention แปรตาม src_len^2 และ decoder self-attention แปรตาม tgt_len^2 (ไม่นับต้นทุนอื่น) ต้นทุนรวมของ BART เป็นกี่เท่าของ T5 (ปัดทศนิยม 2 ตำแหน่ง)?",
+  "opts": {
+   "A": "13.30 เท่า",
+   "B": "2.23 เท่า",
+   "C": "2.35 เท่า",
+   "D": "1.91 เท่า"
+  },
+  "ans": "B",
+  "expl": "src_len ของทั้งสองฝั่ง = 60 - 12 + 3 = 51. BART tgt_len = 60 + <s> + </s> = 62. T5 tgt_len = 12 token ของ span + 3 sentinel นำหน้า + 1 sentinel ปิดท้าย + </s> = 17. ต้นทุน BART = 51^2 + 62^2 = 2601 + 3844 = 6445. ต้นทุน T5 = 51^2 + 17^2 = 2601 + 289 = 2890. อัตราส่วน = 6445 / 2890 = 2.23. ข้อ A (13.30 = (62/17)^2) เทียบเฉพาะ decoder แล้วลืมว่า encoder cost เท่ากันจึงดึงอัตราส่วนรวมลง. ข้อ C (2.35) ใช้ T5 tgt_len = 12 ซึ่งลืมนับ sentinel และ </s>: (2601 + 3844) / (2601 + 144) = 2.35. ข้อ D (1.91) คิด encoder ด้วยความยาวต้นฉบับ 60 แทน 51: (3600 + 3844) / (3600 + 289) = 1.91.",
+  "src": "text/slides_w08.txt s.14, s.17, s.19, s.33 ; verify/verify_1_5.md #5 ; notes 3.0, 3.4",
+  "hinted": true
+ },
+ {
+  "id": "n08-X4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "T5 multi-task text-to-text with prefixes (sst2, cola, stsb, summarize)",
+  "stem": "ทีมหนึ่งต้องการ T5 checkpoint เดียวที่ทำ 4 งาน ได้แก่ sst2 (positive/negative), cola, stsb (ให้คะแนนความคล้ายของสองประโยค เช่น 3.8) และ summarize แผนใดสอดคล้องกับกรอบ text-to-text ในสไลด์ s.15-16, s.30 และ Demo 5 มากที่สุด?",
+  "opts": {
+   "A": "ใช้ prefix กับ sst2, cola และ summarize แต่เพิ่ม regression head พร้อม MSE loss ให้ stsb เพราะผลลัพธ์เป็นตัวเลข จึงต้องมี output layer แยกจาก decoder",
+   "B": "ตัด prefix ออกจากข้อมูลฝึกทั้งสี่งาน แล้วให้โมเดลแยกงานจากหน้าตาของ input เอง เพราะ label ที่ต่างกันพอให้ decoder เลือกงานได้โดยไม่ต้องมีตัวสลับงาน",
+   "C": "ใช้ classification head ร่วมกันสำหรับ sst2, cola และ stsb แล้วใช้ decoder สร้างข้อความสำหรับ summarize เพราะ T5 ต้องมี head ตามประเภทงานแบบ BERT",
+   "D": "ใส่ prefix ต่างกันต่อ task (เช่น stsb sentence1: ... sentence2: ...) ให้ decoder สร้างคะแนน เช่น 3.8 เป็นข้อความ ใช้ cross-entropy และการ decode ชุดเดียว ผสมงานใน batch เดียวได้"
+  },
+  "ans": "D",
+  "expl": "T5 แปลงทุกงานเป็น text in -> text out: prefix เป็นตัวสลับงาน (Demo 5: ไม่มี prefix โมเดลหลุดไปทำ translation), ผลลัพธ์ของ stsb เป็นสตริง เช่น 3.8 ตามรูป s.15 จึงใช้ decoder และ cross-entropy เดียวกัน ไม่มี task-specific head (s.30) และผสมหลายงานใน batch เดียวได้ (s.30). A ผิดเพราะเข้าใจว่าเลขต้องใช้ regression head และ MSE ซึ่งขัดกับ single loss ของ T5. B ผิดเพราะ prefix คือ task switch ไม่ใช่ของตกแต่ง และตัดแล้วโมเดลไม่มีสัญญาณบอกงาน. C ผิดเพราะ head ต่อ task เป็นลักษณะของ BERT ส่วน T5 ไม่มี head.",
+  "src": "text/slides_w08.txt s.15, s.16, s.30 ; text/demo_w08.txt Demo 5 ; notes 2.6, 4 (Demo 5), 7 traps #13-14"
+ },
+ {
+  "id": "n08-X4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Choosing pretraining objective for a downstream task",
+  "stem": "ทีมต้องเลือก pretraining objective ให้ 3 งานปลายทาง งาน (1) ย่อหน้าที่ประโยคถูกสลับตำแหน่งแบบสุ่ม ต้องเรียงกลับให้สอดคล้องกัน งาน (2) ข้อความ OCR ที่บางคำหายไปโดยไม่เหลือช่องว่างหรือสัญลักษณ์ใด ๆ ต้องตรวจให้ได้ว่าอะไรหายและหายตรงไหน งาน (3) เขียนข้อความยาวต่อจาก prefix แบบ causal ตามลำดับซ้ายไปขวา ชุดจับคู่ใดเหมาะที่สุดตามสไลด์ s.7, s.11-12 และ s.42 (ลำดับคือ งาน 1, 2, 3)?",
+  "opts": {
+   "A": "Sentence Permutation, Token Deletion, [S]-Denoising",
+   "B": "Document Rotation, Text Infilling, [S]-Denoising",
+   "C": "Sentence Permutation, Text Infilling, [R]-Denoising",
+   "D": "Token Masking, Token Deletion, [X]-Denoising"
+  },
+  "ans": "A",
+  "expl": "งาน 1: Sentence Permutation สอน discourse/coherence ด้วยการเรียงประโยคที่สลับกลับ (s.12). งาน 2: Token Deletion ลบ token โดยไม่เหลือ placeholder โมเดลต้องตรวจว่าอะไรหายและหายที่ไหน (s.11). งาน 3: [S]-Denoising (prefix LM, causal ลักษณะ GPT) ตาม UL2 (s.42). B ผิด: Rotation สอนให้หาจุดเริ่มต้นจริงของเอกสารจาก pivot ไม่ใช่เรียงประโยค และ Text Infilling มี [MASK] เหลืออยู่ให้เห็นตำแหน่ง ต่างจากงานที่ไม่มีร่องรอย. C ผิด: Infilling ทิ้ง [MASK] และ [R]-Denoising คือ short span corruption แบบ T5 ไม่ใช่การเขียนต่อแบบ causal. D ผิด: Token Masking เรียนเพียง vocabulary และ local context จึงไม่ช่วยเรื่องลำดับประโยค และ [X]-Denoising คือ span ยาวมาก corruption สูง.",
+  "src": "text/slides_w08.txt s.7, s.11, s.12, s.42 ; notes 2.5, 2.12"
+ },
+ {
+  "id": "n08-X4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Enc-Dec vs Dec-only parameter allocation (P/2 split) with Wang 2022",
+  "stem": "สไลด์ s.36 กล่าวว่า Enc-Dec ที่มี P พารามิเตอร์ แบ่งประมาณ P/2 ให้ Encoder และ P/2 ให้ Decoder ส่วน Dec-only ใช้ P ทั้งหมดกับการ generate สไลด์ s.39 อ้างงาน Wang et al. (2022) ที่เทียบ Dec-only 4.8B กับ Enc-Dec 11B ข้อใดสรุปได้ถูกต้องที่สุด?",
+  "opts": {
+   "A": "ฝั่ง decoder ของ Enc-Dec 11B มีประมาณ 2.4B (ครึ่งหนึ่งของ 4.8B) น้อยกว่า Dec-only 4.8B มาก จึงอธิบายได้ว่า Dec-only ชนะ zero-shot เพราะมีพารามิเตอร์สำหรับ generate มากกว่า",
+   "B": "Enc-Dec 11B ใช้พารามิเตอร์ทั้ง 11B ในการ generate เพราะ Encoder ช่วยสร้างผลลัพธ์ผ่าน cross-attention จึงมีกำลัง generate มากกว่า Dec-only 4.8B ราว 2.29 เท่า",
+   "C": "ฝั่ง decoder ของ Enc-Dec 11B ประมาณ 5.5B ซึ่งมากกว่า 4.8B ของ Dec-only ดังนั้นการที่ Dec-only ชนะ zero-shot หลัง pretrain อย่างเดียวอธิบายด้วยจำนวนพารามิเตอร์ที่ใช้ generate ไม่ได้",
+   "D": "Enc-Dec 11B ชนะ Dec-only 4.8B ทั้งก่อนและหลัง multitask finetuning เพราะรวมแล้วมีพารามิเตอร์มากกว่า 2.29 เท่า ข้อได้เปรียบนี้ไม่มีเงื่อนไขใด"
+  },
+  "ans": "C",
+  "expl": "ตามสไลด์ฝั่ง decoder ของ Enc-Dec 11B ~ 11/2 = 5.5B ซึ่งมากกว่า 4.8B ของ Dec-only (อัตราส่วน 5.5/4.8 = 1.15) แต่ Dec-only + full LM ยังชนะ zero-shot หลัง pretrain อย่างเดียว (s.39) จึงอธิบายผลด้วย 'มีพารามิเตอร์ generate มากกว่า' ไม่ได้. A คำนวณผิด (11/2 = 5.5 ไม่ใช่ 2.4). B ขัดกับ s.36 ที่ Encoder ได้ P/2 ไม่ได้ใช้ generate ตรง ๆ. D ผิดเพราะสไลด์ระบุว่า Enc-Dec + span corruption ชนะหลัง multitask finetuning เท่านั้น ข้อได้เปรียบมีเงื่อนไข (11/4.8 = 2.29 เป็นจริงแต่ไม่ได้ทำให้ชนะ zero-shot).",
+  "src": "text/slides_w08.txt s.36, s.39 ; notes 2.11, 7 traps #22, #24"
+ },
+ {
+  "id": "n08-X4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "T5 generative QA: attention weight count over unrolled steps with cached K,V",
+  "stem": "T5 generative QA รับ source 120 tokens และ generate คำตอบ 3 tokens ตามด้วย </s> ตามลูปในสไลด์ s.25-26 ลูปรันทั้งหมด 4 step (Decoder เริ่มด้วย <pad> ทุก step ใช้ Q ของ token ล่าสุดตัวเดียว [batch, 1, d_model] ส่วน K, V ของ Encoder ถูกคำนวณครั้งเดียวและ cache) decoder self-attention ใน step ที่ t มองทุกตำแหน่งของ decoder ที่มีอยู่ถึง step นั้น (t ตำแหน่ง) รวม <pad> ตัวแรก ในหนึ่ง layer, batch = 1, 12 heads รวมจำนวน attention weights (cross-attention + decoder self-attention) ตลอดทุก step เท่าใด?",
+  "opts": {
+   "A": "5,952",
+   "B": "5,880",
+   "C": "4,392",
+   "D": "14,760"
+  },
+  "ans": "B",
+  "expl": "จำนวน step = 3 token ของคำตอบ + </s> = 4 step. Cross-attention: ทุก step มี 1 query x 120 keys = 120 ต่อ head -> 4 x 120 = 480. Self-attention: แถวยาว 1, 2, 3, 4 -> รวม 10. ต่อ head = 490, 12 heads -> 490 x 12 = 5,880. A (5,952) ใช้เมทริกซ์ decoder self-attn เต็ม 4x4 = 16 แทน 10 : (480 + 16) x 12. C (4,392) นับแค่ 3 step (ลืม step ที่ predict </s>): (360 + 6) x 12. D (14,760) คิดแบบไม่ cache ที่ทุก step คำนวณ query ของทุกตำแหน่งใหม่: cross = 10 x 120 = 1,200 และ self = 1+4+9+16 = 30 -> (1,200 + 30) x 12.",
+  "src": "text/slides_w08.txt s.25, s.26, s.32 ; notes 2.8, 2.9"
+ },
+ {
+  "id": "n08-X4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 8,
+  "level": 4,
+  "topic": "Decoder logits size: BART vs T5 with exact target counts",
+  "stem": "เอกสาร 40 tokens ป้อนเป็น batch = 2 BART ใช้ target = ข้อความเต็ม + <s> + </s> และ logits ของ decoder มีรูปร่าง [batch, tgt_len, 50265] ส่วน T5 ตัด 3 span (span ละ 4 tokens) แทนด้วย sentinel หนึ่งตัวต่อ span และ target นับ sentinel ปิดท้ายกับ </s> (ตามสไลด์ s.17) โดย logits มีรูปร่าง [batch, tgt_len, 32000] จำนวนค่าใน logits ของ BART = ___ และของ T5 = ___",
+  "key": "4222260;1088000",
+  "note": "ยอมรับตัวเลขที่มีหรือไม่มีเครื่องหมายคอมมา. BART: tgt_len = 40 + 2 = 42 -> 2 x 42 x 50,265 = 4,222,260. T5: tgt_len = 12 + 3 + 1 + 1 = 17 -> 2 x 17 x 32,000 = 1,088,000. กับดักคือ vocab ต่างกัน (50265 vs 32000), BART นับ <s>/</s>, T5 นับ sentinel ปิดท้ายและ </s>.",
+  "src": "text/slides_w08.txt s.4, s.10, s.14, s.15, s.17 ; verify/verify_1_5.md #4, #5 ; notes 3.8"
+ }
+]

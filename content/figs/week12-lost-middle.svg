@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs>
+    <marker id="a-week12-lost-middle" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+  </defs>
+  <!-- y axis: 40..80 % mapped 250..50 (5px per point) -->
+  <path d="M80 250 H660 M80 200 H660 M80 150 H660 M80 100 H660 M80 50 H660" class="mut"/>
+  <path d="M80 50 V250 H660" class="ln"/>
+  <text x="72" y="254" text-anchor="end" class="s">40</text>
+  <text x="72" y="204" text-anchor="end" class="s">50</text>
+  <text x="72" y="154" text-anchor="end" class="s">60</text>
+  <text x="72" y="104" text-anchor="end" class="s">70</text>
+  <text x="72" y="54" text-anchor="end" class="s">80</text>
+  <text x="80" y="36" class="s">ความแม่นยำ (%), 20 เอกสาร ≈ 4K token, gpt-3.5-turbo</text>
+  <!-- closed-book line (~56%) -->
+  <path d="M80 170 H660" class="lnw dash"/>
+  <text x="656" y="188" text-anchor="end" class="wn">closed-book ≈ 56%</text>
+  <!-- U-shaped schematic through the three read values -->
+  <path d="M110 70 C190 160 290 178 370 177.5 C450 177 560 150 630 135" class="lna" fill="none"/>
+  <circle cx="110" cy="70" r="5" class="acc"/>
+  <text x="124" y="66" class="ac">≈ 76%</text>
+  <circle cx="370" cy="177.5" r="5" class="warn"/>
+  <text x="370" y="208" text-anchor="middle" class="wn">≈ 54-55%</text>
+  <circle cx="630" cy="135" r="5" class="acc"/>
+  <text x="630" y="122" text-anchor="middle" class="ac">≈ 63%</text>
+  <!-- position axis -->
+  <text x="110" y="270" text-anchor="middle">ต้น</text>
+  <text x="110" y="286" text-anchor="middle" class="s">Primacy</text>
+  <text x="370" y="270" text-anchor="middle">กลาง</text>
+  <text x="370" y="286" text-anchor="middle" class="s">Middle</text>
+  <text x="630" y="270" text-anchor="middle">ท้าย</text>
+  <text x="630" y="286" text-anchor="middle" class="s">Recency</text>
+  <text x="370" y="306" text-anchor="middle" class="s">ตำแหน่งของเอกสารที่มีคำตอบ (ค่าอ่านจากกราฟสไลด์ เส้นโค้งเป็นภาพร่าง)</text>
+</svg>

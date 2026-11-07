@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330">
+  <defs>
+    <marker id="a-week12-hybrid-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week12-hybrid-pipeline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- stage labels -->
+  <text x="166" y="28" text-anchor="middle" class="s">Stage 1 (ขนานกัน)</text>
+  <text x="345" y="28" text-anchor="middle" class="s">Stage 2</text>
+  <text x="510" y="28" text-anchor="middle" class="s">Stage 3</text>
+  <text x="664" y="28" text-anchor="middle" class="s">Stage 4</text>
+  <!-- query -->
+  <rect x="12" y="129" width="60" height="44" rx="6" class="box"/>
+  <text x="42" y="156" text-anchor="middle">Query</text>
+  <!-- query to branches -->
+  <path d="M72 151 H84 V81 H96" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <path d="M84 151 V221 H96" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <!-- BM25 -->
+  <rect x="96" y="50" width="140" height="62" rx="6" class="box"/>
+  <text x="166" y="74" text-anchor="middle">BM25 (sparse)</text>
+  <text x="166" y="94" text-anchor="middle" class="s">1M → 100 · ~5 ms</text>
+  <!-- FAISS -->
+  <rect x="96" y="190" width="140" height="62" rx="6" class="box"/>
+  <text x="166" y="214" text-anchor="middle">FAISS (dense)</text>
+  <text x="166" y="234" text-anchor="middle" class="s">1M → 100 · ~10 ms</text>
+  <!-- to RRF -->
+  <path d="M236 81 H263 V140 H290" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <path d="M236 221 H263 V162 H290" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <text x="249" y="73" text-anchor="middle" class="s">100</text>
+  <text x="249" y="213" text-anchor="middle" class="s">100</text>
+  <!-- RRF -->
+  <rect x="290" y="109" width="110" height="84" rx="6" class="acc"/>
+  <text x="345" y="133" text-anchor="middle">RRF fusion</text>
+  <text x="345" y="152" text-anchor="middle" class="s">k = 60</text>
+  <text x="345" y="169" text-anchor="middle" class="s">200 → 80 (dedup)</text>
+  <text x="345" y="185" text-anchor="middle" class="s">~1 ms</text>
+  <!-- RRF to CE -->
+  <path d="M400 151 H450" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <text x="425" y="143" text-anchor="middle" class="s">80</text>
+  <!-- cross encoder -->
+  <rect x="450" y="109" width="120" height="84" rx="6" class="acc"/>
+  <text x="510" y="133" text-anchor="middle">Cross-Encoder</text>
+  <text x="510" y="152" text-anchor="middle" class="s">rerank</text>
+  <text x="510" y="169" text-anchor="middle" class="s">80 → 10</text>
+  <text x="510" y="185" text-anchor="middle" class="s">~200 ms</text>
+  <!-- CE to LLM -->
+  <path d="M570 151 H620" class="ln" marker-end="url(#a-week12-hybrid-pipeline)"/>
+  <text x="595" y="143" text-anchor="middle" class="s">10</text>
+  <!-- LLM -->
+  <rect x="620" y="109" width="88" height="84" rx="6" class="box"/>
+  <text x="664" y="133" text-anchor="middle">LLM</text>
+  <text x="664" y="152" text-anchor="middle" class="s">10 chunks</text>
+  <text x="664" y="169" text-anchor="middle" class="s">~1-5 s</text>
+  <!-- timing note -->
+  <path d="M96 282 H570" class="lna"/>
+  <path d="M96 276 V288 M570 276 V288" class="lna"/>
+  <text x="333" y="272" text-anchor="middle" class="ac">ก่อนถึง LLM: max(5, 10) + 1 + 200 = 211 ms</text>
+  <text x="333" y="308" text-anchor="middle" class="s">ตัวเลขเวลาในสไลด์ 27 ให้วัดซ้ำบนฮาร์ดแวร์และคลังของคุณ</text>
+</svg>

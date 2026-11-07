@@ -1,0 +1,492 @@
+[
+ {
+  "id": "n10-L1-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "Weight memory N x bytes",
+  "stem": "โมเดลมี 13 พันล้าน (13B) parameters เก็บน้ำหนักแบบ FP16 (2 bytes ต่อ parameter) น้ำหนักอย่างเดียวใช้หน่วยความจำประมาณเท่าใด (decimal GB)",
+  "opts": {
+   "A": "13 GB",
+   "B": "26 GB",
+   "C": "52 GB",
+   "D": "6.5 GB"
+  },
+  "ans": "B",
+  "expl": "M_w = N x 2 bytes = 13 x 10^9 x 2 = 26 x 10^9 bytes = 26 GB. 13 GB คือกรณีลืมคูณ 2 (เหมือน INT8), 52 GB คือ FP32 (4 bytes), 6.5 GB คือ INT4 (0.5 byte).",
+  "src": "text/slides_w10.txt s.4-5 ; notes week_10 sec 2.1, 3.1"
+ },
+ {
+  "id": "n10-L1-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "GB vs GiB",
+  "stem": "1 GiB เท่ากับกี่ bytes",
+  "opts": {
+   "A": "1,000,000,000 bytes",
+   "B": "1,048,576 bytes",
+   "C": "1,073,741,824 bytes",
+   "D": "1,024,000,000 bytes"
+  },
+  "ans": "C",
+  "expl": "1 GiB = 2^30 = 1,073,741,824 bytes (ประมาณ 1.074 GB). 10^9 bytes คือ 1 GB (decimal), 1,048,576 = 2^20 คือ 1 MiB, ส่วน 1,024,000,000 เป็นการผสมสองระบบ.",
+  "src": "text/slides_w10.txt s.5 ; source/nlp_exam_hints.md (Week 10 GB vs GiB) ; notes week_10 sec 2.1",
+  "hinted": true
+ },
+ {
+  "id": "n10-L1-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "TTFT",
+  "stem": "เมื่อ prompt ยาวมาก เวลาก่อนผู้ใช้เห็น token แรก (TTFT) ส่วนใหญ่ถูกครอบงำโดยส่วนใด",
+  "opts": {
+   "A": "Prefill time",
+   "B": "Network latency",
+   "C": "Decode time ของ token ที่ 2 เป็นต้นไป",
+   "D": "เวลา quantize weights"
+  },
+  "ans": "A",
+  "expl": "TTFT = network latency + prefill time + decode time ของ token แรก และเมื่อ prompt ยาว prefill (ประมวลผลทั้ง prompt) จะครอบงำ. Decode token ที่ 2 เป็นต้นไปมีผลกับ TPS ไม่ใช่ TTFT.",
+  "src": "text/slides_w10.txt s.13 ; notes week_10 sec 2.4"
+ },
+ {
+  "id": "n10-L1-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "Distillation temperature",
+  "stem": "ใน knowledge distillation การใช้ temperature T > 1 กับ softmax ของ teacher ทำให้การแจกแจงความน่าจะเป็นเป็นอย่างไร",
+  "opts": {
+   "A": "แหลมขึ้นจนมี class เดียวได้เกือบ 1.0 เสมอ",
+   "B": "ไม่เปลี่ยนแปลง เพราะ softmax รวมเป็น 1 อยู่แล้ว",
+   "C": "ผลรวมความน่าจะเป็นมากกว่า 1 อย่างชัดเจน",
+   "D": "แบนขึ้น class ที่ความน่าจะเป็นต่ำเห็นชัดขึ้น"
+  },
+  "ans": "D",
+  "expl": "p_i = exp(z_i/T) / sum exp(z_j/T). เมื่อ T > 1 logits ถูกหารให้เล็กลง ทำให้ softmax แบนขึ้นและเห็นลำดับของ class ที่ไม่ถูกเลือก (dark knowledge) ผลรวมยังเป็น 1 เสมอ.",
+  "src": "text/slides_w10.txt s.51 ; notes week_10 sec 2.15"
+ },
+ {
+  "id": "n10-L1-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "QLoRA Paged Optimizers",
+  "stem": "ใน QLoRA ตัว Paged Optimizers ย้าย optimizer states ที่ทำให้ GPU memory พุ่งสูงไปพักไว้ที่ใด",
+  "opts": {
+   "A": "Disk SSD (NVMe)",
+   "B": "CPU RAM (unified memory)",
+   "C": "SRAM ภายใน GPU",
+   "D": "VRAM ของ GPU ใบอื่นเสมอ"
+  },
+  "ans": "B",
+  "expl": "Paged Optimizers ใช้ unified memory ให้ optimizer states overflow ไป CPU RAM เมื่อ GPU memory ไม่พอ เพื่อกัน OOM จาก memory spike. ไม่ใช่ disk และไม่ใช่ SRAM (SRAM เล็กมาก).",
+  "src": "text/slides_w10.txt s.46, s.50 ; notes week_10 sec 2.13, 7 (trap 11)"
+ },
+ {
+  "id": "n10-L1-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "Speculative decoding",
+  "stem": "ใน speculative decoding โมเดลใดเป็นผู้ตรวจ (verify) candidate tokens ที่ draft สร้างไว้",
+  "opts": {
+   "A": "draft model ขนาดเล็กตรวจ token ของตัวเองซ้ำอีกรอบ",
+   "B": "ผู้ใช้เป็นผู้เลือก token ที่ถูกต้องจากตัวเลือก",
+   "C": "target model ขนาดใหญ่ ใน forward pass เดียว",
+   "D": "page table ของ vLLM เป็นผู้ตัดสินให้"
+  },
+  "ans": "C",
+  "expl": "Draft model เล็กสร้าง candidates ทีละตัว แล้ว target model ใหญ่ประมวลผลทั้งหมดใน 1 parallel forward pass (คล้าย prefill) เพื่อ accept หรือ reject. Page table เป็นของ PagedAttention ไม่เกี่ยวกับ speculative decoding.",
+  "src": "text/slides_w10.txt s.33 ; notes week_10 sec 2.11"
+ },
+ {
+  "id": "n10-L2-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "GB vs GiB conversion",
+  "stem": "tensor ตัวหนึ่งมีขนาด 3,221,225,472 bytes (= 3 x 2^30) ข้อใดแปลงเป็น GB (10^9 bytes) และ GiB (2^30 bytes) ได้ถูกต้อง",
+  "opts": {
+   "A": "GB = 3.46, GiB = 3.22",
+   "B": "GB = 3.00, GiB = 3.22",
+   "C": "GB = 3.22, GiB = 3.46",
+   "D": "GB = 3.22, GiB = 3.00"
+  },
+  "ans": "D",
+  "expl": "GB = 3,221,225,472 / 10^9 = 3.22. GiB = 3,221,225,472 / 2^30 = 3.00 พอดี. ตัวเลขใน GiB ต้องเล็กกว่าใน GB เสมอ (1 GiB = 1.074 GB). ตัวเลือก A และ C เกิดจากการคูณ 1.074 ผิดทิศ, B สลับหน่วย.",
+  "src": "text/slides_w10.txt s.5 ; notes week_10 sec 2.1, 3.1, 7 (trap 1)",
+  "hinted": true
+ },
+ {
+  "id": "n10-L2-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "GQA KV cache reduction",
+  "stem": "LLaMA-3 8B ใช้ GQA โดยมี 32 query heads และ 8 KV heads เมื่อเทียบกับ MHA ที่มี 32 KV heads (ค่าอื่นเท่ากัน) ข้อใดถูกต้อง",
+  "opts": {
+   "A": "KV cache เหลือ 1/4 (ลด 75%) และ 4 query heads ใช้ KV head ชุดเดียวกัน",
+   "B": "KV cache เหลือ 1/8 และ 8 query heads ใช้ KV head ชุดเดียวกัน",
+   "C": "KV cache เหลือ 1/4 แต่จำนวน query heads ลดเหลือ 8",
+   "D": "KV cache เหลือ 3/4 (ลด 25%) และ 4 query heads ใช้ KV head ชุดเดียวกัน"
+  },
+  "ans": "A",
+  "expl": "KV cache แปรผันตาม n_kv: 8/32 = 1/4 จึงลด 75%. จำนวน query heads ต่อ KV head = n_heads/n_kv = 32/8 = 4. ค่า 1/8 มาจากตัวอย่างอื่นที่มี 64 Q heads กับ 8 groups. GQA ไม่ได้ลดจำนวน query heads.",
+  "src": "text/slides_w10.txt s.14 ; source/nlp_exam_hints.md (Week 10 GQA, Week 7) ; notes week_10 sec 2.5",
+  "hinted": true
+ },
+ {
+  "id": "n10-L2-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "Serving techniques matching",
+  "stem": "ข้อใดจับคู่เทคนิคกับปัญหาหลักที่เทคนิคนั้นแก้ได้ถูกต้องทั้งสามคู่",
+  "opts": {
+   "A": "PagedAttention แก้ N x N ที่ต้องเขียนลง HBM; FlashAttention แก้ fragmentation ของ KV cache; Continuous batching แก้ GPU ว่างระหว่างรอ",
+   "B": "FlashAttention แก้ N x N ที่ต้องเขียนลง HBM; PagedAttention แก้ fragmentation ของ KV cache; Continuous batching แก้ GPU ว่างระหว่างรอ",
+   "C": "Continuous batching แก้ N x N ที่ต้องเขียนลง HBM; PagedAttention แก้ GPU ว่างระหว่างรอ; FlashAttention แก้ fragmentation ของ KV cache",
+   "D": "FlashAttention แก้ GPU ว่างระหว่างรอ; Continuous batching แก้ fragmentation ของ KV cache; PagedAttention แก้ N x N ที่ต้องเขียนลง HBM"
+  },
+  "ans": "B",
+  "expl": "FlashAttention เป็น compute kernel ที่ tile ใน SRAM ไม่เขียนเมทริกซ์ N x N ลง HBM. PagedAttention จัดการ KV cache เป็น block ผ่าน page table เพื่อลด fragmentation. Continuous batching เป็น scheduling ระดับ iteration ให้ request เข้าออก batch ได้กลาง generation. ตัวเลือกอื่นสลับคู่.",
+  "src": "text/slides_w10.txt s.19, s.30-32, s.38 ; notes week_10 sec 7 (trap 5, 6)"
+ },
+ {
+  "id": "n10-L2-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "LoRA parameter count non-square",
+  "stem": "LoRA แทน W (ขนาด d x k) ด้วย B x A โดย B เป็น d x r และ A เป็น r x k เมื่อ W_K ใน LLaMA-3 8B มีขนาด 1024 x 4096 (d = 1024, k = 4096) และ r = 16 จำนวน trainable parameters ของเมทริกซ์นี้เท่าใด",
+  "opts": {
+   "A": "131,072",
+   "B": "81,920",
+   "C": "65,536",
+   "D": "4,194,304"
+  },
+  "ans": "B",
+  "expl": "A = 16 x 4096 = 65,536 และ B = 1024 x 16 = 16,384 รวม 81,920 (ตรงกับ K/V ~81k ในสไลด์). 131,072 คือ 2dr ของเมทริกซ์จัตุรัส 4096 x 4096 (Q/O), 65,536 คือนับแค่ A, 4,194,304 = 1024 x 4096 คือจำนวนพารามิเตอร์เต็มของ W_K.",
+  "src": "text/slides_w10.txt s.42 ; notes week_10 sec 3.5"
+ },
+ {
+  "id": "n10-L2-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "MoE memory vs compute",
+  "stem": "Mixtral 8x7B มีพารามิเตอร์รวมประมาณ 47B และ active ประมาณ 13B ต่อ token (top-2 จาก 8 experts) หากโหลดแบบ FP16 ข้อใดประมาณ VRAM สำหรับ weights และ compute ต่อ token ได้ถูกต้อง",
+  "opts": {
+   "A": "weights ประมาณ 94 GB; compute ใกล้เคียงโมเดล dense 13B",
+   "B": "weights ประมาณ 26 GB; compute ใกล้เคียงโมเดล dense 13B",
+   "C": "weights ประมาณ 94 GB; compute ใกล้เคียงโมเดล dense 47B",
+   "D": "weights ประมาณ 26 GB; compute ใกล้เคียงโมเดล dense 47B"
+  },
+  "ans": "A",
+  "expl": "ต้อง load ทุก expert ใน VRAM: 47 x 10^9 x 2 bytes = 94 GB (MoE ไม่ประหยัด memory). แต่ router ส่งแต่ละ token ไปแค่ 2 experts จึงคำนวณเท่าโมเดลที่มี 13B parameters. ตัวเลือก 26 GB = 13 x 2 คือตัวหลอกว่า VRAM ตาม active params.",
+  "src": "text/slides_w10.txt s.24-26 ; source/nlp_exam_hints.md (Week 10 MoE) ; notes week_10 sec 2.10, 7 (trap 3)",
+  "hinted": true
+ },
+ {
+  "id": "n10-L2-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "DeepSeekMoE shared vs routed experts",
+  "stem": "ใน DeepSeekMoE ที่แบ่งเป็น shared experts และ routed micro-experts สองส่วนนี้ต่างกันอย่างไร",
+  "opts": {
+   "A": "shared: router เลือก Top-K ต่อ token; routed: active กับทุก token",
+   "B": "shared: clone มาจาก MLP ของ dense model ตอน upcycling; routed: เทรนใหม่",
+   "C": "shared: ใช้เฉพาะตอนเทรน; routed: ใช้เฉพาะตอน inference เท่านั้น",
+   "D": "shared: active ทุก token (ความรู้ทั่วไป); routed: router เลือกบางตัว"
+  },
+  "ans": "D",
+  "expl": "Shared experts active ทุก token (ความรู้ทั่วไป เช่น grammar, formatting) ส่วน routed micro-experts (160+ ตัว) เป็นเฉพาะทางและ router เลือก Top-K_r ที่เกี่ยวข้อง. ตัวเลือก A สลับบทบาท, B เป็นเรื่อง sparse upcycling ซึ่งเป็นคนละเรื่อง.",
+  "src": "text/slides_w10.txt s.27 ; source/nlp_exam_hints.md (Week 10 DeepSeek MoE) ; notes week_10 sec 2.10",
+  "hinted": true
+ },
+ {
+  "id": "n10-L3-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "MoE INT4 fit on 24 GB",
+  "stem": "ทีมต้องการรัน Mixtral 8x7B (47B params รวม, 13B active) แบบ INT4 (0.5 byte ต่อ parameter) บน RTX 4090 ขนาด 24 GB สมมติ KV cache 0.54 GB และ runtime overhead 1.46 GB เท่ากับ audit ของ LLaMA-3 8B ข้อใดถูกต้อง",
+  "opts": {
+   "A": "พอ ใช้ประมาณ 8.5 GB เพราะโหลดเฉพาะ active experts 13B",
+   "B": "ไม่พอ เพราะ weights ต้อง 47 x 2 = 94 GB เกิน 24 GB มาก",
+   "C": "ไม่พอ เพราะ weights 23.5 + KV 0.54 + overhead 1.46 = 25.5 GB > 24 GB",
+   "D": "พอพอดี เพราะ weights 23.5 GB น้อยกว่า 24 GB (ไม่ต้องนับ KV และ overhead)"
+  },
+  "ans": "C",
+  "expl": "MoE ต้อง load ทุก expert: weights = 47 x 10^9 x 0.5 = 23.5 GB. รวม 23.5 + 0.54 + 1.46 = 25.5 GB > 24 GB จึงไม่พอ. A ใช้ active 13B ซึ่งเป็นตัวหลอก (ลด compute ไม่ลด memory), B ลืมว่าเป็น INT4, D ลืมบวก KV cache และ overhead.",
+  "src": "text/slides_w10.txt s.9, s.24-26 ; source/nlp_exam_hints.md (Week 10 MoE) ; notes week_10 sec 2.10, 3.1",
+  "hinted": true
+ },
+ {
+  "id": "n10-L3-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "Concurrent requests capacity",
+  "stem": "GPU 24 GB รัน LLaMA-3 8B FP16 (weights 16 GB, runtime overhead 1.46 GB, ไม่นับ activations) KV cache คิดจากสูตร 2 x Precision x n_layers x (n_kv x d_head) x n_ctx x B โดย n_layers = 32, n_kv = 8, d_head = 128, n_ctx = 4096 รองรับ request พร้อมกันได้มากที่สุดกี่ request (นับเฉพาะจำนวนเต็มที่ใส่ได้จริง)",
+  "opts": {
+   "A": "12",
+   "B": "13",
+   "C": "14",
+   "D": "3"
+  },
+  "ans": "A",
+  "expl": "KV ต่อ request = 2 x 2 x 32 x 8 x 128 x 4096 = 536,870,912 bytes = 0.537 GB. VRAM เหลือ = 24 - 16 - 1.46 = 6.54 GB. 6.54 / 0.537 = 12.18 จึงใส่ได้ 12 request (ปัดลง ไม่ใช่ปัดขึ้นเป็น 13). 14 เกิดจากลืมหัก overhead (8/0.537 = 14.9), 3 เกิดจากใช้ 32 KV heads แบบ MHA (KV ใหญ่ 4 เท่า).",
+  "src": "text/slides_w10.txt s.8-9, s.14 ; notes week_10 sec 3.2 (จ)"
+ },
+ {
+  "id": "n10-L3-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "Full fine-tuning 16N",
+  "stem": "Full fine-tuning โมเดล 13B ด้วย Adam ตามการประมาณ 16N (FP16 weights + Adam ไม่ shard ไม่นับ activations) ข้อใดระบุ optimizer states, model states รวม และจำนวน H100 80 GB ขั้นต่ำได้ถูกต้อง",
+  "opts": {
+   "A": "optimizer 156 GB; รวม 208 GB; 2 ใบ",
+   "B": "optimizer 26 GB; รวม 208 GB; 3 ใบ",
+   "C": "optimizer 156 GB; รวม 182 GB; 3 ใบ",
+   "D": "optimizer 156 GB; รวม 208 GB; 3 ใบ"
+  },
+  "ans": "D",
+  "expl": "Optimizer states = 12N = 12 x 13 = 156 GB (75% ของ 16N). รวม 16N = 16 x 13 = 208 GB (weights 26 + grads 26 + optimizer 156). 208 / 80 = 2.6 ต้องปัดขึ้นเป็น 3 ใบ. A ปัดลงเป็น 2, B ใช้ 2N แทน 12N, C ลืมบวก gradients (26 + 156 = 182).",
+  "src": "text/slides_w10.txt s.15 ; notes week_10 sec 2.6, 3.4"
+ },
+ {
+  "id": "n10-L3-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "QLoRA forward/backward mechanics",
+  "stem": "ข้อใดเกี่ยวกับ QLoRA เป็นข้อความที่ผิด",
+  "opts": {
+   "A": "Forward: dequantize block NF4 เป็น 16-bit ใน SRAM แล้วทิ้งหลัง matmul",
+   "B": "Backward: อัปเดต NF4 base weights ทุก step เพื่อชดเชย quantization error",
+   "C": "Parameter gradients มีเฉพาะ LoRA adapters (A และ B)",
+   "D": "Double Quantization quantize ตัว scale factors ไม่ใช่ตัว weights"
+  },
+  "ans": "B",
+  "expl": "NF4 base weights ถูกล็อกเป็น frozen reference grid ไม่ถูกอัปเดต; parameter gradients มีเฉพาะ A และ B (activation gradients ยังไหลผ่าน frozen layers). A, C, D ตรงกับสไลด์ (Double Quantization คือ quantize scale factors).",
+  "src": "text/slides_w10.txt s.47, s.50 ; notes week_10 sec 2.13, 7 (trap 11)"
+ },
+ {
+  "id": "n10-L3-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "Absmax INT8 round trip",
+  "stem": "ใช้ symmetric absmax INT8 โดย FP16 range [-3.2, 3.2] map ไป [-127, 127] ด้วย scale s = 3.2/127 = 0.0252 ค่า x = 1.5 เมื่อ quantize แล้ว dequantize กลับ จะได้ค่า q (จำนวนเต็ม) ค่าหลัง dequantize และ error เท่าใด",
+  "opts": {
+   "A": "q = 59, dequant = 1.487, error = 0.013",
+   "B": "q = 60, dequant = 1.512, error = 0.012",
+   "C": "q = 60, dequant = 1.512, error = 0.12",
+   "D": "q = 60, dequant = 1.512, error = 0.0012"
+  },
+  "ans": "B",
+  "expl": "x/s = 1.5/0.0252 = 59.52 ซึ่งปัดเป็น 60 (round ไม่ใช่ตัดทิ้ง). dequant = 60 x 0.0252 = 1.512. error = 1.512 - 1.5 = 0.012. ตัวเลือก A ตัดทศนิยมทิ้งเป็น 59, C และ D คลาดเคลื่อนหนึ่งหลักทศนิยม (ข้อสอบเน้นระวังทศนิยม).",
+  "src": "text/slides_w10.txt s.44 ; verify/verify_6_13.md #6 ; source/nlp_exam_hints.md (Week 11 quantization calculation) ; notes week_10 sec 3.6",
+  "hinted": true
+ },
+ {
+  "id": "n10-L3-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "Attention matrix size scaling",
+  "stem": "สไลด์ระบุว่า standard attention ที่ N = 32,000 เก็บ S = QK^T ประมาณ 2 GB ต่อ head (64 GB สำหรับ 32 heads, FP16) หากลดความยาวลงครึ่งหนึ่งเป็น N = 16,000 โดยยังใช้ FP16 และ 32 heads ที่ standard attention ต้องเก็บ S รวมกี่ GB (decimal)",
+  "opts": {
+   "A": "ประมาณ 8.2 GB",
+   "B": "ประมาณ 32.8 GB",
+   "C": "ประมาณ 16.4 GB",
+   "D": "ประมาณ 65.5 GB"
+  },
+  "ans": "C",
+  "expl": "S มีขนาด N x N จึงโตเป็นกำลังสอง: 16,000^2 = 2.56 x 10^8 elements x 2 bytes = 0.512 GB ต่อ head, x 32 heads = 16.4 GB (เท่ากับ 65.5/4). การคิดว่าลดตามเส้นตรงจะได้ 32.8 GB ซึ่งผิด. FlashAttention ไม่เขียนเมทริกซ์นี้ลง HBM (extra memory O(N)).",
+  "src": "text/slides_w10.txt s.19 ; notes week_10 sec 3.7"
+ },
+ {
+  "id": "n10-L4-01",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "GB vs GiB trap in KV cache fit",
+  "stem": "LLaMA-3 8B ใช้ GQA (8 KV heads) เมื่อ seq = 4096 และ batch = 16 KV cache มีขนาด 8,589,934,592 bytes (สไลด์เขียนเป็น 8 GiB หรือ 8.6 GB) torch รายงานหน่วยความจำว่างของ GPU เป็น 8.2 GiB (นับแบบ 2^30) ข้อใดสรุปได้ถูกต้อง",
+  "opts": {
+   "A": "ไม่พอ ขาดประมาณ 0.39 GB (เทียบ 8.59 กับ 8.2 ตรงๆ)",
+   "B": "ไม่พอ ขาดประมาณ 0.95 GB",
+   "C": "พอ เหลือประมาณ 0.8 GB",
+   "D": "พอ เหลือประมาณ 0.2 GiB (ประมาณ 0.21 GB)"
+  },
+  "ans": "D",
+  "expl": "KV = 8,589,934,592 / 2^30 = 8.0 GiB พอดี (= 8.59 GB). ว่าง 8.2 GiB ดังนั้นเหลือ 8.2 - 8.0 = 0.2 GiB = 0.2 x 1.074 = 0.21 GB. ต้องเทียบในหน่วยเดียวกัน: เทียบ 8.59 GB กับ 8.2 GiB ตรงๆ (A) ผิดหน่วย, B หารผิดทิศ (8.2/1.074 = 7.64), C ถือว่า KV เป็น 8 GB (8.2 GiB = 8.80 GB; 8.80 - 8.0 = 0.8).",
+  "src": "text/slides_w10.txt s.5, s.14 ; source/nlp_exam_hints.md (Week 10 GB vs GiB, GQA) ; notes week_10 sec 3.2 (ค), 7 (trap 1)",
+  "hinted": true
+ },
+ {
+  "id": "n10-L4-02",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "LoRA params with GQA dims and ratio",
+  "stem": "LLaMA-3 8B (32 layers, d_model = 4096, K/V projection ออกขนาด 1024 เพราะ GQA) ใช้ LoRA rank r = 8 เฉพาะ W_Q (4096 x 4096) และ W_V (1024 x 4096) ทุก layer โดยเมทริกซ์ d x k ใช้ r(d + k) parameters ข้อใดระบุจำนวน trainable params รวม และสัดส่วนต่อ 8B ได้ถูกต้อง",
+  "opts": {
+   "A": "ประมาณ 3.41M; ประมาณ 0.043%",
+   "B": "ประมาณ 4.19M; ประมาณ 0.052%",
+   "C": "ประมาณ 3.41M; ประมาณ 0.43%",
+   "D": "ประมาณ 106,496; ประมาณ 0.0013%"
+  },
+  "ans": "A",
+  "expl": "W_Q: 8 x (4096 + 4096) = 65,536. W_V: 8 x (1024 + 4096) = 40,960. ต่อ layer = 106,496; x 32 layers = 3,407,872 (ประมาณ 3.41M). สัดส่วน = 3,407,872 / 8 x 10^9 = 0.0426% (ประมาณ 0.043%). B ถือว่า W_V เป็นจัตุรัส (ลืม GQA), C คลาดหนึ่งหลักทศนิยม, D ลืมคูณ 32 layers.",
+  "src": "text/slides_w10.txt s.41-42 ; notes week_10 sec 3.5, 7 (trap 13)"
+ },
+ {
+  "id": "n10-L4-03",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "LoRA OOM diagnosis, QLoRA fix",
+  "stem": "ทีมใช้ LoRA (r = 16 ที่ Q/K/V/O) fine-tune LLaMA-3 8B บน T4 16 GB ตามสไลด์ประเมินว่า base FP16 (frozen) 16 GB + LoRA weights/grads/Adam 0.22 GB + activations และ overhead ประมาณ 2.0 GB (small batch + checkpointing) = 18.2 GB แล้วเกิด OOM การแก้ข้อใดตรงกับเลขนี้และได้ผลที่สุด",
+  "opts": {
+   "A": "ลด rank จาก 16 เหลือ 4 เพราะ LoRA states คือส่วนที่ใหญ่ที่สุดของ 18.2 GB",
+   "B": "เปิด gradient checkpointing เพิ่ม เพราะ activations คือส่วนที่ใหญ่ที่สุดของ 18.2 GB",
+   "C": "เปิด Paged Optimizers อย่างเดียว เพราะปัญหาหลักคือ optimizer states ล้น",
+   "D": "ใช้ NF4 เก็บ base (QLoRA) เพราะ base 16 GB ใหญ่สุด ส่วนอื่นรวม 2.2 GB"
+  },
+  "ans": "D",
+  "expl": "ส่วนใหญ่ของ 18.2 GB คือ base 16 GB ส่วน LoRA เพียง 0.22 GB และ activations ประมาณ 2.0 GB (รวม checkpointing แล้ว). ลด r เหลือ 4 ประหยัดไม่ถึง 0.2 GB, checkpointing ลดได้ไม่เกิน 2 GB, paged optimizer กันแค่ spike ของ optimizer states ที่เล็กอยู่แล้ว. QLoRA เก็บ base เป็น NF4 (ประมาณ 4 GB) รวมประมาณ 6.2 GB ซึ่งพอ T4.",
+  "src": "text/slides_w10.txt s.42, s.47-50 ; notes week_10 sec 2.12, 2.13, 3.5"
+ },
+ {
+  "id": "n10-L4-04",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "Roofline and decode bottleneck",
+  "stem": "Roofline: Attainable FLOP/s = min(Peak FLOP/s, Peak memory BW x AI) โดย AI = FLOPs ต่อ byte ที่ดึง ในช่วง decode (GEMV) กำหนด AI = 1.5 FLOP/byte เลือกจาก GPU ที่ (peak, BW) = P (900 TFLOP/s, 2 TB/s), Q (300 TFLOP/s, 3 TB/s), R (600 TFLOP/s, 2.5 TB/s), S (1200 TFLOP/s, 1.5 TB/s) ข้อใดถูกต้องสำหรับความเร็ว decode ที่ดีที่สุด",
+  "opts": {
+   "A": "เลือก P เพราะ peak สูงสุดที่ 900 TFLOP/s ในกลุ่ม P, Q, R",
+   "B": "เลือก Q ได้ 4.5 TFLOP/s เพราะ BW x AI ต่ำกว่า peak",
+   "C": "เลือก R เพราะ BW x AI ของ R เท่ากับ 4.5 TFLOP/s ซึ่งสูงสุดในกลุ่ม",
+   "D": "เลือก S เพราะ peak สูงสุด 1,200 TFLOP/s จึงได้ประมาณ 1,200 TFLOP/s จริงตอน decode"
+  },
+  "ans": "B",
+  "expl": "Decode เป็น memory-bandwidth bound เพราะ AI ต่ำ จึงคิด BW x AI: P = 2 x 1.5 = 3, Q = 3 x 1.5 = 4.5, R = 2.5 x 1.5 = 3.75, S = 1.5 x 1.5 = 2.25 TFLOP/s ซึ่งทั้งหมดต่ำกว่า peak มาก. Q ได้ค่าสูงสุด 4.5 แม้ peak ต่ำสุด; peak FLOP/s ที่สูงไม่ช่วย decode (คิดเป็นเพียงประมาณ 1.5% ของ peak ของ Q).",
+  "src": "text/slides_w10.txt s.11-12 ; notes week_10 sec 2.4, 3.10"
+ },
+ {
+  "id": "n10-L4-05",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "Per-tensor vs block-wise absmax with outlier",
+  "stem": "เทนเซอร์มี 256 ค่า แบ่งเป็น 4 block ละ 64 ค่า โดย block 1 มี outlier 12.7 ส่วน block 2 ถึง 4 แต่ละ block มีค่าที่ขนาดสูงสุดเท่ากับ 1.27 พอดี quantize เป็น INT8 แบบ absmax ([-127, 127]) พิจารณาค่า w = 0.04 หนึ่งตัวใน block 3 และอีกหนึ่งตัวใน block 1 (ข้าง outlier) ข้อใดถูกต้อง",
+  "opts": {
+   "A": "per-tensor: s = 0.1 ทำให้ 0.04 เป็น 0 ทั้งสองค่า; block-wise: ค่าใน block 3 ได้ q = 4 (s = 0.01) แต่ค่าใน block 1 ยังเป็น 0",
+   "B": "per-tensor: s = 0.1 ทำให้ 0.04 เป็น 0; block-wise: ทั้งสองค่าได้ q = 4 เพราะทุก block ใช้ s = 0.01 เหมือนกัน",
+   "C": "per-tensor: s = 0.01 ทำให้ 0.04 ได้ q = 4 อยู่แล้ว ส่วน block-wise ก็ให้ผลไม่ต่างจาก per-tensor เลย",
+   "D": "per-tensor และ block-wise ให้ผลเหมือนกัน เพราะ absmax ใช้ค่าสูงสุดของทั้งเทนเซอร์เสมอ ไม่ว่าจะแบ่ง block หรือไม่"
+  },
+  "ans": "A",
+  "expl": "Per-tensor ใช้ max ทั้งเทนเซอร์ = 12.7 จึง s = 12.7/127 = 0.1 และ 0.04/0.1 = 0.4 ปัดเป็น 0 (ข้อมูลหาย). Block-wise ให้ block 3 ใช้ max = 1.27 จึง s = 0.01 และ 0.04/0.01 = 4 เก็บได้ แต่ block 1 ยังมี outlier ทำให้ s = 0.1 และ 0.04 ยังเป็น 0 ดังนั้น block-wise จำกัดความเสียหายไว้ใน block ที่มี outlier เท่านั้น ไม่ได้แก้ทั้งหมด.",
+  "src": "text/slides_w10.txt s.44-45 ; verify/verify_6_13.md #6 ; notes week_10 sec 2.13, 3.6"
+ },
+ {
+  "id": "n10-L4-06",
+  "kind": "mcq",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "PagedAttention utilization and capacity",
+  "stem": "KV pool ของ GPU ขนาด 12 GB แต่ละ request ใช้ KV จริงเฉลี่ย 0.3 GB ระบบแบบ static allocation ใช้ KV memory ที่จองไว้ได้จริงเพียง 30% ส่วน PagedAttention ใช้ได้ประมาณ 95% (ตัวเลขจากสไลด์) แต่ละระบบรองรับกี่ request พร้อมกัน และเพิ่มขึ้นกี่เท่า",
+  "opts": {
+   "A": "static 12, paged 40 (ประมาณ 3.3 เท่า)",
+   "B": "static 36, paged 38 (ประมาณ 1.06 เท่า)",
+   "C": "static 12, paged 38 (ประมาณ 3.2 เท่า)",
+   "D": "static 4, paged 38 (ประมาณ 9.5 เท่า)"
+  },
+  "ans": "C",
+  "expl": "Static: 12 x 0.30 = 3.6 GB ที่ใช้ได้จริง / 0.3 = 12 requests. Paged: 12 x 0.95 = 11.4 GB / 0.3 = 38 requests. อัตราส่วน 38/12 = 3.17 เท่า อยู่ในช่วง 2-4 เท่าที่สไลด์ระบุ. A ใช้ 100% ของ pool กับ paged (12/0.3 = 40) ซึ่งเกินจริง, B ใช้ 90% กับ static ผิด, D ใช้ 10% กับ static.",
+  "src": "text/slides_w10.txt s.30-31 ; notes week_10 sec 2.11, 3.9"
+ },
+ {
+  "id": "n10-L1-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 10,
+  "level": 1,
+  "topic": "16N training memory",
+  "stem": "Full fine-tuning ด้วย Adam ตามสไลด์ใช้ 16N bytes = weights 2N + gradients 2N + optimizer states ___N",
+  "key": "12",
+  "note": "รับ 12 (12N = FP32 master weights 4 + momentum 4 + variance 4 ซึ่งคิดเป็น 75% ของ 16N). ถ้าตอบ 8 หรือ 4 ผิด.",
+  "src": "text/slides_w10.txt s.15 ; notes week_10 sec 2.6"
+ },
+ {
+  "id": "n10-L2-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 10,
+  "level": 2,
+  "topic": "GB to GiB conversion",
+  "stem": "โมเดล 70B parameters เก็บแบบ FP16 ใช้ 140 GB (decimal) เมื่ออ่านด้วย torch.cuda.memory_allocated แล้วแปลงเป็น GiB จะได้ประมาณ ___ GiB (ทศนิยม 1 ตำแหน่ง)",
+  "key": "130.4",
+  "note": "รับ 130.4, 130.39, 130 (140 / 1.0737 = 130.4; GiB ต้องน้อยกว่า GB). ถ้าตอบ 150.3 คือคูณผิดทิศ.",
+  "src": "text/slides_w10.txt s.5 ; source/nlp_exam_hints.md (Week 10 GB vs GiB) ; notes week_10 sec 3.1",
+  "hinted": true
+ },
+ {
+  "id": "n10-L3-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 10,
+  "level": 3,
+  "topic": "Absmax INT8 calculation",
+  "stem": "symmetric absmax INT8 ([-127, 127]) กับ weights ที่ max|w| = 2.54 ได้ scale s = ___ ค่า x = 0.904 ถูกเก็บเป็นจำนวนเต็ม q = ___ และเมื่อ dequantize ได้ ___",
+  "key": "0.02; 45; 0.90",
+  "note": "s = 2.54/127 = 0.02; q = round(0.904/0.02) = round(45.2) = 45; dequant = 45 x 0.02 = 0.90 (error 0.004). รับ 0.9 สำหรับช่องสุดท้าย. ถ้า s = 0.2 หรือ 0.002 คือผิดหลักทศนิยม.",
+  "src": "text/slides_w10.txt s.44 ; verify/verify_6_13.md #6 ; source/nlp_exam_hints.md (Week 11 quantization calculation)",
+  "hinted": true
+ },
+ {
+  "id": "n10-L4-F1",
+  "kind": "fill",
+  "set": "bank",
+  "week": 10,
+  "level": 4,
+  "topic": "KV cache per token and long context",
+  "stem": "LLaMA-3 8B (n_layers = 32, n_kv = 8, d_head = 128, FP16) KV cache ต่อ 1 token = ___ bytes ที่ context 128,000 tokens batch 1 ได้ ___ GB (decimal ทศนิยม 2 ตำแหน่ง) และถ้าเป็น MHA ที่มี 32 KV heads จะได้ ___ GB (decimal ทศนิยม 2 ตำแหน่ง)",
+  "key": "131072; 16.78; 67.11",
+  "note": "2 x 2 x 32 x 8 x 128 = 131,072 bytes (128 KiB) ต่อ token; x 128,000 = 16,777,216,000 B = 16.78 GB; MHA ใหญ่ 4 เท่า = 524,288 B ต่อ token; x 128,000 = 67,108,864,000 B = 67.11 GB. รับ 16.8 และ 67.1 ถ้าปัดทศนิยมน้อยกว่า. ถ้าตอบ 16.78 เป็น GiB (15.63) หรือคลาด 10 เท่าคือผิด.",
+  "src": "text/slides_w10.txt s.8-9, s.14 ; text/demo_w10.txt (KV 128K = 16.78 GB) ; notes week_10 sec 3.2 (ข)"
+ }
+]

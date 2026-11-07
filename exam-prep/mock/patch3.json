@@ -1,0 +1,5 @@
+{
+ "n10-X4-03":{"stem":"คลัสเตอร์มี 2 node แต่ละ node มี 8 GPU (80 GB) เชื่อมกันภายใน node ด้วย NVLink และเชื่อม 2 node ด้วย InfiniBand ต้องการ serve LLaMA-3 70B แบบ FP16 (weights 140 GB ซึ่งใส่ได้ครบใน 1 node) ให้ latency ต่ำและรองรับผู้ใช้จำนวนมาก ข้อใดเป็นการจัด parallelism ที่เหมาะสมที่สุดตามสไลด์"},
+ "n12-X4-F1":{"stem":"เอกสารมี 21 ประโยค ใช้ semantic shift detection ที่ embed ทุกประโยค คำนวณ dist_i = 1 - cos(s_i, s_i+1) แล้วตัดที่ distance ซึ่งสูงกว่า tau อย่างเคร่งครัด โดย tau = 95th percentile แบบ linear interpolation ของ distances (ไม่มีค่า distance ซ้ำกัน) ต้อง embed ___ ประโยค ได้ distance ___ ค่า และได้ ___ chunks"},
+ "n08-X4-05":{"stem":"T5 generative QA รับ source 120 tokens และ generate คำตอบ 3 tokens ตามด้วย </s> ตามลูปในสไลด์ s.25-26 ลูปรันทั้งหมด 4 step (Decoder เริ่มด้วย <pad> ทุก step ใช้ Q ของ token ล่าสุดตัวเดียว [batch, 1, d_model] ส่วน K, V ของ Encoder ถูกคำนวณครั้งเดียวและ cache) decoder self-attention ใน step ที่ t มองทุกตำแหน่งของ decoder ที่มีอยู่ถึง step นั้น (t ตำแหน่ง) รวม <pad> ตัวแรก ในหนึ่ง layer, batch = 1, 12 heads รวมจำนวน attention weights (cross-attention + decoder self-attention) ตลอดทุก step เท่าใด?"}
+}

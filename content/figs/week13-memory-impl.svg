@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 345">
+  <defs>
+    <marker id="a-week13-memory-impl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah"/></marker>
+    <marker id="aa-week13-memory-impl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="aha"/></marker>
+  </defs>
+  <!-- column headers -->
+  <text x="110" y="24" text-anchor="middle" class="h">Buffer</text>
+  <text x="110" y="40" text-anchor="middle" class="s">ต่อท้ายทุกอย่าง</text>
+  <text x="360" y="24" text-anchor="middle" class="h">Summary</text>
+  <text x="360" y="40" text-anchor="middle" class="s">ยุบเทิร์นเก่าเป็นสรุป</text>
+  <text x="610" y="24" text-anchor="middle" class="h">Retrieval</text>
+  <!-- containers: prompt / context window, y 104..264 -->
+  <rect x="10" y="104" width="200" height="160" rx="8" class="mut ln dash"/>
+  <rect x="260" y="104" width="200" height="160" rx="8" class="mut ln dash"/>
+  <rect x="510" y="104" width="200" height="160" rx="8" class="mut ln dash"/>
+  <text x="110" y="98" text-anchor="middle" class="s">prompt (context window)</text>
+  <text x="360" y="98" text-anchor="middle" class="s">prompt (context window)</text>
+  <text x="610" y="98" text-anchor="middle" class="s">prompt (context window)</text>
+
+  <!-- Buffer: 6 blocks h20 pitch 24 from y=116 -->
+  <rect x="22" y="116" width="176" height="20" rx="3" class="box"/><text x="110" y="131" text-anchor="middle" class="s">turn 1</text>
+  <rect x="22" y="140" width="176" height="20" rx="3" class="box"/><text x="110" y="155" text-anchor="middle" class="s">turn 2</text>
+  <rect x="22" y="164" width="176" height="20" rx="3" class="box"/><text x="110" y="179" text-anchor="middle" class="s">turn 3</text>
+  <rect x="22" y="188" width="176" height="20" rx="3" class="box"/><text x="110" y="203" text-anchor="middle" class="s">…</text>
+  <rect x="22" y="212" width="176" height="20" rx="3" class="box"/><text x="110" y="227" text-anchor="middle" class="s">turn n−1</text>
+  <rect x="22" y="236" width="176" height="20" rx="3" class="acc"/><text x="110" y="251" text-anchor="middle" class="s">turn n</text>
+
+  <!-- Summary: summary block + last k turns -->
+  <rect x="272" y="116" width="176" height="44" rx="3" class="warn"/>
+  <text x="360" y="135" text-anchor="middle">Summary</text>
+  <text x="360" y="151" text-anchor="middle" class="s">ของทุกเทิร์นเก่า (lossy)</text>
+  <rect x="272" y="168" width="176" height="20" rx="3" class="box"/><text x="360" y="183" text-anchor="middle" class="s">turn n−2</text>
+  <rect x="272" y="192" width="176" height="20" rx="3" class="box"/><text x="360" y="207" text-anchor="middle" class="s">turn n−1</text>
+  <rect x="272" y="216" width="176" height="20" rx="3" class="acc"/><text x="360" y="231" text-anchor="middle" class="s">turn n</text>
+  <text x="360" y="252" text-anchor="middle" class="s">k เทิร์นล่าสุด (ตัวอย่าง k = 3)</text>
+
+  <!-- Retrieval: vector store above the prompt, top-k blocks -->
+  <rect x="520" y="38" width="180" height="30" rx="6" class="box"/>
+  <text x="610" y="58" text-anchor="middle">Vector store (n เทิร์น)</text>
+  <path d="M610 68 V104" class="lna" marker-end="url(#aa-week13-memory-impl)"/>
+  <text x="618" y="84" class="s">embed → top-k</text>
+  <rect x="522" y="116" width="176" height="20" rx="3" class="acc"/><text x="610" y="131" text-anchor="middle" class="s">turn ที่เกี่ยวข้อง 1</text>
+  <rect x="522" y="140" width="176" height="20" rx="3" class="acc"/><text x="610" y="155" text-anchor="middle" class="s">turn ที่เกี่ยวข้อง 2</text>
+  <rect x="522" y="164" width="176" height="20" rx="3" class="acc"/><text x="610" y="179" text-anchor="middle" class="s">turn ที่เกี่ยวข้อง 3</text>
+  <text x="610" y="214" text-anchor="middle" class="s">เหลือที่ว่างใน prompt</text>
+
+  <!-- bounds -->
+  <text x="110" y="288" text-anchor="middle" class="wn">โต O(n)</text>
+  <text x="110" y="306" text-anchor="middle" class="s">ง่าย ไม่เสียข้อมูล แต่ล้น</text>
+  <text x="360" y="288" text-anchor="middle" class="ac">O(k·‖msg‖ + ‖summary‖)</text>
+  <text x="360" y="306" text-anchor="middle" class="s">มีขอบเขต แต่สรุปสูญเสียข้อมูล</text>
+  <text x="610" y="288" text-anchor="middle" class="ac">O(k·‖msg‖)</text>
+  <text x="610" y="306" text-anchor="middle" class="s">ตรงประเด็น แต่อาจพลาดเรื่องเวลา</text>
+  <text x="360" y="334" text-anchor="middle" class="s">Hybrid: สรุปเทิร์นเก่า + ดึงตอนที่เกี่ยวข้อง (รวมอันดับด้วย RRF)</text>
+</svg>
